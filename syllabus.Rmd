@@ -1,0 +1,30 @@
+---
+pagetitle: "HES 598 Syllabus"
+title: "HES 598: Introduction to Spatial Data in R"
+date: "Updated: `r format(Sys.Date())`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars, echo=FALSE}
+mon <- as.Date("2020-01-14")
+
+advdate <- function(obj, adv) {
+ tmon <- obj + 7*(adv-1)
+ tfri <- obj + 4 + 7*(adv-1)
+ tmon <- format(tmon, format="%m/%d")
+ tfri <- format(tfri, format="%m/%d")
+ zadv <- sprintf("%02d", adv)
+ tmp <- paste("Week ",zadv,sep='',", ", tmon)
+ return(tmp)
+}
+```
+
+###  `r advdate(mon, 1)`: Keep
+
+###  `r advdate(mon, 2)`: Going
+
+###  `r advdate(mon, 3)`: Down
