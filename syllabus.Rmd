@@ -23,8 +23,35 @@ advdate <- function(obj, adv) {
 }
 ```
 
-###  `r advdate(mon, 1)`: Keep
+###  `r advdate(mon, 1)`: Introduction to spatial data and R
 
-###  `r advdate(mon, 2)`: Going
+###  `r advdate(mon, 2)`: Vectors, rasters, and other types of spatial data
 
-###  `r advdate(mon, 3)`: Down
+###  `r advdate(mon, 3)`: Finding alignment and extracting data
+
+###  `r advdate(mon, 4)`: Introduction to visualization
+
+###  `r advdate(mon, 5)`: No Class - complete R markdown exercise
+
+###  `r advdate(mon, 6)`: Reclassify, mosaic, and other raster operations
+
+###  `r advdate(mon, 7)`: Repetitive tasks, functional programming, and bench-marking
+
+###  `r advdate(mon, 8)`: 
+
+###  `r advdate(mon, 9)`: Advanced topics:
+
+###  `r advdate(mon, 10)`: Advanced topics:
+
+###  `r advdate(mon, 11)`: No Class (Spring Break)
+
+###  `r advdate(mon, 12)`: Advanced topics:
+
+###  `r advdate(mon, 13)`: Advanced topics:
+
+###  `r advdate(mon, 14)`: Advanced topics:
+
+###  `r advdate(mon, 15)`: Advanced topics:
+
+###  `r advdate(mon, 16)`: Advanced topics:
+
