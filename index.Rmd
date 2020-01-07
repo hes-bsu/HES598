@@ -4,35 +4,26 @@ title: "HES 598: Introduction to Spatial Data in R"
 date: "Updated: `r format(Sys.Date())`"
 ---
 
-## (<font color="#DAAA00">**R**</font>-<font color="#DAAA00">**D**</font>ata <font color="#DAAA00">**A**</font>nalysis & <font color="#DAAA00">**V**</font>isualization <font color="#DAAA00">**I**</font>n <font color="#DAAA00">**S**</font>cience) {-}
-
-<br>  
 
 ### Course Description
 
-Computer literacy is now essential in all aspects of science. Data management skills are needed for entering data without errors, storing it in a usable way, and extracting key aspects of the data for analysis. Basic programming is required for everything from accessing and managing data, data visualization, to statistical analysis, and modeling. This course will provide an introduction to data/project management, manipulation, visualization and analysis, across a broad set of ecological data (spatial, genomic, field, etc). Class will typically consist of short introductions or question & answer sessions, followed by hands on computing exercises. The course will be taught using git/Github, R/RStudio, RMarkdown, and SQLite, but the concepts learned will easily apply to all programming languages and database management systems. **No background in databases or R/computational experience is required.**
+Spatial data are ubiquitous and form the basis for many of our inquiries into social, ecological, and evolutionary processes. As such, developing the skills necessary for incorporating spatial data into reproducible statistical workflows is critical. In this course, we will introduce the core components of manipulating spatial data within the R statistical environment including managing vector and raster data, projections, extraction of data values, interpolation, and plotting. Students will also learn to prototype and benchmark different workflows to aid in applying the appropriate tools to their research questions.
+
 
 ### Prerequisite Knowledge and Skills
 
-A willingess to practice coding and embrace the R language.
-
-### Purpose of Course
-
-In this course you will learn all of the fundamental aspects of computer programming that are necessary for conducting ecological research. By the end of the course you will be able to use these tools to import data into R, wrangle various types of data, summarize and analyze data, create visualizations and maps, write reports/manuscripts/CV’s in RMarkdown, save and export data/figures, work with SQL databases, as well as collaborate on Github with version-controlled projects.
-
-The focus of this course is to provide graduate students with training that develops and teaches the tools applicable to the entire process of **reproducible data-driven research** and encourage the use of open-source tools. By learning how to get the computer to do your work for you, you will be able to do more science faster, and your future-self will thank you.
+Some familiarity with the R statistical environment is helpful, but not necessary. My goal is to foster an environment where we are all learning from each other and sharing the tips and tricks that we learn along the way. If you want to start learning a few of the basics, the **Resources** tab has some background information to get you started. 
 
 ### Course Objectives
 
 Students completing this course should be able to:
 
- - Compare and contrast common types of spatial data
- - Develop workflows to: 
-    - Import, export, and visualize spatial data in R
-    - Extract spatial data for use in statistical analyses
-    - Generate new spatial data based on statistical analyses
- - Write functions to automate and parallelize repetitive tasks
- - Use benchmarking to identify computationally efficient approaches for data-intensive tasks 
+ - Introduce commonly encountered spatial datatypes (polygons, rasters, netCDF)
+ - Explore the variety of packages available for conducting spatial analyses in R
+ - Introduce functional programming and benchmarking as a means of evaluating different approaches for managing spatial data
+ - Develop workflows for extracting spatial data for use in statistical analyses
+ - Practice reproducible workflow and visualization using Rmarkdown
+
 
 ### Code of Conduct
 
@@ -60,14 +51,6 @@ This code of conduct is an adaptation of the one used by the Software Carpentry 
 
 For more information about the Code of Conduct related to Data Carpentry, please see their [website](http://www.datacarpentry.org/code-of-conduct/).
 
-If you are being harassed, notice that someone else is being harassed, or have any other concerns, please see the [UC Davis ombuds office](http://ombuds.ucdavis.edu/).
+If you are being harassed, notice that someone else is being harassed, or have any other concerns, please contact the [Boise State Dean of Students office](https://www.boisestate.edu/deanofstudents/free-speech-at-boise-state/use-your-voice/get-support/).
 
 <br>
-
-### Territory Acknowledgement
-
-Acknowledging territory shows recognition of and respect for Native Americans. It is recognition of their presence both in the past and the present. Recognition and respect are essential elements of establishing healthy, reciprocal relations. These relationships are key to reconciliation, a process to which we are committed.
-
-We would like to respectfully acknowledge that the land on which we gather is traditional unceded Patwin territory. We recognize and respect our role as guests here.
-
-Th
