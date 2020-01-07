@@ -1,0 +1,67 @@
+navbar:
+  left:
+  - text: Home
+    href: index.html
+  - text: About
+    href: about.html
+    icon: fa-info-circle  fa-1x
+  - text: Syllabus
+    href: syllabus.html
+    icon: fa-map fa-1x
+  - text: Resources
+    icon: fa-list
+    menu:
+    - text: Computer Setup
+      href: computer_setup.html
+    - text: Setting up Git Repository
+      href: setting_up_git.html
+    - text: Intro to Programming, R, & RStudio
+      href: lesson_intro_r_rstudio.html
+    - text: Project Management
+      href: lesson_project_management.html  
+  - text: Course Materials
+    icon: fa-book  fa-1x
+    menu:
+    - text: Spreadsheets
+      href: lesson_spreadsheets_condensed.html
+    - text: How R Thinks About Data
+      href: lesson_how_r_thinks_about_data.html
+    - text: Starting With Data in R
+      href: lesson_data_frames_tibbles_ecology.html
+    - text: Using dplyr and tidyr
+      href: lesson_dplyr_ecology.html
+    - text: Using ggplot2
+      href: lesson_ggplot_ecology.html
+    - text: Visualization Best Practices
+      href: lesson_visualization_dos.html
+    - text: Data Import & Export
+      href: lesson_data_import.html
+    - text: Date-times with lubridate
+      href: lesson_lubridate.html
+    - text: Writing functions
+      href: lesson_functions.html
+    - text: Iteration
+      href: lesson_iteration.html
+    - text: Literate Programming with RMarkdown
+      href: lesson_rmarkdown.html
+  right:
+  - text: Contact
+    icon: fa-hand-spock-o
+    href: contact.html
+  - icon: fa-github fa-lg
+    href: https://github.com/gge-ucd/R-DAVIS
+output_dir: docs
+output:
+  html_document:
+    theme: readable
+    #highlight: pygments
+    code_folding: show
+    toc: yes
+    toc_float:
+      collapsed: yes
+    include:
+      in_header: header.html
+    css: style.css
+    lib_dir: site_libs
+    self_contained: no
+name: HES598
