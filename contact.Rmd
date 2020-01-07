@@ -1,0 +1,22 @@
+---
+title: "Contact"
+---
+
+<br>
+
+## Instructors
+
+**Michael Culshaw-Maurer** 
+
+<i class="fa fa-envelope-square" aria-hidden="true"></i> [email](mailto:mattwilliamson@boisestate.edu)  
+[<i class="fa fa-globe" aria-hidden="true"></i> website](https://www.boisestate.edu/hes/people/matt-williamson/)  
+[<i class="fa fa-twitter-square" aria-hidden="true"></i> \@MwilliamsonMatt](https://twitter.com/MwilliamsonMatt)  
+[<i class="fa fa-github-square" aria-hidden="true"></i> mattwilliamson13](https://github.com/mattwilliamson13)  
+
+
+
+## Data Carpentry  
+
+<i class="fa fa-envelope-square" aria-hidden="true"></i> [info@datacarpentry.org](mailto:info@datacarpentry.org)  
+[<i class="fa fa-globe" aria-hidden="true"></i> http://www.datacarpentry.org/](http://www.datacarpentry.org/)  
+[<i class="fa fa-twitter-square" aria-hidden="true"></i> \@datacarpentry](https://twitter.com/datacarpentry)
