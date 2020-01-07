@@ -5,7 +5,7 @@ title: "RStudio and Git"
 Once we've setup R/RStudio, and installed git, the next step is seeing whether we can connect RStudio with Git. Please try this at home before class, and then we'll go through it when we meet.
 
 <br>
-<div class = "blue">
+<div class = "orange">
 **This lesson assumes you have:**
 
 - registered for your free Github account
