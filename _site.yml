@@ -7,9 +7,9 @@ navbar:
     icon: fa-info-circle  fa-1x
   - text: Syllabus
     href: syllabus.html
-    icon: fa-map fa-1x
+    icon: fa-map
   - text: Resources
-    icon: fa-list
+    icon: fa-book
     menu:
     - text: Computer Setup
       href: computer_setup.html
@@ -20,10 +20,10 @@ navbar:
     - text: Project Management
       href: lesson_project_management.html  
   - text: Course Materials
-    icon: fa-book  fa-1x
-    #menu:
-    #- text: Getting started with spatial data in R
-    #  href: lesson_welcome_to_space.html
+    icon: fa-desktop  fa-1x
+    menu:
+    - text: Getting started with spatial data in R
+      href: lesson_welcome_to_space.html
   right:
   - text: Contact
     href: contact.html
