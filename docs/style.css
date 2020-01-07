@@ -10,5 +10,12 @@ pre {
     font-size: 15px;
 }
 
-.golden { background-color:#ffe8aa; border-radius: 5px; padding: 15px;}
-.blue { background-color:#f2f8ff; border-radius: 5px; padding: 15px;}
+h1 {
+    color: #0033A0;
+}
+
+h3 {
+    color: #D64309;
+}
+.orange { background-color: #0033A0; color: #D64309; border-radius: 5px; padding: 15px;}
+.blue { background-color: #D64309; color: #0033A0; border-radius: 5px; padding: 15px;}

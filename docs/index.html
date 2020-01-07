@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -240,6 +239,7 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -271,6 +271,12 @@ $(document).ready(function () {
 }
 }
 
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
 
 .toc-content {
   padding-left: 30px;
@@ -361,14 +367,14 @@ div.tocify {
 </li>
 <li>
   <a href="syllabus.html">
-    <span class="fa fa-map fa-1x"></span>
+    <span class="fa fa-map"></span>
      
     Syllabus
   </a>
 </li>
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    <span class="fa fa-list"></span>
+    <span class="fa fa-book"></span>
      
     Resources
      
@@ -389,7 +395,20 @@ div.tocify {
     </li>
   </ul>
 </li>
-<li class="dropdown-header">Course Materials</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    <span class="fa fa-desktop  fa-1x"></span>
+     
+    Course Materials
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="lesson_welcome_to_space.html">Getting started with spatial data in R</a>
+    </li>
+  </ul>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
@@ -424,35 +443,23 @@ div.tocify {
 </div>
 
 
-<div id="r-data-analysis-visualization-in-science" class="section level2 unnumbered">
-<h2>(<font color="#DAAA00"><strong>R</strong></font>-<font color="#DAAA00"><strong>D</strong></font>ata <font color="#DAAA00"><strong>A</strong></font>nalysis &amp; <font color="#DAAA00"><strong>V</strong></font>isualization <font color="#DAAA00"><strong>I</strong></font>n <font color="#DAAA00"><strong>S</strong></font>cience)</h2>
-<p><br></p>
 <div id="course-description" class="section level3">
 <h3>Course Description</h3>
-<p>Computer literacy is now essential in all aspects of science. Data management skills are needed for entering data without errors, storing it in a usable way, and extracting key aspects of the data for analysis. Basic programming is required for everything from accessing and managing data, data visualization, to statistical analysis, and modeling. This course will provide an introduction to data/project management, manipulation, visualization and analysis, across a broad set of ecological data (spatial, genomic, field, etc). Class will typically consist of short introductions or question &amp; answer sessions, followed by hands on computing exercises. The course will be taught using git/Github, R/RStudio, RMarkdown, and SQLite, but the concepts learned will easily apply to all programming languages and database management systems. <strong>No background in databases or R/computational experience is required.</strong></p>
+<p>Spatial data are ubiquitous and form the basis for many of our inquiries into social, ecological, and evolutionary processes. As such, developing the skills necessary for incorporating spatial data into reproducible statistical workflows is critical. In this course, we will introduce the core components of manipulating spatial data within the R statistical environment including managing vector and raster data, projections, extraction of data values, interpolation, and plotting. Students will also learn to prototype and benchmark different workflows to aid in applying the appropriate tools to their research questions.</p>
 </div>
 <div id="prerequisite-knowledge-and-skills" class="section level3">
 <h3>Prerequisite Knowledge and Skills</h3>
-<p>A willingess to practice coding and embrace the R language.</p>
-</div>
-<div id="purpose-of-course" class="section level3">
-<h3>Purpose of Course</h3>
-<p>In this course you will learn all of the fundamental aspects of computer programming that are necessary for conducting ecological research. By the end of the course you will be able to use these tools to import data into R, wrangle various types of data, summarize and analyze data, create visualizations and maps, write reports/manuscripts/CV’s in RMarkdown, save and export data/figures, work with SQL databases, as well as collaborate on Github with version-controlled projects.</p>
-<p>The focus of this course is to provide graduate students with training that develops and teaches the tools applicable to the entire process of <strong>reproducible data-driven research</strong> and encourage the use of open-source tools. By learning how to get the computer to do your work for you, you will be able to do more science faster, and your future-self will thank you.</p>
+<p>Some familiarity with the R statistical environment is helpful, but not necessary. My goal is to foster an environment where we are all learning from each other and sharing the tips and tricks that we learn along the way. If you want to start learning a few of the basics, the <strong>Resources</strong> tab has some background information to get you started.</p>
 </div>
 <div id="course-objectives" class="section level3">
 <h3>Course Objectives</h3>
 <p>Students completing this course should be able to:</p>
 <ul>
-<li>Compare and contrast common types of spatial data</li>
-<li>Develop workflows to:
-<ul>
-<li>Import, export, and visualize spatial data in R</li>
-<li>Extract spatial data for use in statistical analyses</li>
-<li>Generate new spatial data based on statistical analyses</li>
-</ul></li>
-<li>Write functions to automate and parallelize repetitive tasks</li>
-<li>Use benchmarking to identify computationally efficient approaches for data-intensive tasks</li>
+<li>Introduce commonly encountered spatial datatypes (polygons, rasters, netCDF)</li>
+<li>Explore the variety of packages available for conducting spatial analyses in R</li>
+<li>Introduce functional programming and benchmarking as a means of evaluating different approaches for managing spatial data</li>
+<li>Develop workflows for extracting spatial data for use in statistical analyses</li>
+<li>Practice reproducible workflow and visualization using Rmarkdown</li>
 </ul>
 </div>
 <div id="code-of-conduct" class="section level3">
@@ -474,15 +481,8 @@ div.tocify {
 <p>Thank you for helping make this a welcoming, friendly community for all.</p>
 <p>This code of conduct is an adaptation of the one used by the Software Carpentry Foundation and is a modified version of that used by PyCon, which in turn is forked from a template written by the Ada Initiative and hosted on the Geek Feminism Wiki. Contributors to this document: Adam Obeng, Aleksandra Pawlik, Bill Mills, Carol Willing, Erin Becker, Hilmar Lapp, Kara Woo, Karin Lagesen, Pauline Barmby, Sheila Miguez, Simon Waldman, Tracy Teal.</p>
 <p>For more information about the Code of Conduct related to Data Carpentry, please see their <a href="http://www.datacarpentry.org/code-of-conduct/">website</a>.</p>
-<p>If you are being harassed, notice that someone else is being harassed, or have any other concerns, please see the <a href="http://ombuds.ucdavis.edu/">UC Davis ombuds office</a>.</p>
+<p>If you are being harassed, notice that someone else is being harassed, or have any other concerns, please contact the <a href="https://www.boisestate.edu/deanofstudents/free-speech-at-boise-state/use-your-voice/get-support/">Boise State Dean of Students office</a>.</p>
 <p><br></p>
-</div>
-<div id="territory-acknowledgement" class="section level3">
-<h3>Territory Acknowledgement</h3>
-<p>Acknowledging territory shows recognition of and respect for Native Americans. It is recognition of their presence both in the past and the present. Recognition and respect are essential elements of establishing healthy, reciprocal relations. These relationships are key to reconciliation, a process to which we are committed.</p>
-<p>We would like to respectfully acknowledge that the land on which we gather is traditional unceded Patwin territory. We recognize and respect our role as guests here.</p>
-<p>Th</p>
-</div>
 </div>
 
 
