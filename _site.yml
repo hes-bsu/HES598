@@ -22,28 +22,8 @@ navbar:
   - text: Course Materials
     icon: fa-book  fa-1x
     menu:
-    - text: Spreadsheets
-      href: lesson_spreadsheets_condensed.html
-    - text: How R Thinks About Data
-      href: lesson_how_r_thinks_about_data.html
-    - text: Starting With Data in R
-      href: lesson_data_frames_tibbles_ecology.html
-    - text: Using dplyr and tidyr
-      href: lesson_dplyr_ecology.html
-    - text: Using ggplot2
-      href: lesson_ggplot_ecology.html
-    - text: Visualization Best Practices
-      href: lesson_visualization_dos.html
-    - text: Data Import & Export
-      href: lesson_data_import.html
-    - text: Date-times with lubridate
-      href: lesson_lubridate.html
-    - text: Writing functions
-      href: lesson_functions.html
-    - text: Iteration
-      href: lesson_iteration.html
-    - text: Literate Programming with RMarkdown
-      href: lesson_rmarkdown.html
+    - text: Getting started with spatial data in R
+      href: lesson_welcome_to_space.html
   right:
   - text: Contact
     icon: fa-hand-spock-o
