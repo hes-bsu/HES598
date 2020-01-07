@@ -21,9 +21,9 @@ navbar:
       href: lesson_project_management.html  
   - text: Course Materials
     icon: fa-book  fa-1x
-    menu:
-    - text: Getting started with spatial data in R
-      href: lesson_welcome_to_space.html
+    #menu:
+    #- text: Getting started with spatial data in R
+    #  href: lesson_welcome_to_space.html
   right:
   - text: Contact
     icon: fa-hand-spock-o
