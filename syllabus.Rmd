@@ -53,5 +53,5 @@ advdate <- function(obj, adv) {
 
 ###  `r advdate(mon, 15)`: Advanced topics:
 
-###  `r advdate(mon, 16)`: Advanced topics:
+###  `r advdate(mon, 16)`: Flex dashboards, web mapping, interactive maps
 
