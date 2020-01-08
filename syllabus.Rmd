@@ -22,7 +22,28 @@ advdate <- function(obj, adv) {
  return(tmp)
 }
 ```
+## Course Description
 
+Spatial data are ubiquitous and form the basis for many of our inquiries into social, ecological, and evolutionary processes. As such, developing the skills necessary for incorporating spatial data into reproducible statistical workflows is critical. In this course, we will introduce the core components of manipulating spatial data within the R statistical environment including managing vector and raster data, projections, extraction of data values, interpolation, and plotting. Students will also learn to prototype and benchmark different workflows to aid in applying the appropriate tools to their research questions.
+
+ 
+
+## Course Objectives
+
+Students completing this course should be able to:
+
+ - Introduce commonly encountered spatial datatypes (polygons, rasters, netCDF)
+ - Explore the variety of packages available for conducting spatial analyses in R
+ - Introduce functional programming and benchmarking as a means of evaluating different approaches for managing spatial data
+ - Develop workflows for extracting spatial data for use in statistical analyses
+ - Practice reproducible workflow and visualization using Rmarkdown
+
+
+## Expectations
+
+## Advanced Topics
+
+## Course Schedule
 ###  `r advdate(mon, 1)`: Introduction to spatial data and R
 
 ###  `r advdate(mon, 2)`: Vectors, rasters, and other types of spatial data
