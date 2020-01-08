@@ -1,6 +1,6 @@
 ---
 pagetitle: "HES 598 Syllabus"
-title: "HES 598: Introduction to Spatial Data in R"
+title: "HES 598: Intro to Spatial Data in R"
 date: "Updated: `r format(Sys.Date())`"
 ---
 
