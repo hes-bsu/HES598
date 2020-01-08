@@ -5,16 +5,16 @@ date: "Updated: `r format(Sys.Date())`"
 ---
 
 
-### Course Description
+## Course Description
 
 Spatial data are ubiquitous and form the basis for many of our inquiries into social, ecological, and evolutionary processes. As such, developing the skills necessary for incorporating spatial data into reproducible statistical workflows is critical. In this course, we will introduce the core components of manipulating spatial data within the R statistical environment including managing vector and raster data, projections, extraction of data values, interpolation, and plotting. Students will also learn to prototype and benchmark different workflows to aid in applying the appropriate tools to their research questions.
 
 
-### Prerequisite Knowledge and Skills
+## Prerequisite Knowledge and Skills
 
 Some familiarity with the R statistical environment is helpful, but not necessary. My goal is to foster an environment where we are all learning from each other and sharing the tips and tricks that help us along the way. If you want to start learning a few of the basics, the **Resources** tab has some background information to get you started. 
 
-### Course Objectives
+## Course Objectives
 
 Students completing this course should be able to:
 
@@ -25,7 +25,7 @@ Students completing this course should be able to:
  - Practice reproducible workflow and visualization using Rmarkdown
 
 
-### Code of Conduct
+## Code of Conduct
 
 We are dedicated to providing a welcoming and supportive environment for all people, regardless of background or identity. However, we recognise that some groups in our community are subject to historical and ongoing discrimination, and may be vulnerable or disadvantaged. Membership in such a specific group can be on the basis of characteristics such as gender, sexual orientation, disability, physical appearance, body size, race, nationality, sex, colour, ethnic or social origin, pregnancy, citizenship, familial status, veteran status, genetic information, religion or belief, political or any other opinion, membership of a national minority, property, birth, age, or choice of text editor. We do not tolerate harassment of participants on the basis of these categories, or for any other reason.
 
