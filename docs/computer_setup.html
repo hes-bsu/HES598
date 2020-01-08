@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
 
 <meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -15,7 +16,7 @@
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/readable.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
@@ -91,6 +92,7 @@ code {
 }
 img {
   max-width:100%;
+  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -110,33 +112,33 @@ summary {
 <style type="text/css">
 /* padding for bootstrap navbar */
 body {
-  padding-top: 66px;
+  padding-top: 60px;
   padding-bottom: 40px;
 }
 /* offset scroll position for anchor links (for fixed navbar)  */
 .section h1 {
-  padding-top: 71px;
-  margin-top: -71px;
+  padding-top: 65px;
+  margin-top: -65px;
 }
 .section h2 {
-  padding-top: 71px;
-  margin-top: -71px;
+  padding-top: 65px;
+  margin-top: -65px;
 }
 .section h3 {
-  padding-top: 71px;
-  margin-top: -71px;
+  padding-top: 65px;
+  margin-top: -65px;
 }
 .section h4 {
-  padding-top: 71px;
-  margin-top: -71px;
+  padding-top: 65px;
+  margin-top: -65px;
 }
 .section h5 {
-  padding-top: 71px;
-  margin-top: -71px;
+  padding-top: 65px;
+  margin-top: -65px;
 }
 .section h6 {
-  padding-top: 71px;
-  margin-top: -71px;
+  padding-top: 65px;
+  margin-top: -65px;
 }
 .dropdown-submenu {
   position: relative;
@@ -239,7 +241,6 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
-  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -271,12 +272,6 @@ $(document).ready(function () {
 }
 }
 
-@media print {
-.toc-content {
-  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
-  float: right;
-}
-}
 
 .toc-content {
   padding-left: 30px;
@@ -357,13 +352,6 @@ div.tocify {
       <ul class="nav navbar-nav">
         <li>
   <a href="index.html">Home</a>
-</li>
-<li>
-  <a href="about.html">
-    <span class="fa fa-info-circle  fa-1x"></span>
-     
-    About
-  </a>
 </li>
 <li>
   <a href="syllabus.html">
@@ -448,7 +436,7 @@ div.tocify {
 <div id="please-complete-these-4-main-tasks-before-our-first-class" class="section level3">
 <h3>Please complete these 4 main tasks before our first class:</h3>
 <ol style="list-style-type: decimal">
-<li><p><i class="fa fa-github fa-2x" aria-hidden="true"></i>   Install <a href="https://git-scm.com/downloads"><strong><code>git</code></strong></a> &amp; register for a free <a href="https://github.com/"><strong>github</strong> account</a> with your <code>.edu</code> email address</p>
+<li><i class="fa fa-github fa-2x" aria-hidden="true"></i>   Install <a href="https://git-scm.com/downloads"><strong><code>git</code></strong></a> &amp; register for a free <a href="https://github.com/"><strong>github</strong> account</a> with your <code>.edu</code> email address
 <ul>
 <li><strong>IMPORTANT NOTE</strong>: When installing <strong>git</strong> on your computer, please do not change the installation location! The default installation location is what you want, and if during the installation you click something like “Change Install Location”, it will mess everything up</li>
 </ul></li>

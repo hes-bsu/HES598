@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
 
 <meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -15,7 +16,7 @@
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/readable.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
@@ -91,6 +92,7 @@ code {
 }
 img {
   max-width:100%;
+  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -110,33 +112,33 @@ summary {
 <style type="text/css">
 /* padding for bootstrap navbar */
 body {
-  padding-top: 66px;
+  padding-top: 60px;
   padding-bottom: 40px;
 }
 /* offset scroll position for anchor links (for fixed navbar)  */
 .section h1 {
-  padding-top: 71px;
-  margin-top: -71px;
+  padding-top: 65px;
+  margin-top: -65px;
 }
 .section h2 {
-  padding-top: 71px;
-  margin-top: -71px;
+  padding-top: 65px;
+  margin-top: -65px;
 }
 .section h3 {
-  padding-top: 71px;
-  margin-top: -71px;
+  padding-top: 65px;
+  margin-top: -65px;
 }
 .section h4 {
-  padding-top: 71px;
-  margin-top: -71px;
+  padding-top: 65px;
+  margin-top: -65px;
 }
 .section h5 {
-  padding-top: 71px;
-  margin-top: -71px;
+  padding-top: 65px;
+  margin-top: -65px;
 }
 .section h6 {
-  padding-top: 71px;
-  margin-top: -71px;
+  padding-top: 65px;
+  margin-top: -65px;
 }
 .dropdown-submenu {
   position: relative;
@@ -239,7 +241,6 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
-  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -271,12 +272,6 @@ $(document).ready(function () {
 }
 }
 
-@media print {
-.toc-content {
-  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
-  float: right;
-}
-}
 
 .toc-content {
   padding-left: 30px;
@@ -357,13 +352,6 @@ div.tocify {
       <ul class="nav navbar-nav">
         <li>
   <a href="index.html">Home</a>
-</li>
-<li>
-  <a href="about.html">
-    <span class="fa fa-info-circle  fa-1x"></span>
-     
-    About
-  </a>
 </li>
 <li>
   <a href="syllabus.html">
@@ -454,8 +442,8 @@ div.tocify {
 <p><br></p>
 <div id="working-directory-and-file-paths" class="section level1">
 <h1>Working Directory and File Paths</h1>
-<p>Any time you’re working in R, R needs to know where you are within your computer, which is referred to as the <em>working directory</em>. The working directory could be something like <code>"YourUsername/Documents"</code>, or it could be something more specific like <code>"YourUsername/Documents/GradSchool/Chapter1"</code>. Either way, R will think of everything in your computer as located relative to your working directory. One of the nicest parts of using R Projects is that they automatically set the working directory to the folder containing the .RProject file. You can see your current working directory by running the function <code>getwd()</code>, and you can set it using <code>setwd()</code>, but if you’re using an R Project, you generally shouldn’t mess with this too much.</p>
-<p>All directories and files in R (and most computer languages) are located using <em>file paths</em>. The two working directory examples we just used are written as file paths, with <code>/</code> put between different levels. Within <code>YourUsername</code> there is a folder called <code>Documents</code>, and within that there is a folder called <code>GradSchool</code>, and so on. In R, file paths are always wrapped in quotes. There are 2 basic kinds of file paths: <em>absolute</em> and <em>relative</em>. Absolute paths list out the full file path, usually starting with your username, which you can also refer to using the shortcut <code>~</code>. So instead of <code>YourUsername/Documents</code>, you can type <code>~/Documents</code>. However, if you’ve got folders within folders within folders, typing out absolute paths can get really tedious. <em>Relative</em> paths are <em>relative</em> to your working directory. So if R thinks we’re in that <code>Chapter1</code> folder, and we want to access a folder inside it called <code>data</code>, we can just type <code>data</code> instead of <code>"YourUsername/Documents/GradSchool/Chapter1/data"</code>. What happens if we need to go up a level, into <code>GradSchool</code>? Well we can type <code>..</code> to go up a level. So if we need to grab something from our <code>Chapter2</code> folder, but our working directory is <code>Chapter1</code>, we would type <code>../Chapter2/FileWeWant</code>.</p>
+<p>Any time you’re working in R, R needs to know where you are within your computer, which is referred to as the <em>working directory</em>. The working directory could be something like <code>&quot;YourUsername/Documents&quot;</code>, or it could be something more specific like <code>&quot;YourUsername/Documents/GradSchool/Chapter1&quot;</code>. Either way, R will think of everything in your computer as located relative to your working directory. One of the nicest parts of using R Projects is that they automatically set the working directory to the folder containing the .RProject file. You can see your current working directory by running the function <code>getwd()</code>, and you can set it using <code>setwd()</code>, but if you’re using an R Project, you generally shouldn’t mess with this too much.</p>
+<p>All directories and files in R (and most computer languages) are located using <em>file paths</em>. The two working directory examples we just used are written as file paths, with <code>/</code> put between different levels. Within <code>YourUsername</code> there is a folder called <code>Documents</code>, and within that there is a folder called <code>GradSchool</code>, and so on. In R, file paths are always wrapped in quotes. There are 2 basic kinds of file paths: <em>absolute</em> and <em>relative</em>. Absolute paths list out the full file path, usually starting with your username, which you can also refer to using the shortcut <code>~</code>. So instead of <code>YourUsername/Documents</code>, you can type <code>~/Documents</code>. However, if you’ve got folders within folders within folders, typing out absolute paths can get really tedious. <em>Relative</em> paths are <em>relative</em> to your working directory. So if R thinks we’re in that <code>Chapter1</code> folder, and we want to access a folder inside it called <code>data</code>, we can just type <code>data</code> instead of <code>&quot;YourUsername/Documents/GradSchool/Chapter1/data&quot;</code>. What happens if we need to go up a level, into <code>GradSchool</code>? Well we can type <code>..</code> to go up a level. So if we need to grab something from our <code>Chapter2</code> folder, but our working directory is <code>Chapter1</code>, we would type <code>../Chapter2/FileWeWant</code>.</p>
 </div>
 <div id="code-data-organization" class="section level1">
 <h1>Code &amp; Data Organization</h1>
@@ -493,7 +481,7 @@ div.tocify {
 <p>RStudio has a feature to help keep everything organized in a self-contained, reproducible package, called a “project”.</p>
 <p>A project is a small file with a <code>.Rproj</code> extension, but you can think of all the files and sub-directories as belonging to that project. We recommend creating a directory and a project file for each project you work on. It should look something like this:</p>
 <p><img src="img/working-directory-structure.png" /></p>
-<p>When you want to work on this project using R, double click on the .Rproj file, and RStudio will open it and keep everything organized for you. You can also open an existing project from RStudio by clicking "File -&gt; Open project…</p>
+<p>When you want to work on this project using R, double click on the .Rproj file, and RStudio will open it and keep everything organized for you. You can also open an existing project from RStudio by clicking &quot;File -&gt; Open project…</p>
 <br>
 <div class="blue">
 <h3 id="challenge-create-a-project">Challenge – Create a Project</h3>
