@@ -1,6 +1,6 @@
 ---
 pagetitle: "BSU-HES598"
-title: "HES 598: Introduction to Spatial Data in R"
+title: "HES 598: Intro to Spatial Data in R"
 date: "Updated: `r format(Sys.Date())`"
 ---
 
@@ -12,7 +12,7 @@ Spatial data are ubiquitous and form the basis for many of our inquiries into so
 
 ### Prerequisite Knowledge and Skills
 
-Some familiarity with the R statistical environment is helpful, but not necessary. My goal is to foster an environment where we are all learning from each other and sharing the tips and tricks that we learn along the way. If you want to start learning a few of the basics, the **Resources** tab has some background information to get you started. 
+Some familiarity with the R statistical environment is helpful, but not necessary. My goal is to foster an environment where we are all learning from each other and sharing the tips and tricks that help us along the way. If you want to start learning a few of the basics, the **Resources** tab has some background information to get you started. 
 
 ### Course Objectives
 
