@@ -2,9 +2,6 @@ navbar:
   left:
   - text: Home
     href: index.html
-  - text: About
-    href: about.html
-    icon: fa-info-circle  fa-1x
   - text: Syllabus
     href: syllabus.html
     icon: fa-map
