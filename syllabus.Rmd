@@ -42,7 +42,7 @@ Students completing this course should be able to:
 ## Expectations
 
 ## Advanced Topics
-This course is designed to help support your spatial analysis needs. As such, you are integral part to designing and delivering the parts of the course that are most useful to you. During the *Advanced Topics* portion of the course, you will partner with one of your classmates and work with me to develop a presentation to your classmates. We will be convert each presentation into a blog post that can be kept on the course website as a resource to you and future students.
+This course is designed to help support your spatial analysis needs. As such, you are integral part to designing and delivering the parts of the course that are most useful to you. During the *Advanced Topics* portion of the course, I will work with you and your partner to develop a presentation that you will deliver to your classmates. We will try to describe the problem you are trying to solve. We will work together to identify at least two potential solutions that you will evaluate using the tools we learn in class. We will then convert each presentation into a blog post that can be kept on the course website as a resource to you and future students.
 
 ## Course Schedule
 ###  `r advdate(mon, 1)`: Introduction to spatial data and R
@@ -61,19 +61,19 @@ This course is designed to help support your spatial analysis needs. As such, yo
 
 ###  `r advdate(mon, 8)`: Intro to parallel computing for spatial data
 
-###  `r advdate(mon, 9)`: Advanced topics: Study design and spatial simulation 
+###  `r advdate(mon, 9)`: Advanced topics: _Study design and spatial simulation_ 
 
-###  `r advdate(mon, 10)`: Advanced topics: Spatial stats, point patterns, nearest neighbors
+###  `r advdate(mon, 10)`: Advanced topics: _Spatial stats, point patterns, nearest neighbors_
 
 ###  `r advdate(mon, 11)`: No Class (Spring Break)
 
-###  `r advdate(mon, 12)`: Advanced topics: Landscape metrics and raster data
+###  `r advdate(mon, 12)`: Advanced topics: _Landscape metrics and raster data_
 
-###  `r advdate(mon, 13)`: Advanced topics: Telemetry and conectivity
+###  `r advdate(mon, 13)`: Advanced topics: _Telemetry and connectivity_
 
-###  `r advdate(mon, 14)`: Advanced topics: Species distribution models, geographically weighted regression, interpolation
+###  `r advdate(mon, 14)`: Advanced topics: _Species distribution models, geographically weighted regression, interpolation_
 
-###  `r advdate(mon, 15)`: Advanced topics: Next-level visualization (publication quality figures, network maps, combining datatypes)
+###  `r advdate(mon, 15)`: Advanced topics: _Next-level visualization (publication quality figures, network maps, combining datatypes)_
 
 ###  `r advdate(mon, 16)`: Flex dashboards, web mapping, interactive maps
 
