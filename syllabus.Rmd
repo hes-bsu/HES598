@@ -58,21 +58,21 @@ Students completing this course should be able to:
 
 ###  `r advdate(mon, 7)`: Repetitive tasks, functional programming, and bench-marking
 
-###  `r advdate(mon, 8)`: 
+###  `r advdate(mon, 8)`: Intro to parallel computing for spatial data
 
-###  `r advdate(mon, 9)`: Advanced topics:
+###  `r advdate(mon, 9)`: Advanced topics: Study design and spatial simulation 
 
-###  `r advdate(mon, 10)`: Advanced topics:
+###  `r advdate(mon, 10)`: Advanced topics: Spatial stats, point patterns, nearest neighbors
 
 ###  `r advdate(mon, 11)`: No Class (Spring Break)
 
-###  `r advdate(mon, 12)`: Advanced topics:
+###  `r advdate(mon, 12)`: Advanced topics: Landscape metrics and raster data
 
-###  `r advdate(mon, 13)`: Advanced topics:
+###  `r advdate(mon, 13)`: Advanced topics: Telemetry and conectivity
 
-###  `r advdate(mon, 14)`: Advanced topics:
+###  `r advdate(mon, 14)`: Advanced topics: Species distribution models, geographically weighted regression, interpolation
 
-###  `r advdate(mon, 15)`: Advanced topics:
+###  `r advdate(mon, 15)`: Advanced topics: Next-level visualization (publication quality figures, network maps, combining datatypes)
 
 ###  `r advdate(mon, 16)`: Flex dashboards, web mapping, interactive maps
 
