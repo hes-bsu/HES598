@@ -42,6 +42,7 @@ Students completing this course should be able to:
 ## Expectations
 
 ## Advanced Topics
+This course is designed to help support your spatial analysis needs. As such, you are integral part to designing and delivering the parts of the course that are most useful to you. During the *Advanced Topics* portion of the course, you will partner with one of your classmates and work with me to develop a presentation to your classmates. We will be convert each presentation into a blog post that can be kept on the course website as a resource to you and future students.
 
 ## Course Schedule
 ###  `r advdate(mon, 1)`: Introduction to spatial data and R
