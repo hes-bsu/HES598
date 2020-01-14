@@ -22,11 +22,20 @@ advdate <- function(obj, adv) {
  return(tmp)
 }
 ```
+## Instructor Details
+Dr. Matt Williamson
+
+Human Environment Systems
+
+College of Innovation and Design
+
+[Environmental Research Building 4123](https://goo.gl/maps/RNBM9Y92P6FSuVgM8)
+
+Office Hours: By appointment ([email](mailto:mattwilliamson@boisestate.edu))
+
 ## Course Description
 
 Spatial data are ubiquitous and form the basis for many of our inquiries into social, ecological, and evolutionary processes. As such, developing the skills necessary for incorporating spatial data into reproducible statistical workflows is critical. In this course, we will introduce the core components of manipulating spatial data within the R statistical environment including managing vector and raster data, projections, extraction of data values, interpolation, and plotting. Students will also learn to prototype and benchmark different workflows to aid in applying the appropriate tools to their research questions.
-
- 
 
 ## Course Objectives
 
@@ -39,10 +48,19 @@ Students completing this course should be able to:
  - Practice reproducible workflow and visualization using Rmarkdown
 
 
-## Expectations
+## Basic Course Structure
+This course will consist primarily of short (20-25 min) lectures followed by some in-class coding to help guide your exploration of the tools. I will lead the first half of the course to help get us all to a reasonable starting place. After that, the course is _yours_ to design and deliver. The goal here is to learn the spatial skills that are useful to _your_ research. I'll be here to help support and guide you, but you will get out of the course what you put into it once we move into the *Advanced Topics* portion of the course.
 
 ## Advanced Topics
 This course is designed to help support your spatial analysis needs. As such, you are integral part to designing and delivering the parts of the course that are most useful to you. During the *Advanced Topics* portion of the course, I will work with you and your partner to develop a presentation that you will deliver to your classmates. We will try to describe the problem you are trying to solve. We will work together to identify at least two potential solutions that you will evaluate using the tools we learn in class. We will then convert each presentation into a blog post that can be kept on the course website as a resource to you and future students.
+
+## Expectations
+Seminar courses like these are only successful if we all work together. Shared expectations are a big part of that. As such, I expect the following from you:
+1. Participation - I expect you to show up, ask questions, work through the in-class coding exercises, and be generally present while we are together.
+2. Understanding - We are all at different places in our research and our experience with scientific computing. Rather than belittle each other for not knowing how to do something, I hope to create an environment where we all learn from each other and there are no stupid questions. I expect you to help me achieve this.
+3. Communication - I am happy to shift directions in the course if it stops meeting your needs. I can only do that if you let me know that a change is necessary. Please feel free to provide feedback early and often.
+
+You can expect the following from me:
 
 ## Course Schedule
 ###  `r advdate(mon, 1)`: Introduction to spatial data and R
@@ -71,7 +89,7 @@ This course is designed to help support your spatial analysis needs. As such, yo
 
 ###  `r advdate(mon, 13)`: Advanced topics: _Telemetry and connectivity_
 
-###  `r advdate(mon, 14)`: Advanced topics: _Species distribution models, geographically weighted regression, interpolation_
+###  `r advdate(mon, 14)`: Advanced topics: _Species distribution models, statistical learning, interpolation_
 
 ###  `r advdate(mon, 15)`: Advanced topics: _Next-level visualization (publication quality figures, network maps, combining datatypes)_
 
