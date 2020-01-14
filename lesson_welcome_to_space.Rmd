@@ -59,8 +59,29 @@ p2 <- p1 + scale_fill_manual(values = party_colors) +
 p2
 ```
 
+## 
+```{r echo=TRUE}
+library(maps)
+library(socviz)
+library(tidyverse)
+party_colors <- c("#2E74C0", "#CB454A") 
+
+us_states <- map_data("state")
+head(us_states)
+election$region <- tolower(election$state)
+us_states_elec <- left_join(us_states, election)
+p0 <- ggplot(data = us_states_elec,
+             mapping = aes(x = long, y = lat,
+                           group = group, fill = party))
+p1 <- p0 + geom_polygon(color = "gray90", size = 0.1) +
+    coord_map(projection = "albers", lat0 = 39, lat1 = 45) 
+p2 <- p1 + scale_fill_manual(values = party_colors) +
+    labs(title = "Election Results 2016", fill = NULL)
+p2
+```
+
 ##
-```{r}
+```{r echo=FALSE}
 p0 <- ggplot(data = subset(election, st %nin% "DC"),
              mapping = aes(x = r_points,
                            y = reorder(state, r_points),
