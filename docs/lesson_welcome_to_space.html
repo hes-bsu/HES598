@@ -111,6 +111,7 @@ slide:not(.current) .plotly.html-widget{
 <li>A bit about me</li>
 <li>A bit about you</li>
 <li><a href='https://hes-bsu.github.io/HES598/' title=''>Course Webpage</a></li>
+<li>Git, Github, etc…</li>
 </ul>
 
 </article></slide><slide class=""><hgroup><h2>The Syllabus</h2></hgroup><article  id="the-syllabus">
@@ -121,21 +122,66 @@ slide:not(.current) .plotly.html-widget{
 <li>Advanced Topics</li>
 </ul>
 
-</article></slide><slide class=""><hgroup><h2>Why R</h2></hgroup><article  id="why-r">
+</article></slide><slide class=""><hgroup><h2>Why R?</h2></hgroup><article  id="why-r">
 
 <ul>
 <li>Open Source</li>
-<li>Integrated Analysis Pipelines</li>
-<li>Reproducible Workflows</li>
+<li>Integrated analysis pipelines</li>
+<li>Reproducible workflows</li>
 </ul>
 
-</article></slide><slide class=""><hgroup><h2>Why Not R</h2></hgroup><article  id="why-not-r">
+</article></slide><slide class=""><hgroup><h2>Why Not R?</h2></hgroup><article  id="why-not-r">
 
 <ul>
-<li>Coding Can Be Hard</li>
+<li>Coding can be hard…</li>
 <li>Memory challenges</li>
 <li>Speed</li>
-<li></li>
+<li>Decision fatigue</li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>What is spatial data?</h2></hgroup><article  id="what-is-spatial-data">
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section">
+
+<pre >## Joining, by = &quot;region&quot;</pre>
+
+<p><img src="lesson_welcome_to_space_files/figure-html/unnamed-chunk-1-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-1">
+
+<pre class = 'prettyprint lang-r'>library(maps)
+library(socviz)
+library(tidyverse)
+party_colors &lt;- c(&quot;#2E74C0&quot;, &quot;#CB454A&quot;) 
+
+us_states &lt;- map_data(&quot;state&quot;)
+
+election$region &lt;- tolower(election$state)
+us_states_elec &lt;- left_join(us_states, election)</pre>
+
+<pre >## Joining, by = &quot;region&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>p0 &lt;- ggplot(data = us_states_elec,
+             mapping = aes(x = long, y = lat,
+                           group = group, fill = party))
+p1 &lt;- p0 + geom_polygon(color = &quot;gray90&quot;, size = 0.1) +
+    coord_map(projection = &quot;albers&quot;, lat0 = 39, lat1 = 45) 
+p2 &lt;- p1 + scale_fill_manual(values = party_colors) +
+    labs(title = &quot;Election Results 2016&quot;, fill = NULL)
+p2</pre>
+
+<p><img src="lesson_welcome_to_space_files/figure-html/unnamed-chunk-2-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-2">
+
+<p><img src="lesson_welcome_to_space_files/figure-html/unnamed-chunk-3-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Things to think about</h2></hgroup><article  id="things-to-think-about">
+
+<ul>
+<li>Am I making a map or running an analysis</li>
+<li>What is the goal of my analysis or figure?</li>
+<li>Is the spatial arrangement important?</li>
 </ul></article></slide>
 
 
