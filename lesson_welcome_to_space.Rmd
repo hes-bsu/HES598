@@ -46,7 +46,7 @@ library(tidyverse)
 party_colors <- c("#2E74C0", "#CB454A") 
 
 us_states <- map_data("state")
-head(us_states)
+
 election$region <- tolower(election$state)
 us_states_elec <- left_join(us_states, election)
 p0 <- ggplot(data = us_states_elec,
@@ -67,7 +67,7 @@ library(tidyverse)
 party_colors <- c("#2E74C0", "#CB454A") 
 
 us_states <- map_data("state")
-head(us_states)
+
 election$region <- tolower(election$state)
 us_states_elec <- left_join(us_states, election)
 p0 <- ggplot(data = us_states_elec,
