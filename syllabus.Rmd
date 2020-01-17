@@ -56,8 +56,11 @@ This course is designed to help support your spatial analysis needs. As such, yo
 
 ## Expectations
 Seminar courses like these are only successful if we all work together. Shared expectations are a big part of that. As such, I expect the following from you:
+
 1. Participation - I expect you to show up, ask questions, work through the in-class coding exercises, and be generally present while we are together.
+
 2. Understanding - We are all at different places in our research and our experience with scientific computing. Rather than belittle each other for not knowing how to do something, I hope to create an environment where we all learn from each other and there are no stupid questions. I expect you to help me achieve this.
+
 3. Communication - I am happy to shift directions in the course if it stops meeting your needs. I can only do that if you let me know that a change is necessary. Please feel free to provide feedback early and often.
 
 You can expect the following from me:
