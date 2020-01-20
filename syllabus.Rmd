@@ -65,6 +65,10 @@ Seminar courses like these are only successful if we all work together. Shared e
 
 You can expect the following from me:
 
+1. Availability - This is a 1 credit course and your questions are likely to require more time than we can devote in class. I will do my best to make myself available outside of class hours to help you work through the spatial analysis problems that are slowing down your research progress.
+
+2. Balance - The goal of this course is to teach you general approaches and workflows for spatial analyses in R, not to troubleshoot individual coding problems. I will do my best to point you toward resources that can help you solve your individual problems without monopolizing the time of others in class.
+
 ## Course Schedule
 ###  `r advdate(mon, 1)`: Introduction to spatial data and R
 
