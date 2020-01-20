@@ -6,6 +6,7 @@ date: "1/14/2020"
 output: 
     ioslides_presentation:
         css: style.css
+        theme: readable
 ---
 
 ```{r setup, include=FALSE}
