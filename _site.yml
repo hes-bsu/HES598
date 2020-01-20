@@ -21,6 +21,8 @@ navbar:
     menu:
     - text: Getting started with spatial data in R
       href: lesson_welcome_to_space.html
+    - text: Introduction to spatial datatypes
+      href: lesson_datatype_intro.html
   right:
   - text: Contact
     href: contact.html
