@@ -1,0 +1,53 @@
+---
+title: "Introduction to spatial datatypes"
+author: "Matt Williamson"
+date: "1/20/2020"
+output: 
+  ioslides_presentation:
+        css: style.css
+        theme: readable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+```
+
+## Objectives
+By the end of today, you should be able to:
+- Distinguish amongst 3 common spatial data-types
+- Identify the "major" packages for dealing with each datatype
+- Recognize the differences between the objects that each package creates
+
+# Vector Data
+
+## Vector Data
+
+
+## Vector Data
+<div class="columns-2">
+  ![Image Source: Colin Williams (NEON)](./images/points-lines-polygons-vector-data-types.png)
+
+- **Points:** Points defined by a single x, y coordinate. There can be many points in a vector point file. 
+    - *Examples:* sampling locations, control points, addresses
+
+- **Lines:** Lines are composed of many (at least 2) vertices, or points, that are connected. The more vertices, the more complex (i.e., larger in terms of memory) the line.
+    - *Examples:* Roads, rivers, transects
+
+
+- **Polygons:** A polygon consists of 3 or more vertices that are connected and “closed”. Note that self-intersections and holes can lead to invalid geometries that disrupt spatial analyses.
+  - *Examples:* state boundaries, sample sites, buffered transects 
+</div>
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+
