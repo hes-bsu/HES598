@@ -3,7 +3,9 @@ title: "Welcome to Space!"
 subtitle: "HES 598 - Introduction to Spatial Data in R"
 author: "Matt Williamson"
 date: "1/14/2020"
-output: ioslides_presentation
+output: 
+    ioslides_presentation:
+        css: style.css
 ---
 
 ```{r setup, include=FALSE}
