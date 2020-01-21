@@ -127,13 +127,21 @@ p.caption {
 <li><p>Recognize the differences between the objects that each package creates</p></li>
 </ul>
 
+</article></slide><slide class=""><hgroup><h2>Why do you care?</h2></hgroup><article  id="why-do-you-care">
+
+<ul>
+<li><p>Data type affects size, storage, and memory</p></li>
+<li><p>Data type affects (re)projection decisions and data manipulation</p></li>
+<li><p><em>Data type affects which workflow pipelines you choose</em></p></li>
+</ul>
+
 </article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Vector Data</h2></hgroup><article  id="vector-data">
 
 </article></slide><slide class=""><hgroup><h2>Vector Data</h2></hgroup><article  id="vector-data-1">
 
 </article></slide><slide class=""><hgroup><h2>Vector Data</h2></hgroup><article  id="vector-data-2">
 
-<div class="figure">
+<div class="figure" style="text-align: center">
 <img src="images/points-lines-polygons-vector-data-types.png" alt="Image Source: Colin Williams (NEON)" width="379" />
 
 <p class="caption">
@@ -162,21 +170,129 @@ Image Source: Colin Williams (NEON)
 </ul></li>
 </ul>
 
-</article></slide><slide class=""><hgroup><h2>Slide with R Output</h2></hgroup><article  id="slide-with-r-output">
+</article></slide><slide class=""><hgroup><h2>The Workhorses: <code>sp</code></h2></hgroup><article  id="the-workhorses-sp">
 
-<pre class = 'prettyprint lang-r'>summary(cars)</pre>
+<ul>
+<li><p>Historically the most widely-used spatial data management package</p></li>
+<li><p>Combined with <code>rgdal</code> performs many of the commonly used GIS functions</p></li>
+<li><p>Many of the spatial packages depend on funcitons in <code>sp</code></p></li>
+<li><p>Stores data as <code>Spatial*</code> objects (each attribute stored in slots)</p>
 
-<pre >##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00</pre>
+<ul>
+<li>SpatialPolgyonsDataFrame, SpatialLines, SpatialPointsDataframe, etc…</li>
+</ul></li>
+</ul>
 
-</article></slide><slide class=""><hgroup><h2>Slide with Plot</h2></hgroup><article  id="slide-with-plot">
+</article></slide><slide class=""><hgroup><h2>Loading a shapefile with <code>sp</code> and <code>rgdal</code></h2></hgroup><article  id="loading-a-shapefile-with-sp-and-rgdal">
 
-<p><img src="lesson_datatype_intro_files/figure-html/pressure-1.png" width="720" /></p></article></slide>
+<pre class = 'prettyprint lang-r'>library(sp)
+library(rgdal)
+
+idaho &lt;- readOGR(&quot;./data/idaho_cty.shp&quot;)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Inspecting a <code>Spatial*</code> object</h2></hgroup><article  id="inspecting-a-spatial-object">
+
+<pre class = 'prettyprint lang-r'>str(idaho)
+
+head(idaho)
+
+proj4string(idaho)
+
+bbox(idaho)
+
+head(geometry(idaho))</pre>
+
+</article></slide><slide class=""><hgroup><h2>The Workhorses: <code>sf</code></h2></hgroup><article  id="the-workhorses-sf">
+
+<ul>
+<li><p>Relatively new addition to spatial analyses designed for use with the <code>tidyverse</code></p></li>
+<li><p>Still relies on <code>rgdal</code> for many of the commonly used GIS functions</p></li>
+<li><p>Stores data as a combination of <code>sf</code> (for geometries) and a <code>dataframe</code></p></li>
+<li><p>Generally easier (and sometimes faster) to work with, but not as ubiquitous.</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Loading a shapefile with <code>sf</code></h2></hgroup><article  id="loading-a-shapefile-with-sf">
+
+<pre class = 'prettyprint lang-r'>library(sf)
+
+idaho.sf &lt;- st_read(&quot;./data/idaho_cty.shp&quot;)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Inspecting a <code>sf</code> object</h2></hgroup><article  id="inspecting-a-sf-object">
+
+<pre class = 'prettyprint lang-r'>str(idaho.sf)
+
+head(idaho.sf)
+
+proj4string(idaho.sf)
+st_crs(idaho.sf)
+
+st_bbox(idaho.sf)
+
+st_geometry(idaho.sf)</pre>
+
+</article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Raster Data</h2></hgroup><article  id="raster-data">
+
+</article></slide><slide class=""><hgroup><h2>Raster Data</h2></hgroup><article  id="raster-data-1">
+
+</article></slide><slide class=""><hgroup><h2>Raster Data</h2></hgroup><article  id="raster-data-2">
+
+<ul>
+<li><p>Gridded data with a uniform pixel size</p></li>
+<li><p>Typically represents a single variable continuously in space</p></li>
+<li><p>Can be resampled to various resolutions</p></li>
+<li><p>Reprojection problematic</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>The Workhorse: <code>raster</code></h2></hgroup><article  id="the-workhorse-raster">
+
+<ul>
+<li><p><code>raster</code> has functions for the majority of raster operations (not always the fastest)</p>
+
+<ul>
+<li><code>mosaic</code>, <code>extract</code>, <code>reclassify</code>, etc.</li>
+</ul></li>
+<li><p>Lots of options for memory management and large problems</p></li>
+<li><p>Depends on (and improves) <code>sp</code></p></li>
+<li><p>Lots of other &lsquo;operation-specific&rsquo; packages</p>
+
+<ul>
+<li><code>fasterize</code>, <code>velox</code></li>
+</ul></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Loading or creating a raster with <code>raster</code></h2></hgroup><article  id="loading-or-creating-a-raster-with-raster">
+
+<pre class = 'prettyprint lang-r'>library(raster)
+
+id.elev &lt;- raster(&quot;./data/id_elev.tif&quot;)
+id.elev
+head(id.elev)
+summary(id.elev)
+crs(id.elev)
+bbox(id.elev)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Loading or creating a raster with <code>raster</code></h2></hgroup><article  id="loading-or-creating-a-raster-with-raster-1">
+
+<pre class = 'prettyprint lang-r'>r &lt;- raster(ncol=10, nrow=10, xmx=-80, xmn=-150, ymn=20, ymx=60)
+r
+values(r) &lt;- runif(ncell(r))
+extent(r) &lt;- bbox(id.elev)</pre>
+
+</article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Other formats</h2></hgroup><article  id="other-formats">
+
+</article></slide><slide class=""><hgroup><h2>RasterBricks, RasterStacks, NetCDF</h2></hgroup><article  id="rasterbricks-rasterstacks-netcdf">
+
+<ul>
+<li><p>Often more than 2 dimensions of data</p>
+
+<ul>
+<li>Data through time, satelitte bands</li>
+</ul></li>
+<li><p>NetCDF increasingly used to store large datacubes</p></li>
+<li><p><code>raster</code> package can represent multiple data layers as <code>RasterStacks</code> and <code>RasterBricks</code></p></li>
+<li><p><code>stars</code> is a new, <code>tidyverse</code>-inspired approach for dealing with mixed data formats</p></li>
+<li><p>We’ll explore these more when we start extracting data</p></li>
+</ul></article></slide>
 
 
   <slide class="backdrop"></slide>
