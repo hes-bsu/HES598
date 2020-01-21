@@ -7,6 +7,11 @@ output:
         css: style.css
         theme: readable
 ---
+<style>
+p.caption {
+  font-size: 0.6em;
+}
+</style>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -15,8 +20,11 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Objectives
 By the end of today, you should be able to:
+
 - Distinguish amongst 3 common spatial data-types
+
 - Identify the "major" packages for dealing with each datatype
+
 - Recognize the differences between the objects that each package creates
 
 # Vector Data
@@ -25,19 +33,25 @@ By the end of today, you should be able to:
 
 
 ## Vector Data
-<div class="columns-2">
-  ![Image Source: Colin Williams (NEON)](./images/points-lines-polygons-vector-data-types.png)
 
-- **Points:** Points defined by a single x, y coordinate. There can be many points in a vector point file. 
-    - *Examples:* sampling locations, control points, addresses
+```{r vecfig, echo=FALSE, fig.cap="Image Source: Colin Williams (NEON)", fig.height=1.5}
+img1_path <- "./images/points-lines-polygons-vector-data-types.png"
+img1 <- png::readPNG(img1_path, native = TRUE, info = TRUE)
+knitr::include_graphics(img1_path)
+```
 
-- **Lines:** Lines are composed of many (at least 2) vertices, or points, that are connected. The more vertices, the more complex (i.e., larger in terms of memory) the line.
-    - *Examples:* Roads, rivers, transects
+## Vector Data
+
+* **Points:** Points defined by a single x, y coordinate. There can be many points in a vector point file. 
+    + *Examples:* sampling locations, control points, addresses
+
+* **Lines:** Lines are composed of many (at least 2) vertices, or points, that are connected. The more vertices, the more complex (i.e., larger in terms of memory) the line.
+    + *Examples:* Roads, rivers, transects
 
 
-- **Polygons:** A polygon consists of 3 or more vertices that are connected and “closed”. Note that self-intersections and holes can lead to invalid geometries that disrupt spatial analyses.
-  - *Examples:* state boundaries, sample sites, buffered transects 
-</div>
+* **Polygons:** A polygon consists of 3 or more vertices that are connected and “closed”. Note that self-intersections and holes can lead to invalid geometries that disrupt spatial analyses.
+    + *Examples:* state boundaries, sample sites, buffered transects 
+
 
 ## Slide with R Output
 
