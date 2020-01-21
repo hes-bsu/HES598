@@ -223,7 +223,7 @@ idaho.sf &lt;- st_read(&quot;./data/idaho_cty.shp&quot;)</pre>
 
 head(idaho.sf)
 
-proj4string(idaho.sf)
+proj4string(idaho.sf) ##Note sp commands generally don&#39;t work on sf and vice versa
 st_crs(idaho.sf)
 
 st_bbox(idaho.sf)
@@ -267,16 +267,16 @@ st_geometry(idaho.sf)</pre>
 id.elev &lt;- raster(&quot;./data/id_elev.tif&quot;)
 id.elev
 head(id.elev)
-summary(id.elev)
-crs(id.elev)
-bbox(id.elev)</pre>
+summary(id.elev) #rasters are single variables so can summarize them like you would any other vector or matrix
+crs(id.elev) #get the projection
+bbox(id.elev) #get the extent</pre>
 
 </article></slide><slide class=""><hgroup><h2>Loading or creating a raster with <code>raster</code></h2></hgroup><article  id="loading-or-creating-a-raster-with-raster-1">
 
 <pre class = 'prettyprint lang-r'>r &lt;- raster(ncol=10, nrow=10, xmx=-80, xmn=-150, ymn=20, ymx=60)
 r
-values(r) &lt;- runif(ncell(r))
-extent(r) &lt;- bbox(id.elev)</pre>
+values(r) &lt;- runif(ncell(r)) #values on the left side of &lt;- allows you to assign new values to the empty raster
+extent(r) &lt;- bbox(id.elev) #sets the extent of r to match that of the id.elev dataset</pre>
 
 </article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Other formats</h2></hgroup><article  id="other-formats">
 
@@ -292,6 +292,14 @@ extent(r) &lt;- bbox(id.elev)</pre>
 <li><p><code>raster</code> package can represent multiple data layers as <code>RasterStacks</code> and <code>RasterBricks</code></p></li>
 <li><p><code>stars</code> is a new, <code>tidyverse</code>-inspired approach for dealing with mixed data formats</p></li>
 <li><p>We’ll explore these more when we start extracting data</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>More Resources</h2></hgroup><article  id="more-resources">
+
+<ul>
+<li>The Tidyverse:</li>
+<li>&lsquo;sf&rsquo;</li>
+<li>&lsquo;stars&rsquo;</li>
 </ul></article></slide>
 
 
