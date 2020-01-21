@@ -118,7 +118,7 @@ str(idaho.sf)
 
 head(idaho.sf)
 
-proj4string(idaho.sf)
+proj4string(idaho.sf) ##Note sp commands generally don't work on sf and vice versa
 st_crs(idaho.sf)
 
 st_bbox(idaho.sf)
@@ -154,17 +154,17 @@ library(raster)
 id.elev <- raster("./data/id_elev.tif")
 id.elev
 head(id.elev)
-summary(id.elev)
-crs(id.elev)
-bbox(id.elev)
+summary(id.elev) #rasters are single variables so can summarize them like you would any other vector or matrix
+crs(id.elev) #get the projection
+bbox(id.elev) #get the extent
 ```
 
 ## Loading or creating a raster with `raster`
 ```{r createraster, echo=TRUE, eval=FALSE}
 r <- raster(ncol=10, nrow=10, xmx=-80, xmn=-150, ymn=20, ymx=60)
 r
-values(r) <- runif(ncell(r))
-extent(r) <- bbox(id.elev)
+values(r) <- runif(ncell(r)) #values on the left side of <- allows you to assign new values to the empty raster
+extent(r) <- bbox(id.elev) #sets the extent of r to match that of the id.elev dataset
 ```
 
 # Other formats
@@ -181,3 +181,8 @@ extent(r) <- bbox(id.elev)
 * `stars` is a new, `tidyverse`-inspired approach for dealing with mixed data formats
 
 * We'll explore these more when we start extracting data
+
+## More Resources
+* The Tidyverse:
+* 'sf'
+* 'stars'
