@@ -27,14 +27,20 @@ By the end of today, you should be able to:
 
 - Recognize the differences between the objects that each package creates
 
+## Why do you care?
+
+* Data type affects size, storage, and memory
+
+* Data type affects (re)projection decisions and data manipulation
+
+* *Data type affects which workflow pipelines you choose*
+
 # Vector Data
 
 ## Vector Data
-
-
 ## Vector Data
 
-```{r vecfig, echo=FALSE, fig.cap="Image Source: Colin Williams (NEON)", fig.height=1.5}
+```{r vecfig, echo=FALSE, fig.cap="Image Source: Colin Williams (NEON)", fig.height=1.5, fig.align="center"}
 img1_path <- "./images/points-lines-polygons-vector-data-types.png"
 img1 <- png::readPNG(img1_path, native = TRUE, info = TRUE)
 knitr::include_graphics(img1_path)
@@ -53,15 +59,125 @@ knitr::include_graphics(img1_path)
     + *Examples:* state boundaries, sample sites, buffered transects 
 
 
-## Slide with R Output
+## The Workhorses: `sp` 
 
-```{r cars, echo = TRUE}
-summary(cars)
+* Historically the most widely-used spatial data management package
+
+* Combined with `rgdal` performs many of the commonly used GIS functions
+
+* Many of the spatial packages depend on funcitons in `sp`
+
+* Stores data as `Spatial*` objects (each attribute stored in slots)
+    - SpatialPolgyonsDataFrame, SpatialLines, SpatialPointsDataframe, etc...
+
+## Loading a shapefile with `sp` and `rgdal`
+```{r spload, echo = TRUE, eval=FALSE}
+library(sp)
+library(rgdal)
+
+idaho <- readOGR("./data/idaho_cty.shp")
+
 ```
 
-## Slide with Plot
+## Inspecting a `Spatial*` object
 
-```{r pressure}
-plot(pressure)
+```{r spinspect, echo=TRUE, eval=FALSE}
+str(idaho)
+
+head(idaho)
+
+proj4string(idaho)
+
+bbox(idaho)
+
+head(geometry(idaho))
+
+```
+## The Workhorses: `sf` 
+
+* Relatively new addition to spatial analyses designed for use with the `tidyverse`
+
+* Still relies on `rgdal` for many of the commonly used GIS functions
+
+* Stores data as a combination of `sf` (for geometries) and a `dataframe`
+
+* Generally easier (and sometimes faster) to work with, but not as ubiquitous.
+
+## Loading a shapefile with `sf`
+```{r sfload, echo = TRUE, eval=FALSE}
+library(sf)
+
+idaho.sf <- st_read("./data/idaho_cty.shp")
+
 ```
 
+## Inspecting a `sf` object
+
+```{r sfinspect, echo=TRUE, eval=FALSE}
+str(idaho.sf)
+
+head(idaho.sf)
+
+proj4string(idaho.sf)
+st_crs(idaho.sf)
+
+st_bbox(idaho.sf)
+
+st_geometry(idaho.sf)
+```
+# Raster Data
+## Raster Data
+## Raster Data
+* Gridded data with a uniform pixel size
+
+* Typically represents a single variable continuously in space
+
+* Can be resampled to various resolutions
+
+* Reprojection problematic
+
+## The Workhorse: `raster`
+* `raster` has functions for the majority of raster operations (not always the fastest)
+    - `mosaic`, `extract`, `reclassify`, etc.
+
+* Lots of options for memory management and large problems
+
+* Depends on (and improves) `sp`
+
+* Lots of other 'operation-specific' packages
+    - `fasterize`, `velox`
+
+## Loading or creating a raster with `raster`
+```{r ldraster, echo=TRUE, eval=FALSE}
+library(raster)
+
+id.elev <- raster("./data/id_elev.tif")
+id.elev
+head(id.elev)
+summary(id.elev)
+crs(id.elev)
+bbox(id.elev)
+```
+
+## Loading or creating a raster with `raster`
+```{r createraster, echo=TRUE, eval=FALSE}
+r <- raster(ncol=10, nrow=10, xmx=-80, xmn=-150, ymn=20, ymx=60)
+r
+values(r) <- runif(ncell(r))
+extent(r) <- bbox(id.elev)
+```
+
+# Other formats
+
+## RasterBricks, RasterStacks, NetCDF
+
+* Often more than 2 dimensions of data
+    - Data through time, satelitte bands
+
+* NetCDF increasingly used to store large datacubes
+
+* `raster` package can represent multiple data layers as `RasterStacks` and `RasterBricks`
+
+* `stars` is a new, `tidyverse`-inspired approach for dealing with mixed data formats
+
+* We'll explore these more when we start extracting data
