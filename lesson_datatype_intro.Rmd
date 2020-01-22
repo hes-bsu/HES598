@@ -183,13 +183,13 @@ extent(r) <- bbox(id.elev) #sets the extent of r to match that of the id.elev da
 * We'll explore these more when we start extracting data
 
 ## More Resources
-* [R for Data Science]<https://r4ds.had.co.nz>
+* [R for Data Science](https://r4ds.had.co.nz)
 
-* [The Tidyverse]<https://www.tidyverse.org>
+* [The Tidyverse](https://www.tidyverse.org)
 
-* ['sf']<https://r-spatial.github.io/sf/articles/sf1.html>
+* ['sf'](https://r-spatial.github.io/sf/articles/sf1.html)
 
-* ['stars']<https://r-spatial.github.io/stars/>
+* ['stars'](https://r-spatial.github.io/stars/)
 
-*['raster']<https://cran.r-project.org/web/packages/raster/vignettes/Raster.pdf> 
+* ['raster'](https://cran.r-project.org/web/packages/raster/vignettes/Raster.pdf)
 
