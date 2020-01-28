@@ -12,7 +12,7 @@
 
 
 
-<title>Project Management with RStudio</title>
+<title>Collaborating in Rmarkdown</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -434,99 +434,63 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Project Management with RStudio</h1>
+<h1 class="title toc-ignore">Collaborating in Rmarkdown</h1>
 
 </div>
 
 
-<div class="blue">
-<h1 id="learning-objectives">Learning objectives</h1>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>. When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. R Markdown can do the majority of things a typical word processing program (e.g., Microsoft Word), but requires a bit of knowledge about how the syntax works. There’s a lot of help online, but the things I tended to use most when I first started were the RMarkdown Cheat Sheet and Reference guide (got to Help &gt; Cheatsheets inside RStudio) and the <a href="https://daringfireball.net/projects/markdown/syntax">Markdown syntax page</a>.</p>
+<p>For this exercise, I’m going to assign Issues to each of you via our group page at Github. You will create a fork of the repository, complete the Issue assigned to you, commit your changes, push them up to the remote version of your fork, and then issue a “pull request” so I can merge the changes. I’ve set up the document to resemble a simple manuscript format with an Intro, Methods, Results section so you can see the utility of building your code right into documents. We’ll play with formatting, citations, and more complex stuff later on. For now, I just want to demonstrate the workflow.</p>
+</div>
+<div id="introduction-1" class="section level2">
+<h2>Introduction</h2>
+<p>This is where you frame the research question you plan to address in your manuscript. You’ll probably want to reference some relevant literature (I’ll show you this later), clarify where your questions/hypotheses fit in that literature, and maybe even include a conceptual model to help illustrate how the pieces fit together. I’m going to assign an issue on github to a few of you to fill in this part of the document with:</p>
 <ul>
-<li>Understand motivation for code and data management</li>
-<li>Know how to organize code, data, and results</li>
-<li>Know the basics of file paths and directory structures</li>
-<li>Be able to create and use an RStudio project</li>
+<li><p>A brief description of a webpage you like along with an inline link to that webpage.</p></li>
+<li><p>An image along with a brief description of what’s in the image and where it came from (note that you should save the image into the “images” folder that clones with the repository)</p></li>
 </ul>
 </div>
-<p><br></p>
-<div id="working-directory-and-file-paths" class="section level1">
-<h1>Working Directory and File Paths</h1>
-<p>Any time you’re working in R, R needs to know where you are within your computer, which is referred to as the <em>working directory</em>. The working directory could be something like <code>&quot;YourUsername/Documents&quot;</code>, or it could be something more specific like <code>&quot;YourUsername/Documents/GradSchool/Chapter1&quot;</code>. Either way, R will think of everything in your computer as located relative to your working directory. One of the nicest parts of using R Projects is that they automatically set the working directory to the folder containing the .RProject file. You can see your current working directory by running the function <code>getwd()</code>, and you can set it using <code>setwd()</code>, but if you’re using an R Project, you generally shouldn’t mess with this too much.</p>
-<p>All directories and files in R (and most computer languages) are located using <em>file paths</em>. The two working directory examples we just used are written as file paths, with <code>/</code> put between different levels. Within <code>YourUsername</code> there is a folder called <code>Documents</code>, and within that there is a folder called <code>GradSchool</code>, and so on. In R, file paths are always wrapped in quotes. There are 2 basic kinds of file paths: <em>absolute</em> and <em>relative</em>. Absolute paths list out the full file path, usually starting with your username, which you can also refer to using the shortcut <code>~</code>. So instead of <code>YourUsername/Documents</code>, you can type <code>~/Documents</code>. However, if you’ve got folders within folders within folders, typing out absolute paths can get really tedious. <em>Relative</em> paths are <em>relative</em> to your working directory. So if R thinks we’re in that <code>Chapter1</code> folder, and we want to access a folder inside it called <code>data</code>, we can just type <code>data</code> instead of <code>&quot;YourUsername/Documents/GradSchool/Chapter1/data&quot;</code>. What happens if we need to go up a level, into <code>GradSchool</code>? Well we can type <code>..</code> to go up a level. So if we need to grab something from our <code>Chapter2</code> folder, but our working directory is <code>Chapter1</code>, we would type <code>../Chapter2/FileWeWant</code>.</p>
-</div>
-<div id="code-data-organization" class="section level1">
-<h1>Code &amp; Data Organization</h1>
-<p>The scientific process is naturally incremental, and many projects start life as random notes, some code, then a manuscript, and eventually everything is a bit mixed together.</p>
-<blockquote>
-<p>“Your greatest enemy is yourself four months ago” -Every grad student ever A good project layout will ultimately make your life easier:</p>
-</blockquote>
+<div id="methods" class="section level2">
+<h2>Methods</h2>
+<p>This is where Rmarkdown starts to become really useful. You can describe the methods you are using at the same time that you begin to implement them. You do this using code chunks like this one:</p>
+<pre class="r"><code>summary(cars)</code></pre>
+<pre><code>##      speed           dist       
+##  Min.   : 4.0   Min.   :  2.00  
+##  1st Qu.:12.0   1st Qu.: 26.00  
+##  Median :15.0   Median : 36.00  
+##  Mean   :15.4   Mean   : 42.98  
+##  3rd Qu.:19.0   3rd Qu.: 56.00  
+##  Max.   :25.0   Max.   :120.00</code></pre>
+<p>You’ll notice that you can include code chunks from several different languages (R, python, stan) this can be useful if you’re programming across platforms, but I’ve found the implementation for languages outside of R to be pretty difficult.</p>
+<p>The Methods section is usually reserved for descriptions of the analysis and possibly some summary information about the study sites rather than the results of the analysis that you conduct. As such, we’re going to focus on displaying some summary data on the different datasets that ship with R. I’ll assign an issue on github to have someone: * display the summary stats of the “iris” dataset</p>
 <ul>
-<li>It makes it easier to understand the pipeline from source data to final product</li>
-<li>It helps ensure the integrity of your data</li>
-<li>It makes it simpler to share your code with someone else</li>
-<li>It allows you to easily upload your code with your manuscript submission</li>
-<li>It makes it easier to pick the project back up after a break</li>
-</ul>
-<div id="best-practices-for-project-organization" class="section level2">
-<h2>Best practices for project organization</h2>
-<p>Although there is no “best” way to lay out a project, there are some general principles to adhere to that will make project management easier:</p>
-<div id="treat-raw-data-as-read-only" class="section level3">
-<h3>Treat raw data as read only</h3>
-<p>This is probably the most important goal of setting up a project. Raw data should never be edited, because you can never be sure that you will want to keep any edit you make, and you want to have a record of any changes you make to data. Therefore, treat your raw data as “read only”, perhaps even making a <code>raw_data</code> directory that is never modified. If you do some data cleaning or modification, save the modified file separate from the raw data, and ideally keep all the modifying actions in a script so that you can review and revise them as needed in the future.</p>
-</div>
-<div id="treat-generated-output-as-disposable" class="section level3">
-<h3>Treat generated output as disposable</h3>
-<p>Anything generated by your scripts should be treated as disposable: it should all be able to be regenerated from your scripts. There are lots of different ways to manage this output, and what’s best may depend on the particular kind of project. At a minimum, it’s useful to have separate directories for each of the following:</p>
-<ul>
-<li>data: Ideally .csv files as these are flat, transparent, and universal. You may have other specialized formats as well. .rda and .rds are R-specific data files but you never <em>need</em> to use these.</li>
-<li>code: .R files, perhaps .do files if Stata is your thing, .py files for Python, etc.</li>
-<li>results: .png or .pdf files for plots; .tex or .txt files for tables</li>
-<li>papers: .tex if you write in LaTeX, .doc for Word, .Rmd for RMarkdown (which we recommend and will cover tomorrow afternoon), and .pdf or .html rendered documents.</li>
+<li><p>display the summary stats of the “PlantGrowth” dataset</p></li>
+<li><p>display the summary stats of the “USArrests” dataset</p></li>
 </ul>
 </div>
-</div>
-<div id="rstudio-projects" class="section level2">
-<h2>RStudio Projects</h2>
-<p>RStudio has a feature to help keep everything organized in a self-contained, reproducible package, called a “project”.</p>
-<p>A project is a small file with a <code>.Rproj</code> extension, but you can think of all the files and sub-directories as belonging to that project. We recommend creating a directory and a project file for each project you work on. It should look something like this:</p>
-<p><img src="img/working-directory-structure.png" /></p>
-<p>When you want to work on this project using R, double click on the .Rproj file, and RStudio will open it and keep everything organized for you. You can also open an existing project from RStudio by clicking &quot;File -&gt; Open project…</p>
-<br>
-<div class="blue">
-<h3 id="challenge-create-a-project">Challenge – Create a Project</h3>
-<p>Let’s create a new project in RStudio. We won’t use this project today (we will ALWAYS work in the repository we pulled from github), but it’s good practice.</p>
-<ol style="list-style-type: decimal">
-<li>Click the “File” menu button, then “New Project”.</li>
-<li>Click “New Directory”.</li>
-<li>Click “Empty Project”.</li>
-<li>Call your project “test_project_lastname”</li>
-<li>Store the new directory in the R_DAVIS_2020 folder you should have already created on your desktop.</li>
-<li>Click “Create Project”.</li>
-</ol>
-</div>
-<p><br></p>
-<p>If everything went right, RStudio should’ve flickered and you should be looking at a pretty bare RStudio instance. That’s okay. Click on the “Files” tab in the lower right pane. Your .Rproj file should be there with nothing else. You’ve got the bare bones of a new project. Let’s now create the directory structure described above, a folder for each of data, code, results, and papers. You can do this in RStudio by clicking on the “New Folder” button in the Files pane, or in your OS by navigating to the directory you just created.</p>
-<br>
-<div class="blue">
-<h4 id="challenge-project-organization">Challenge – Project Organization</h4>
+<div id="results" class="section level2">
+<h2>Results</h2>
+<p>Now it’s time to show the results of some of your analyses. Again, you’ll use code chunks like the one below to develop plots of your analyses. Note the use of the “echo=FALSE” command in the code chunk. This suppresses the code from rendering when you knit the document. I generally leave this set to “TRUE” when I’m in the draft stage, as that let’s other folks double-check my coding.</p>
+<p><img src="FirstTry_files/figure-html/pressure-1.png" width="672" /></p>
+<p>Then I switch it to “FALSE” when i’m ready to move towards a final product. I’ll assign issues to several of you to:</p>
 <ul>
-<li>In your project directory, either using the Project tab of RStudio or your OS’ file system, create the following directories:
-<ul>
-<li>data</li>
-<li>code</li>
-<li>results</li>
-<li>papers</li>
-</ul></li>
+<li><p>make a correlation plot of the numeric values in the iris dataset (using the package ‘corrplot’ )</p></li>
+<li><p>plot a regression line of the relationship between UrbanPop and Assault using the ‘lm’ command and the USArrests data</p></li>
 </ul>
-<p>The finished product should look something like this on your computer:<br />
-<img src="img/good_project_organization.png" /></p>
-</div>
-<p><br></p>
-<p>Finally, let’s switch back to our R_DAVIS project that we will be working in for the rest of class. Go up to the right hand corner of your screen and click the pull down tab that currently says something like “test_project_lastname.” Once you click it, you can toggle between multiple projects at once by clicking the white square/arrow icon next to the project name. This will allow you to have multiple projects open at once. If you want to switch projects completely, just click the project name (not the white square/arrow icon).</p>
-<p>Let’s do that now. Click on the project you’ve named R_DAVIS_2020. Once RStudio switches to the new project, the tab in the top right corner should read R_DAVIS_2020.</p>
-<hr />
-<p>This lesson is adapted from the Software Carpentry: R for Reproducible Scientific Analysis <a href="http://data-lessons.github.io/gapminder-R/02-project-intro.html">Project management with RStudio materials</a> and the Data Carpentry: R for data analysis and visualization of Ecological Data <a href="http://www.datacarpentry.org/R-ecology-lesson/00-before-we-start.html">Before We Start materials</a>.</p>
-</div>
+<pre class="r"><code>#Create regression between Urban Population and assaumt arrests (per 100,000)
+Regression&lt;-lm(Assault ~ UrbanPop, USArrests) 
+
+#plot the regression line on top of a scatter plot 
+with(USArrests, plot(UrbanPop,Assault,xlab = &quot;Percent Urban Population&quot;, ylab = &quot;Assault Arrests (per 100,000)&quot; )) 
+abline(Regression)</code></pre>
+<p><img src="FirstTry_files/figure-html/USArrests-1.png" width="672" /></p>
+<ul>
+<li><p>plot a histogram of the ‘weight’ variable in the PlantGrowth dataset</p></li>
+<li><p>Use the kableExtra package to create atable of the regression results from a linear regression of the relationship between Sepal.Length and Petal.Length in the iris dataset.</p></li>
+</ul>
+<p>Remember, you can use ? to at the prompt to learn more about a command (e.g., ?plot will tell you about the usage of the plot command). Send me questions if you need help!! Good luck.</p>
 </div>
 
 

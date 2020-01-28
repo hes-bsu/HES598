@@ -15,7 +15,9 @@ navbar:
     - text: Intro to Programming, R, & RStudio
       href: lesson_intro_r_rstudio.html
     - text: Project Management
-      href: lesson_project_management.html  
+      href: lesson_project_management.html
+    - text: Intro to git with Rmarkdown
+      href: lesson_git_markdown.html
   - text: Course Materials
     icon: fa-desktop  fa-1x
     menu:
@@ -23,6 +25,8 @@ navbar:
       href: lesson_welcome_to_space.html
     - text: Introduction to spatial datatypes
       href: lesson_datatype_intro.html
+    - text: Finding alignment, joins, and extraction
+      href: lesson_align_join_extract.html
   right:
   - text: Contact
     href: contact.html

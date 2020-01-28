@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Projections, joins, and extractions</title>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="generator" content="pandoc" />
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <base target="_blank">
+
+  <script type="text/javascript">
+    var SLIDE_CONFIG = {
+      // Slide settings
+      settings: {
+                title: 'Projections, joins, and extractions',
+                        useBuilds: true,
+        usePrettify: true,
+        enableSlideAreas: true,
+        enableTouch: true,
+                      },
+
+      // Author information
+      presenters: [
+            {
+        name:  'Matt Williamson' ,
+        company: '',
+        gplus: '',
+        twitter: '',
+        www: '',
+        github: ''
+      },
+            ]
+    };
+  </script>
+
+  <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="site_libs/bootstrap-3.3.5/css/readable.min.css" rel="stylesheet" />
+  <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+  <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+  <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+  <link href="site_libs/ioslides-13.5.1/fonts/fonts.css" rel="stylesheet" />
+  <link href="site_libs/ioslides-13.5.1/theme/css/default.css" rel="stylesheet" />
+  <link href="site_libs/ioslides-13.5.1/theme/css/phone.css" rel="stylesheet" />
+  <script src="site_libs/ioslides-13.5.1/js/modernizr.custom.45394.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/prettify.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/lang-r.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/lang-yaml.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/hammer.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/slide-controller.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/slide-deck.js"></script>
+
+  <style type="text/css">
+
+    b, strong {
+      font-weight: bold;
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    summary {
+      display: list-item;
+    }
+
+    slides > slide {
+      -webkit-transition: all 0.4s ease-in-out;
+      -moz-transition: all 0.4s ease-in-out;
+      -o-transition: all 0.4s ease-in-out;
+      transition: all 0.4s ease-in-out;
+    }
+
+    .auto-fadein {
+      -webkit-transition: opacity 0.6s ease-in;
+      -webkit-transition-delay: 0.4s;
+      -moz-transition: opacity 0.6s ease-in 0.4s;
+      -o-transition: opacity 0.6s ease-in 0.4s;
+      transition: opacity 0.6s ease-in 0.4s;
+      opacity: 0;
+    }
+/* https://github.com/ropensci/plotly/pull/524#issuecomment-468142578 */
+slide:not(.current) .plotly.html-widget{
+  display: block;
+}
+
+  </style>
+
+  <link rel="stylesheet" href="style.css" type="text/css" />
+
+</head>
+
+<body style="opacity: 0">
+
+<slides>
+
+  <slide class="title-slide segue nobackground">
+        <!-- The content of this hgroup is replaced programmatically through the slide_config.json. -->
+    <hgroup class="auto-fadein">
+      <h1 data-config-title><!-- populated from slide_config.json --></h1>
+      <h2 data-config-subtitle><!-- populated from slide_config.json --></h2>
+      <p data-config-presenter><!-- populated from slide_config.json --></p>
+            <p style="margin-top: 6px; margin-left: -2px;">1/27/2020</p>
+          </hgroup>
+  </slide>
+
+<slide class=""><hgroup><h2>Objectives</h2></hgroup><article  id="objectives">
+
+<p>By the end of today, you should be able to:</p>
+
+<ul>
+<li><p>Access, understand, and change the projection of a <code>Spatial*</code> and <code>sf</code> object</p></li>
+<li><p>Join datasets by attribute or location</p></li>
+<li><p>Implement a workflow for extracting raster data to polygons (i.e., zonal stats)</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Projections</h2></hgroup><article  id="projections">
+
+<div class="figure" style="text-align: center">
+<img src="images/projections.png" alt="Image Source: M. Corey, opennews.org" width="500" />
+
+<p class="caption">
+
+Image Source: M. Corey, opennews.org
+
+</p></div>
+
+</article></slide><slide class=""><hgroup><h2>Projections</h2></hgroup><article  id="projections-1">
+
+<p><img src="lesson_align_join_extract_files/figure-html/usproj-1.png" width="720" /></p>
+
+<ul>
+<li><p>Projections tell your computer how to &lsquo;flatten&rsquo; your data into a 2-dimensional map</p></li>
+<li><p>Goal is to choose projection that best maintains <em>both</em> distance and direction</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>The Coordinate Reference System</h2></hgroup><article  id="the-coordinate-reference-system">
+
+<ul>
+<li>Coordinate Reference System (CRS) provides standardized way of describing location and projection
+
+<ul>
+<li><p><code>R</code> stores this information as either a <code>proj4</code> string, an <code>EPSG</code> code</p></li>
+<li><p>ESRI, ENVI, and a few other platforms also use <code>WKT</code>, the &ldquo;Well-known text&rdquo; format.</p></li>
+</ul></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Anatomy of a Coordinate Reference System</h2></hgroup><article  id="anatomy-of-a-coordinate-reference-system">
+
+<ul>
+<li><p>A CRS generally contains:</p>
+
+<ul>
+<li><p>the Ellipsoid: Describes the general shape of the globe (not exactly spherical)</p></li>
+<li><p>the Datum: Defines the origin and orientation of the coordinate access</p></li>
+<li><p>the Projection: Projects the globe onto a 2-D surface</p></li>
+<li><p>the units: the units of the map (e.g., meters, decimal degrees, arc-seconds)</p></li>
+<li><p>the conversion used to convert to the ellipsoid</p></li>
+</ul></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Accessing the CRS in R</h2></hgroup><article  id="accessing-the-crs-in-r">
+
+<pre class = 'prettyprint lang-r'>idaho &lt;- rgdal::readOGR(&quot;./data/idaho_cty.shp&quot;)
+sp::proj4string(idaho)
+
+idaho.sf &lt;- sf::st_read(&quot;./data/idaho_cty.shp&quot;)
+sf::st_crs(idaho.sf)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Re-projections in <code>sp</code></h2></hgroup><article  id="re-projections-in-sp">
+
+<pre class = 'prettyprint lang-r'>#choose a few projections
+nad83 &lt;- &quot;+init=epsg:4269&quot;
+idaho.cent &lt;- &quot;+proj=tmerc +lat_0=41.66666666666666 +lon_0=-114 +k=0.9999473679999999 +x_0=500000.0001016001 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs &quot; 
+
+idaho.83 &lt;- spTransform(idaho, CRS(nad83))
+idaho.c &lt;- spTransform(idaho, CRS(idaho.cent))
+
+#are they different?
+identicalCRS(idaho.83, idaho.c)
+
+#reproject idaho.cent
+idaho.reproj &lt;- spTransform(idaho.83, proj4string(idaho.c))
+
+#are they different?
+identicalCRS(idaho.c, idaho.reproj)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Re-projections in <code>sf</code></h2></hgroup><article  id="re-projections-in-sf">
+
+<pre class = 'prettyprint lang-r'>#choose a few projections
+nad83 &lt;- &quot;+init=epsg:4269&quot;
+idaho.cent &lt;- &quot;+proj=tmerc +lat_0=41.66666666666666 +lon_0=-114 +k=0.9999473679999999 +x_0=500000.0001016001 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs &quot; 
+
+idaho.sf.83 &lt;- sf::st_transform(idaho.sf, nad83)
+idaho.sf.c &lt;- sf::st_transform(idaho.sf, idaho.cent)
+## are they the same?
+st_crs(idaho.sf.83) == st_crs(idaho.sf.c)
+
+##reproject using sf syntax
+idaho.sf.reproj &lt;- st_transform(idaho.sf.83, st_crs(idaho.sf.c))
+
+## are they the same?
+st_crs(idaho.sf.reproj) == st_crs(idaho.sf.c)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Joining attributes to spatial data</h2></hgroup><article  id="joining-attributes-to-spatial-data">
+
+<ul>
+<li><p>Sometimes we want to add addtional attributes to our vector data</p></li>
+<li><p>We can &ldquo;Join&rdquo; data together by shared attributes or locations</p>
+
+<ul>
+<li><p>inner join: all rows from df1 with matching values in df2</p></li>
+<li><p>left join: all rows from df1 and all columns from df1 and df2 (NAs where no match)</p></li>
+<li><p>right join: all rows from df2 and all columns from df1 and df2</p></li>
+</ul></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Joins continued</h2></hgroup><article  id="joins-continued">
+
+<ul>
+<li><p>full join: all rows and columns from both dfs</p></li>
+<li><p>semi join: all rows from df1 with matching values in df2, only columns from df1</p></li>
+<li><p>anti join: all rows from df1 without matching values in df2, only columns from df2</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Joining by attributes using <code>sp</code> and <code>tigris</code></h2></hgroup><article  id="joining-by-attributes-using-sp-and-tigris">
+
+<pre class = 'prettyprint lang-r'>head(idaho.83@data)
+
+#load a tabular dataset
+idaho.nonprof &lt;- read.csv(&quot;./data/bmfcount.csv&quot;, stringsAsFactors = FALSE, colClasses = &quot;character&quot;)
+head(idaho.nonprof)
+
+#join based on the columns that match
+idaho.join &lt;- tigris::geo_join(idaho.83, data_frame = idaho.nonprof, by_sp = &quot;GEOID&quot;, by_df=&quot;FIPS&quot;, how=&quot;left&quot;)
+head(idaho.join@data)
+str(idaho.join@data)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Joining by attrbutes using <code>sf</code></h2></hgroup><article  id="joining-by-attrbutes-using-sf">
+
+<pre class = 'prettyprint lang-r'>head(idaho.sf.83)
+str(idaho.sf.83)
+
+idaho.join.sf &lt;- idaho.sf.83 %&gt;% 
+  left_join(., idaho.nonprof, by = c(&quot;GEOID&quot; = &quot;FIPS&quot;))
+head(idaho.join.sf)
+str(idaho.join.sf)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Join by location in &lsquo;sp&rsquo;</h2></hgroup><article  id="join-by-location-in-sp">
+
+<ul>
+<li><p>can use <code>over</code> from <code>sp</code></p></li>
+<li><p>Sometimes strange behavior when more than one intersection</p></li>
+<li><p>Can also use <code>gIntersects</code> from <code>rgeos</code> or <code>union</code> from <code>raster</code> but syntax bcomes more complicated</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Join by location in &lsquo;sp&rsquo;</h2></hgroup><article  id="join-by-location-in-sp-1">
+
+<pre class = 'prettyprint lang-r'>#get some places within counties
+idaho.places &lt;- tigris::places(state=&quot;16&quot;, year = &quot;2015&quot;)
+
+#Ar the projections the same
+identicalCRS(idaho.join, idaho.places)
+
+#need to reproject idaho.places
+idaho.places.proj &lt;- spTransform(idaho.places, proj4string(idaho.join))
+
+#join based on location
+nonprof.join &lt;- cbind(over(idaho.join, idaho.places.proj), as.data.frame(idaho.join))
+
+str(nonprof.join)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Joining attributes by location in <code>sf</code></h2></hgroup><article  id="joining-attributes-by-location-in-sf">
+
+<pre class = 'prettyprint lang-r'>idaho.places.sf &lt;- as(idaho.places, &quot;sf&quot;)
+
+#need to reproject idaho.places
+idaho.places.proj.sf &lt;- st_transform(idaho.places.sf, st_crs(idaho.join.sf))
+
+##using st_join
+nonprof.join.sf &lt;- st_join(idaho.join.sf, idaho.places.proj.sf, join=st_overlaps)
+str(nonprof.join.sf)
+
+nonprof.join.sf &lt;- st_join(idaho.join.sf, idaho.places.proj.sf, join=st_intersects)
+str(nonprof.join.sf)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Extracting Data from Rasters</h2></hgroup><article  id="extracting-data-from-rasters">
+
+<ul>
+<li><p>Similar to Zonal Stats in ArcGIS</p></li>
+<li><p>Necessary when developing dataframes for statistical analyses</p></li>
+<li><p>Lots of ways to do it. Trade-offs in memory, computational speed, and flexibility of outputs.</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Extracting Data from Rasters</h2></hgroup><article  id="extracting-data-from-rasters-1">
+
+<pre class = 'prettyprint lang-r'>#load the raster
+elev &lt;- raster(&quot;./data/id_elev.tif&quot;)
+#check the projection
+identicalCRS(idaho.83, elev)
+#project the vector to the raster!
+idaho.proj &lt;- spTransform(idaho.83, proj4string(elev))
+
+#using extract from raster package
+idaho.ext &lt;- raster::extract(elev, idaho.proj)
+idaho.ext.mn &lt;- raster::extract(elev, idaho.proj, fun=mean)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Extracting Data from Rasters (cont’d)</h2></hgroup><article  id="extracting-data-from-rasters-contd">
+
+<pre class = 'prettyprint lang-r'>#using velox
+elev.vx &lt;- velox(elev)
+elev.ext.vx &lt;- elev.vx$extract(sp = idaho.proj)
+#with sf
+idaho.proj.sf &lt;- st_transform(idaho.sf.83, st_crs(elev))
+elev.ext.vx.sf &lt;- elev.vx$extract(sp = idaho.proj.sf)
+
+#with fasterize and 
+idaho.cty.rstr &lt;- fasterize(as(idaho.proj, &quot;sf&quot;), raster = elev, field = &quot;GEOID&quot;)
+
+idaho.zones &lt;- zonal(elev, idaho.cty.rstr, fun=&quot;mean&quot;)
+head(idaho.zones)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Additional references</h2></hgroup><article  id="additional-references">
+
+<ul>
+<li>Projections and Coordinate Reference Systems
+
+<ul>
+<li><p><a href='https://spatialreference.org/ref/epsg/' title=''>CRS library</a>: searchable website for all of the EPSG and proj4 values for different projections</p></li>
+<li><p><a href='https://source.opennews.org/articles/choosing-right-map-projection/' title=''>Choosing the right map projection</a>: A deeper exploration of why projections matter and rules of thumb for selecting them.</p></li>
+<li><p><a href='https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf' title=''>NCEAS cheatsheet on CRS data in R</a>: A description of how projections are developed, some best practices, and examples using <code>sp</code> and <code>rgdal</code>.</p></li>
+</ul></li>
+</ul></article></slide>
+
+
+  <slide class="backdrop"></slide>
+
+</slides>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+<!-- map slide visiblity events into shiny -->
+<script>
+  (function() {
+    if (window.jQuery) {
+       window.jQuery(document).on('slideleave', function(e) {
+         window.jQuery(e.target).trigger('hidden');
+      });
+       window.jQuery(document).on('slideenter', function(e) {
+         window.jQuery(e.target).trigger('shown');
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>
