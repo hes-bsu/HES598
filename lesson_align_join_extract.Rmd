@@ -15,7 +15,6 @@ library(raster)
 library(velox)
 library(sf)
 library(sp)
-library(velox)
 library(tigris)
 library(tidyverse)
 library(maps)
@@ -162,7 +161,7 @@ str(idaho.join@data)
 
 
 ## Joining by attrbutes using `sf`
-```{r}
+```{r sfjoin, eval=FALSE}
 head(idaho.sf.83)
 str(idaho.sf.83)
 
@@ -182,6 +181,7 @@ str(idaho.join.sf)
 
 - Can also use `gIntersects` from `rgeos` or `union` from `raster` but syntax bcomes more complicated
 
+## Join by location in 'sp'
 ```{r spatialjoinsp, eval=FALSE}
 #get some places within counties
 idaho.places <- tigris::places(state="16", year = "2015")
@@ -197,6 +197,58 @@ nonprof.join <- cbind(over(idaho.join, idaho.places.proj), as.data.frame(idaho.j
 
 str(nonprof.join)
 
+```
+
+## Joining attributes by location in `sf`
+```{r joinsf, eval=FALSE}
+idaho.places.sf <- as(idaho.places, "sf")
+
+#need to reproject idaho.places
+idaho.places.proj.sf <- st_transform(idaho.places.sf, st_crs(idaho.join.sf))
+
+##using st_join
+nonprof.join.sf <- st_join(idaho.join.sf, idaho.places.proj.sf, join=st_overlaps)
+str(nonprof.join.sf)
+
+nonprof.join.sf <- st_join(idaho.join.sf, idaho.places.proj.sf, join=st_intersects)
+str(nonprof.join.sf)
+```
+
+## Extracting Data from Rasters
+
+- Similar to Zonal Stats in ArcGIS
+
+- Necessary when developing dataframes for statistical analyses
+
+- Lots of ways to do it. Trade-offs in memory, computational speed, and flexibility of outputs.
+
+## Extracting Data from Rasters
+```{r ext1, eval=FALSE}
+#load the raster
+elev <- raster("./data/id_elev.tif")
+#check the projection
+identicalCRS(idaho.83, elev)
+#project the vector to the raster!
+idaho.proj <- spTransform(idaho.83, proj4string(elev))
+
+#using extract from raster package
+idaho.ext <- raster::extract(elev, idaho.proj)
+idaho.ext.mn <- raster::extract(elev, idaho.proj, fun=mean)
+```
+## Extracting Data from Rasters (cont'd)
+```{r ext2, eval=FALSE}
+#using velox
+elev.vx <- velox(elev)
+elev.ext.vx <- elev.vx$extract(sp = idaho.proj)
+#with sf
+idaho.proj.sf <- st_transform(idaho.sf.83, st_crs(elev))
+elev.ext.vx.sf <- elev.vx$extract(sp = idaho.proj.sf)
+
+#with fasterize and 
+idaho.cty.rstr <- fasterize(as(idaho.proj, "sf"), raster = elev, field = "GEOID")
+
+idaho.zones <- zonal(elev, idaho.cty.rstr, fun="mean")
+head(idaho.zones)
 ```
 
 
