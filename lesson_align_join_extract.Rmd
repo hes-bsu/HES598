@@ -161,7 +161,7 @@ str(idaho.join@data)
 
 
 ## Joining by attrbutes using `sf`
-```{r}
+```{r sfjoin, eval=FALSE}
 head(idaho.sf.83)
 str(idaho.sf.83)
 
@@ -181,6 +181,7 @@ str(idaho.join.sf)
 
 - Can also use `gIntersects` from `rgeos` or `union` from `raster` but syntax bcomes more complicated
 
+## Join by location in 'sp'
 ```{r spatialjoinsp, eval=FALSE}
 #get some places within counties
 idaho.places <- tigris::places(state="16", year = "2015")
