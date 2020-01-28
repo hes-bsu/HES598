@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
 
 <meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -92,6 +93,7 @@ code {
 }
 img {
   max-width:100%;
+  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -240,7 +242,6 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
-  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -272,12 +273,6 @@ $(document).ready(function () {
 }
 }
 
-@media print {
-.toc-content {
-  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
-  float: right;
-}
-}
 
 .toc-content {
   padding-left: 30px;
@@ -471,13 +466,13 @@ div.tocify {
 </ul>
 <ol start="3" style="list-style-type: decimal">
 <li><p>Open FirstTry.Rmd</p></li>
-<li><p>Create a local branch (or fork) of the repository by clicking on the fork <img src="images/forkbutton.png" alt="alt text" /> button</p></li>
-<li><p>Make your changes based on what was assigned to you in the Issue. Be careful to make your changes in the location where they are identified in the document.</p></li>
+<li>Create a local branch (or fork) of the repository by clicking on the fork <img src="images/forkbutton.png" alt="alt text" /> button</li>
+<li>Make your changes based on what was assigned to you in the Issue. Be careful to make your changes in the location where they are identified in the document.</li>
 <li><p>Save your file (still as FirstTry.Rmd). This will place the file with a tickbox next to it in your “Git” screen. Select the tickbox next to FirstTry.Rmd and push the commit button. That should open a screen that looks like this <img src="images/commitscreen.png" alt="alt text" /></p></li>
 </ol>
 <p>note the name of my local branch in the top left corner - if this still say ‘master’ don’t commit! you haven’t switched to your local branch</p>
 <div class="figure">
-<img src="images/whichbranch.png" alt="" />
+<img src="images/whichbranch.png" alt="alt text" />
 <p class="caption">alt text</p>
 </div>
 <ol start="7" style="list-style-type: decimal">

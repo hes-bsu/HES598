@@ -105,7 +105,7 @@ slide:not(.current) .plotly.html-widget{
         <!-- The content of this hgroup is replaced programmatically through the slide_config.json. -->
     <hgroup class="auto-fadein">
       <h1 data-config-title><!-- populated from slide_config.json --></h1>
-      
+      <h2 data-config-subtitle><!-- populated from slide_config.json --></h2>
       <p data-config-presenter><!-- populated from slide_config.json --></p>
             <p style="margin-top: 6px; margin-left: -2px;">1/27/2020</p>
           </hgroup>
@@ -123,7 +123,7 @@ slide:not(.current) .plotly.html-widget{
 
 </article></slide><slide class=""><hgroup><h2>Projections</h2></hgroup><article  id="projections">
 
-<div class="figure" style="text-align: center">
+<div style="text-align: center" class="figure">
 <img src="images/projections.png" alt="Image Source: M. Corey, opennews.org" width="500" />
 
 <p class="caption">
@@ -168,32 +168,164 @@ Image Source: M. Corey, opennews.org
 
 </article></slide><slide class=""><hgroup><h2>Accessing the CRS in R</h2></hgroup><article  id="accessing-the-crs-in-r">
 
-<pre class = 'prettyprint lang-r'>idaho &lt;- rgdal::readOGR(&quot;./data/idaho_cty.shp&quot;)</pre>
+<pre class = 'prettyprint lang-r'>idaho &lt;- rgdal::readOGR(&quot;./data/idaho_cty.shp&quot;)
+sp::proj4string(idaho)
 
-<pre >## OGR data source with driver: ESRI Shapefile 
-## Source: &quot;/Users/mattwilliamson/Courses/HES598/data/idaho_cty.shp&quot;, layer: &quot;idaho_cty&quot;
-## with 44 features
-## It has 17 fields</pre>
+idaho.sf &lt;- sf::st_read(&quot;./data/idaho_cty.shp&quot;)
+sf::st_crs(idaho.sf)</pre>
 
-<pre class = 'prettyprint lang-r'>sp::proj4string(idaho)</pre>
+</article></slide><slide class=""><hgroup><h2>Re-projections in <code>sp</code></h2></hgroup><article  id="re-projections-in-sp">
 
-<pre >## [1] &quot;+proj=longlat +ellps=GRS80 +no_defs&quot;</pre>
+<pre class = 'prettyprint lang-r'>#choose a few projections
+nad83 &lt;- &quot;+init=epsg:4269&quot;
+idaho.cent &lt;- &quot;+proj=tmerc +lat_0=41.66666666666666 +lon_0=-114 +k=0.9999473679999999 +x_0=500000.0001016001 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs &quot; 
 
-<pre class = 'prettyprint lang-r'>idaho.sf &lt;- sf::st_read(&quot;./data/idaho_cty.shp&quot;)</pre>
+idaho.83 &lt;- spTransform(idaho, CRS(nad83))
+idaho.c &lt;- spTransform(idaho, CRS(idaho.cent))
 
-<pre >## Reading layer `idaho_cty&#39; from data source `/Users/mattwilliamson/Courses/HES598/data/idaho_cty.shp&#39; using driver `ESRI Shapefile&#39;
-## Simple feature collection with 44 features and 17 fields
-## geometry type:  POLYGON
-## dimension:      XY
-## bbox:           xmin: -117.243 ymin: 41.98818 xmax: -111.0435 ymax: 49.00091
-## epsg (SRID):    NA
-## proj4string:    +proj=longlat +ellps=GRS80 +no_defs</pre>
+#are they different?
+identicalCRS(idaho.83, idaho.c)
 
-<pre class = 'prettyprint lang-r'>sf::st_crs(idaho.sf)</pre>
+#reproject idaho.cent
+idaho.reproj &lt;- spTransform(idaho.83, proj4string(idaho.c))
 
-<pre >## Coordinate Reference System:
-##   No EPSG code
-##   proj4string: &quot;+proj=longlat +ellps=GRS80 +no_defs&quot;</pre>
+#are they different?
+identicalCRS(idaho.c, idaho.reproj)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Re-projections in <code>sf</code></h2></hgroup><article  id="re-projections-in-sf">
+
+<pre class = 'prettyprint lang-r'>#choose a few projections
+nad83 &lt;- &quot;+init=epsg:4269&quot;
+idaho.cent &lt;- &quot;+proj=tmerc +lat_0=41.66666666666666 +lon_0=-114 +k=0.9999473679999999 +x_0=500000.0001016001 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs &quot; 
+
+idaho.sf.83 &lt;- sf::st_transform(idaho.sf, nad83)
+idaho.sf.c &lt;- sf::st_transform(idaho.sf, idaho.cent)
+## are they the same?
+st_crs(idaho.sf.83) == st_crs(idaho.sf.c)
+
+##reproject using sf syntax
+idaho.sf.reproj &lt;- st_transform(idaho.sf.83, st_crs(idaho.sf.c))
+
+## are they the same?
+st_crs(idaho.sf.reproj) == st_crs(idaho.sf.c)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Joining attributes to spatial data</h2></hgroup><article  id="joining-attributes-to-spatial-data">
+
+<ul>
+<li><p>Sometimes we want to add addtional attributes to our vector data</p></li>
+<li><p>We can &ldquo;Join&rdquo; data together by shared attributes or locations</p>
+
+<ul>
+<li><p>inner join: all rows from df1 with matching values in df2</p></li>
+<li><p>left join: all rows from df1 and all columns from df1 and df2 (NAs where no match)</p></li>
+<li><p>right join: all rows from df2 and all columns from df1 and df2</p></li>
+</ul></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Joins continued</h2></hgroup><article  id="joins-continued">
+
+<ul>
+<li><p>full join: all rows and columns from both dfs</p></li>
+<li><p>semi join: all rows from df1 with matching values in df2, only columns from df1</p></li>
+<li><p>anti join: all rows from df1 without matching values in df2, only columns from df2</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Joining by attributes using <code>sp</code> and <code>tigris</code></h2></hgroup><article  id="joining-by-attributes-using-sp-and-tigris">
+
+<pre class = 'prettyprint lang-r'>head(idaho.83@data)
+
+#load a tabular dataset
+idaho.nonprof &lt;- read.csv(&quot;./data/bmfcount.csv&quot;, stringsAsFactors = FALSE, colClasses = &quot;character&quot;)
+head(idaho.nonprof)
+
+#join based on the columns that match
+idaho.join &lt;- tigris::geo_join(idaho.83, data_frame = idaho.nonprof, by_sp = &quot;GEOID&quot;, by_df=&quot;FIPS&quot;, how=&quot;left&quot;)
+head(idaho.join@data)
+str(idaho.join@data)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Joining by attrbutes using <code>sf</code></h2></hgroup><article  id="joining-by-attrbutes-using-sf">
+
+<pre class = 'prettyprint lang-r'>head(idaho.sf.83)
+str(idaho.sf.83)
+
+idaho.join.sf &lt;- idaho.sf.83 %&gt;% 
+  left_join(., idaho.nonprof, by = c(&quot;GEOID&quot; = &quot;FIPS&quot;))
+head(idaho.join.sf)
+str(idaho.join.sf)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Join by location in &lsquo;sp&rsquo;</h2></hgroup><article  id="join-by-location-in-sp">
+
+<ul>
+<li><p>can use <code>over</code> from <code>sp</code></p></li>
+<li><p>Sometimes strange behavior when more than one intersection</p></li>
+<li><p>Can also use <code>gIntersects</code> from <code>rgeos</code> or <code>union</code> from <code>raster</code> but syntax bcomes more complicated</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Join by location in &lsquo;sp&rsquo;</h2></hgroup><article  id="join-by-location-in-sp-1">
+
+<pre class = 'prettyprint lang-r'>#get some places within counties
+idaho.places &lt;- tigris::places(state=&quot;16&quot;, year = &quot;2015&quot;)
+
+#Ar the projections the same
+identicalCRS(idaho.join, idaho.places)
+
+#need to reproject idaho.places
+idaho.places.proj &lt;- spTransform(idaho.places, proj4string(idaho.join))
+
+#join based on location
+nonprof.join &lt;- cbind(over(idaho.join, idaho.places.proj), as.data.frame(idaho.join))
+
+str(nonprof.join)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Joining attributes by location in <code>sf</code></h2></hgroup><article  id="joining-attributes-by-location-in-sf">
+
+<pre class = 'prettyprint lang-r'>idaho.places.sf &lt;- as(idaho.places, &quot;sf&quot;)
+
+#need to reproject idaho.places
+idaho.places.proj.sf &lt;- st_transform(idaho.places.sf, st_crs(idaho.join.sf))
+
+##using st_join
+nonprof.join.sf &lt;- st_join(idaho.join.sf, idaho.places.proj.sf, join=st_overlaps)
+str(nonprof.join.sf)
+
+nonprof.join.sf &lt;- st_join(idaho.join.sf, idaho.places.proj.sf, join=st_intersects)
+str(nonprof.join.sf)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Extracting Data from Rasters</h2></hgroup><article  id="extracting-data-from-rasters">
+
+<ul>
+<li><p>Similar to Zonal Stats in ArcGIS</p></li>
+<li><p>Necessary when developing dataframes for statistical analyses</p></li>
+<li><p>Lots of ways to do it. Trade-offs in memory, computational speed, and flexibility of outputs.</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Extracting Data from Rasters</h2></hgroup><article  id="extracting-data-from-rasters-1">
+
+<pre class = 'prettyprint lang-r'>#load the raster
+elev &lt;- raster(&quot;./data/id_elev.tif&quot;)
+#check the projection
+identicalCRS(idaho.83, elev)
+#project the vector to the raster!
+idaho.proj &lt;- spTransform(idaho.83, proj4string(elev))
+
+#using extract from raster package
+idaho.ext &lt;- raster::extract(elev, idaho.proj)
+idaho.ext.mn &lt;- raster::extract(elev, idaho.proj, fun=mean)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Extracting Data from Rasters (cont’d)</h2></hgroup><article  id="extracting-data-from-rasters-contd">
+
+<pre class = 'prettyprint lang-r'>#using velox
+elev.vx &lt;- velox(elev)
+elev.ext.vx &lt;- elev.vx$extract(sp = idaho.proj)
+#with sf
+idaho.proj.sf &lt;- st_transform(idaho.sf.83, st_crs(elev))
+elev.ext.vx.sf &lt;- elev.vx$extract(sp = idaho.proj.sf)
+
+#with fasterize and 
+idaho.cty.rstr &lt;- fasterize(as(idaho.proj, &quot;sf&quot;), raster = elev, field = &quot;GEOID&quot;)
+
+idaho.zones &lt;- zonal(elev, idaho.cty.rstr, fun=&quot;mean&quot;)
+head(idaho.zones)</pre>
 
 </article></slide><slide class=""><hgroup><h2>Additional references</h2></hgroup><article  id="additional-references">
 
