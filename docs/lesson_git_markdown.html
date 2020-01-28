@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
+<meta name="author" content="Matt Williamson" />
 
 
-<title>README.utf8.md</title>
+<title>Intro to Rmarkdown and Git</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -27,6 +27,8 @@
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
 <link rel="stylesheet" href="site_libs_extra/academicons-1.8.0/css/academicons.css"/>
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -90,7 +92,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -239,6 +240,7 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -270,6 +272,12 @@ $(document).ready(function () {
 }
 }
 
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
 
 .toc-content {
   padding-left: 30px;
@@ -379,6 +387,9 @@ div.tocify {
     <li>
       <a href="lesson_project_management.html">Project Management</a>
     </li>
+    <li>
+      <a href="lesson_git_markdown.html">Intro to git with Rmarkdown</a>
+    </li>
   </ul>
 </li>
 <li class="dropdown">
@@ -395,6 +406,9 @@ div.tocify {
     </li>
     <li>
       <a href="lesson_datatype_intro.html">Introduction to spatial datatypes</a>
+    </li>
+    <li>
+      <a href="lesson_align_join_extract.html">Finding alignment, joins, and extraction</a>
     </li>
   </ul>
 </li>
@@ -426,13 +440,51 @@ div.tocify {
 
 
 
+<h1 class="title toc-ignore">Intro to Rmarkdown and Git</h1>
+<h4 class="author">Matt Williamson</h4>
+<h4 class="date">1/27/2020</h4>
 
 </div>
 
 
-<div id="hes598" class="section level1">
-<h1>HES598</h1>
-<p>This is the <a href="https://hes-bsu.github.io/HES598/">WEBSITE</a> for HES 598: Intro to Spatial Data in R at Boise State University.</p>
+<div id="introduction-to-rmarkdown" class="section level1">
+<h1>Introduction to Rmarkdown</h1>
+<p><em>based on the discussion on 5 Nov 2019, Jenny Bryan’s <a href="https://happygitwithr.com/">happygitwithr</a>, and the <a href="https://gge-ucd.github.io/R-DAVIS/index.html">Data Analysis and Visualization</a> course hosted by students at the University of California, Davis</em></p>
+<div id="gitting-started" class="section level2">
+<h2>“Gitting” started</h2>
+<ol style="list-style-type: decimal">
+<li><em>Clone this repository into RStudio</em>
+<ul>
+<li>Open RStudio</li>
+<li>Go to File&gt;New Project and choose the “Version Control” option</li>
+<li>Select “Git” (Not Subversion)</li>
+<li>paste the link from the “Clone Repository” button into the “Repository URL” space</li>
+</ul></li>
+</ol>
+<p>This should create a folder on your computer with this file (README.md) and the Rmarkdown document we’ll be working using for this example (FirstTry.Rmd).</p>
+<ol start="2" style="list-style-type: decimal">
+<li>Make sure you’re up-to-date</li>
+</ol>
+<ul>
+<li><p>Go to the “Git” tab in Rstudio (mine shows up in the same window as Environment, History, etc) <img src="images/gitoverview.png" alt="alt text" /></p></li>
+<li><p>Click the “Pull” button to make sure you’ve cloned the most recent version</p></li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
+<li><p>Open FirstTry.Rmd</p></li>
+<li><p>Create a local branch (or fork) of the repository by clicking on the fork <img src="images/forkbutton.png" alt="alt text" /> button</p></li>
+<li><p>Make your changes based on what was assigned to you in the Issue. Be careful to make your changes in the location where they are identified in the document.</p></li>
+<li><p>Save your file (still as FirstTry.Rmd). This will place the file with a tickbox next to it in your “Git” screen. Select the tickbox next to FirstTry.Rmd and push the commit button. That should open a screen that looks like this <img src="images/commitscreen.png" alt="alt text" /></p></li>
+</ol>
+<p>note the name of my local branch in the top left corner - if this still say ‘master’ don’t commit! you haven’t switched to your local branch</p>
+<div class="figure">
+<img src="images/whichbranch.png" alt="" />
+<p class="caption">alt text</p>
+</div>
+<ol start="7" style="list-style-type: decimal">
+<li><p>Click the “Push” button to send your commits to the remote location on Github</p></li>
+<li><p>Go to the “Pull Request tab” and click “new pull request”. Leave the “base:” set to master and change the “compare:” to the name of your branch. Click “Create Pull Request”. Enter a message describing the changes you made and issue the pull request. I’ll show you what happens next when we’re in class together!</p></li>
+</ol>
+</div>
 </div>
 
 

@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -92,7 +91,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -241,6 +239,7 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -272,6 +271,12 @@ $(document).ready(function () {
 }
 }
 
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
 
 .toc-content {
   padding-left: 30px;
@@ -381,6 +386,9 @@ div.tocify {
     <li>
       <a href="lesson_project_management.html">Project Management</a>
     </li>
+    <li>
+      <a href="lesson_git_markdown.html">Intro to git with Rmarkdown</a>
+    </li>
   </ul>
 </li>
 <li class="dropdown">
@@ -397,6 +405,9 @@ div.tocify {
     </li>
     <li>
       <a href="lesson_datatype_intro.html">Introduction to spatial datatypes</a>
+    </li>
+    <li>
+      <a href="lesson_align_join_extract.html">Finding alignment, joins, and extraction</a>
     </li>
   </ul>
 </li>
@@ -692,7 +703,7 @@ Option 4) ::nothing::  </code></pre>
 <div id="other-ways-to-get-help" class="section level2">
 <h2>Other ways to get help</h2>
 <ul>
-<li><code>??</code> searches the text of all R help files, e.g. <code>??base</code> will find <code>log</code>.</li>
+<li><code>??</code> searches the text of all R help files, e.g. <code>??base</code> will find <code>log</code>.</li>
 <li><a href="https://www.google.com/">Google</a></li>
 <li><a href="https://stackoverflow.com/">Stack Overflow</a></li>
 <li><a href="http://www.rstudio.com/resources/cheatsheets/">RStudio cheat sheets</a></li>
@@ -710,7 +721,7 @@ Option 4) ::nothing::  </code></pre>
 <pre class="r"><code>log(x = 3)</code></pre>
 <pre><code>## [1] 1.098612</code></pre>
 <ul>
-<li>Some arguments have default values, e.g. <code>log</code>’s <code>base</code> defaults to <code>exp(1)</code>, <em>e</em>, unless you tell it otherwise. So these are identical:</li>
+<li>Some arguments have default values, e.g. <code>log</code>’s <code>base</code> defaults to <code>exp(1)</code>, <em>e</em>, unless you tell it otherwise. So these are identical:</li>
 </ul>
 <pre class="r"><code>log(x = 3)</code></pre>
 <pre><code>## [1] 1.098612</code></pre>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Projections, joins, and extractions</title>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="generator" content="pandoc" />
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <base target="_blank">
+
+  <script type="text/javascript">
+    var SLIDE_CONFIG = {
+      // Slide settings
+      settings: {
+                title: 'Projections, joins, and extractions',
+                        useBuilds: true,
+        usePrettify: true,
+        enableSlideAreas: true,
+        enableTouch: true,
+                      },
+
+      // Author information
+      presenters: [
+            {
+        name:  'Matt Williamson' ,
+        company: '',
+        gplus: '',
+        twitter: '',
+        www: '',
+        github: ''
+      },
+            ]
+    };
+  </script>
+
+  <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="site_libs/bootstrap-3.3.5/css/readable.min.css" rel="stylesheet" />
+  <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+  <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+  <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+  <link href="site_libs/ioslides-13.5.1/fonts/fonts.css" rel="stylesheet" />
+  <link href="site_libs/ioslides-13.5.1/theme/css/default.css" rel="stylesheet" />
+  <link href="site_libs/ioslides-13.5.1/theme/css/phone.css" rel="stylesheet" />
+  <script src="site_libs/ioslides-13.5.1/js/modernizr.custom.45394.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/prettify.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/lang-r.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/lang-yaml.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/hammer.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/slide-controller.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/slide-deck.js"></script>
+
+  <style type="text/css">
+
+    b, strong {
+      font-weight: bold;
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    summary {
+      display: list-item;
+    }
+
+    slides > slide {
+      -webkit-transition: all 0.4s ease-in-out;
+      -moz-transition: all 0.4s ease-in-out;
+      -o-transition: all 0.4s ease-in-out;
+      transition: all 0.4s ease-in-out;
+    }
+
+    .auto-fadein {
+      -webkit-transition: opacity 0.6s ease-in;
+      -webkit-transition-delay: 0.4s;
+      -moz-transition: opacity 0.6s ease-in 0.4s;
+      -o-transition: opacity 0.6s ease-in 0.4s;
+      transition: opacity 0.6s ease-in 0.4s;
+      opacity: 0;
+    }
+/* https://github.com/ropensci/plotly/pull/524#issuecomment-468142578 */
+slide:not(.current) .plotly.html-widget{
+  display: block;
+}
+
+  </style>
+
+  <link rel="stylesheet" href="style.css" type="text/css" />
+
+</head>
+
+<body style="opacity: 0">
+
+<slides>
+
+  <slide class="title-slide segue nobackground">
+        <!-- The content of this hgroup is replaced programmatically through the slide_config.json. -->
+    <hgroup class="auto-fadein">
+      <h1 data-config-title><!-- populated from slide_config.json --></h1>
+      
+      <p data-config-presenter><!-- populated from slide_config.json --></p>
+            <p style="margin-top: 6px; margin-left: -2px;">1/27/2020</p>
+          </hgroup>
+  </slide>
+
+<slide class=""><hgroup><h2>Objectives</h2></hgroup><article  id="objectives">
+
+<p>By the end of today, you should be able to:</p>
+
+<ul>
+<li><p>Access, understand, and change the projection of a <code>Spatial*</code> and <code>sf</code> object</p></li>
+<li><p>Join datasets by attribute or location</p></li>
+<li><p>Implement a workflow for extracting raster data to polygons (i.e., zonal stats)</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Projections</h2></hgroup><article  id="projections">
+
+<div class="figure" style="text-align: center">
+<img src="images/projections.png" alt="Image Source: M. Corey, opennews.org" width="500" />
+
+<p class="caption">
+
+Image Source: M. Corey, opennews.org
+
+</p></div>
+
+</article></slide><slide class=""><hgroup><h2>Projections</h2></hgroup><article  id="projections-1">
+
+<p><img src="lesson_align_join_extract_files/figure-html/usproj-1.png" width="720" /></p>
+
+<ul>
+<li><p>Projections tell your computer how to &lsquo;flatten&rsquo; your data into a 2-dimensional map</p></li>
+<li><p>Goal is to choose projection that best maintains <em>both</em> distance and direction</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>The Coordinate Reference System</h2></hgroup><article  id="the-coordinate-reference-system">
+
+<ul>
+<li>Coordinate Reference System (CRS) provides standardized way of describing location and projection
+
+<ul>
+<li><p><code>R</code> stores this information as either a <code>proj4</code> string, an <code>EPSG</code> code</p></li>
+<li><p>ESRI, ENVI, and a few other platforms also use <code>WKT</code>, the &ldquo;Well-known text&rdquo; format.</p></li>
+</ul></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Anatomy of a Coordinate Reference System</h2></hgroup><article  id="anatomy-of-a-coordinate-reference-system">
+
+<ul>
+<li><p>A CRS generally contains:</p>
+
+<ul>
+<li><p>the Ellipsoid: Describes the general shape of the globe (not exactly spherical)</p></li>
+<li><p>the Datum: Defines the origin and orientation of the coordinate access</p></li>
+<li><p>the Projection: Projects the globe onto a 2-D surface</p></li>
+<li><p>the units: the units of the map (e.g., meters, decimal degrees, arc-seconds)</p></li>
+<li><p>the conversion used to convert to the ellipsoid</p></li>
+</ul></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Accessing the CRS in R</h2></hgroup><article  id="accessing-the-crs-in-r">
+
+<pre class = 'prettyprint lang-r'>idaho &lt;- rgdal::readOGR(&quot;./data/idaho_cty.shp&quot;)</pre>
+
+<pre >## OGR data source with driver: ESRI Shapefile 
+## Source: &quot;/Users/mattwilliamson/Courses/HES598/data/idaho_cty.shp&quot;, layer: &quot;idaho_cty&quot;
+## with 44 features
+## It has 17 fields</pre>
+
+<pre class = 'prettyprint lang-r'>sp::proj4string(idaho)</pre>
+
+<pre >## [1] &quot;+proj=longlat +ellps=GRS80 +no_defs&quot;</pre>
+
+<pre class = 'prettyprint lang-r'>idaho.sf &lt;- sf::st_read(&quot;./data/idaho_cty.shp&quot;)</pre>
+
+<pre >## Reading layer `idaho_cty&#39; from data source `/Users/mattwilliamson/Courses/HES598/data/idaho_cty.shp&#39; using driver `ESRI Shapefile&#39;
+## Simple feature collection with 44 features and 17 fields
+## geometry type:  POLYGON
+## dimension:      XY
+## bbox:           xmin: -117.243 ymin: 41.98818 xmax: -111.0435 ymax: 49.00091
+## epsg (SRID):    NA
+## proj4string:    +proj=longlat +ellps=GRS80 +no_defs</pre>
+
+<pre class = 'prettyprint lang-r'>sf::st_crs(idaho.sf)</pre>
+
+<pre >## Coordinate Reference System:
+##   No EPSG code
+##   proj4string: &quot;+proj=longlat +ellps=GRS80 +no_defs&quot;</pre>
+
+</article></slide><slide class=""><hgroup><h2>Additional references</h2></hgroup><article  id="additional-references">
+
+<ul>
+<li>Projections and Coordinate Reference Systems
+
+<ul>
+<li><p><a href='https://spatialreference.org/ref/epsg/' title=''>CRS library</a>: searchable website for all of the EPSG and proj4 values for different projections</p></li>
+<li><p><a href='https://source.opennews.org/articles/choosing-right-map-projection/' title=''>Choosing the right map projection</a>: A deeper exploration of why projections matter and rules of thumb for selecting them.</p></li>
+<li><p><a href='https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf' title=''>NCEAS cheatsheet on CRS data in R</a>: A description of how projections are developed, some best practices, and examples using <code>sp</code> and <code>rgdal</code>.</p></li>
+</ul></li>
+</ul></article></slide>
+
+
+  <slide class="backdrop"></slide>
+
+</slides>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+<!-- map slide visiblity events into shiny -->
+<script>
+  (function() {
+    if (window.jQuery) {
+       window.jQuery(document).on('slideleave', function(e) {
+         window.jQuery(e.target).trigger('hidden');
+      });
+       window.jQuery(document).on('slideenter', function(e) {
+         window.jQuery(e.target).trigger('shown');
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>
