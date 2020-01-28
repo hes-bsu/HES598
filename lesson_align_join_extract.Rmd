@@ -40,7 +40,7 @@ knitr::include_graphics(proj_path)
 ```
 
 ## Projections
-```{r usproj, echo=FALSE}
+```{r usproj, echo=FALSE, fig.align="top", fig.height=3}
 us_states <- map_data("state")
 usamap1<-ggplot(us_states, aes(x=long, y=lat, group=group)) +
   geom_polygon(fill="white", colour="black") + 
@@ -57,6 +57,8 @@ usamap1 + usamap2
 - Projections tell your computer how to 'flatten' your data into a 2-dimensional map
 
 - Goal is to choose projection that best maintains *both* distance and direction
+
+## The Coordinate Reference System
 
 - Coordinate Reference System (CRS) provides standardized way of describing location and projection
   - `R` stores this information as either a `proj4` string, an `EPSG` code
