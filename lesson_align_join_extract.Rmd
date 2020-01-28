@@ -1,0 +1,56 @@
+---
+title: "Projections, joins, and extractions"
+author: "Matt Williamson"
+date: "1/27/2020"
+output: 
+    ioslides_presentation:
+        css: style.css
+        theme: readable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(fasterize)
+library(raster)
+library(velox)
+library(sf)
+library(sp)
+library(velox)
+library(tigris)
+library(tidyverse)
+```
+
+## Objectives
+By the end of today, you should be able to:
+
+- Access, understand, and change the projection of a `Spatial*` and `sf` object
+
+- Join datasets by attribute or location
+
+- Implement a workflow for extracting raster data to polygons (i.e., zonal stats)
+
+## Projections
+```{r projfig, echo=FALSE, fig.cap="Image Source: M. Corey, opennews.org", fig.height=1.5, fig.align="center"}
+proj_path <- "./images/projections.png"
+img1 <- png::readPNG(proj_path, native = TRUE, info = TRUE)
+knitr::include_graphics(proj_path)
+```
+## Projections
+
+- Projections tell your computer how to 'flatten' your data into a 2-dimensional map
+
+- Goal is to choose projection that best maintains *both* distance and direction
+
+- Coordinate Reference System (CRS) provides standardized way of describing location and projection
+  - `R` stores this information as either a `proj4` string, an `EPSG` code
+  - ESRI, ENVI, and a few other platforms also use `WKT`, the "Well-known text" format.
+  - A CRS generally contains 
+
+
+## Additional references
+* Projections and Coordinate Reference Systems
+  - [CRS library](https://spatialreference.org/ref/epsg/): searchable website for all of the EPSG and proj4 values for different projections
+  
+  - [Choosing the right map projection](https://source.opennews.org/articles/choosing-right-map-projection/): A deeper exploration of why projections matter and rules of thumb for selecting them.
+  
+  - [NCEAS cheatsheet on CRS data in R](https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf): A description of how projections are developed, some best practices, and examples using `sp` and `rgdal`.
