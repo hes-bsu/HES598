@@ -18,6 +18,9 @@ library(sp)
 library(velox)
 library(tigris)
 library(tidyverse)
+library(maps)
+library(mapproj)
+library(patchwork)
 ```
 
 ## Objectives
@@ -35,7 +38,21 @@ proj_path <- "./images/projections.png"
 img1 <- png::readPNG(proj_path, native = TRUE, info = TRUE)
 knitr::include_graphics(proj_path)
 ```
+
 ## Projections
+```{r usproj, echo=FALSE}
+us_states <- map_data("state")
+usamap1<-ggplot(us_states, aes(x=long, y=lat, group=group)) +
+  geom_polygon(fill="white", colour="black") + 
+  coord_map("mercator") +
+  ggtitle("Mercator")
+usamap2 <- ggplot(us_states, aes(x=long, y=lat, group=group)) +
+  geom_polygon(fill="white", colour="black") + 
+  coord_map("azequalarea") +
+  ggtitle("Equal Area")
+usamap1 + usamap2
+```
+
 
 - Projections tell your computer how to 'flatten' your data into a 2-dimensional map
 
@@ -43,8 +60,32 @@ knitr::include_graphics(proj_path)
 
 - Coordinate Reference System (CRS) provides standardized way of describing location and projection
   - `R` stores this information as either a `proj4` string, an `EPSG` code
+  
   - ESRI, ENVI, and a few other platforms also use `WKT`, the "Well-known text" format.
-  - A CRS generally contains 
+
+## Anatomy of a Coordinate Reference System
+
+- A CRS generally contains:
+  
+  - the Ellipsoid: Describes the general shape of the globe (not exactly spherical)
+  
+  - the Datum: Defines the origin and orientation of the coordinate access
+  
+  - the Projection: Projects the globe onto a 2-D surface
+  
+  - the units: the units of the map (e.g., meters, decimal degrees, arc-seconds)
+  
+  - the conversion used to convert to the ellipsoid
+
+## Accessing the CRS in R
+```{r}
+idaho <- rgdal::readOGR("./data/idaho_cty.shp")
+sp::proj4string(idaho)
+
+idaho.sf <- sf::st_read("./data/idaho_cty.shp")
+sf::st_crs(idaho.sf)
+
+```
 
 
 ## Additional references
