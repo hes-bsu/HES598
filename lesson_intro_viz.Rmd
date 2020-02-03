@@ -1,0 +1,74 @@
+---
+title: "Introduction to Visualization"
+author: "Matt Williamson"
+date: "2/1/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidycensus)
+library(tidyverse)
+library(sf)
+library(raster)
+library(tmap)
+library(rasterVis)
+library(latticeExtra)
+
+```
+
+## Today's objectives
+- Explore plotting vector data using `plot`, `spplot`, and `ggplot2`
+- Explore plotting raster data using `plot`, `rasterViz`
+- Map multiple layers using `spplot`, `ggplot2`, and `tmap`
+
+## Visualization and spatial data
+
+
+## Building a vector dataset
+```{r}
+census_api_key("90b94953d2f24e81e890229e0128174f5ba80d3f")
+
+id.income <- get_acs(geography = "county", 
+              variables = c("B19013_001", "B01002_001"),
+              state = "ID", 
+              year = 2018, geometry = TRUE) %>% #download censu data
+  mutate(rename = str_replace_all(.$variable,(c("B19013_001"="income", "B01002_001"="age" )))) %>% 
+  dplyr::select(c(GEOID, rename, estimate)) %>% #select the columns to keep
+  spread(., key = rename, value = estimate) #have to use spread because pivot_wider not currently working for sf objects
+
+#join our nonprofit data set
+id.nonprof <- read.csv("./data/bmfcount.csv", stringsAsFactors = FALSE, colClasses = "character")
+
+id.census.sf <- id.income %>% 
+  left_join(., id.nonprof, by = c("GEOID" = "FIPS"))
+
+id.census.sp <- as(id.census.sf, "Spatial")
+```
+
+
+## Plotting spatial data in base `plot`
+
+- Base `plot` handles `Spatial*` and `sf` objects differently
+- Base `plot` is useful for quick exploration of data and figure drafting
+
+```{r vectorplot, echo = TRUE}
+plot(id.census.sp, main = "Idaho Counties", sub="2018 Census Data")
+plot(id.census.sf, main= "Idaho Counties", sub="2018 Census Data")
+#if you just want the sf geometry
+plot(st_geometry(id.census.sf))
+
+#hard to plot by attributes in base plot with Spatial* objects
+plot(id.census.sp$income)
+#Easier with sf
+plot(id.census.sf["income"], main= "Idaho Income", sub="Median county value as of 2018")
+
+```
+
+##  
+## Additional references
+[Data Visualization: A Practical Introduction by Kieran Healy](https://socviz.co)
+
+[The tmap package](https://cran.r-project.org/web/packages/tmap/vignettes/tmap-getstarted.html)
+
+[Plotting Simple Features](https://r-spatial.github.io/sf/articles/sf5.html)
