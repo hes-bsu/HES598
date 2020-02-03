@@ -14,7 +14,8 @@ library(raster)
 library(tmap)
 library(rasterVis)
 library(latticeExtra)
-
+library(RColorBrewer)
+library(viridis)
 ```
 
 ## Today's objectives
@@ -53,10 +54,10 @@ id.census.sp <- as(id.census.sf, "Spatial")
 - Base `plot` is useful for quick exploration of data and figure drafting
 
 ```{r vectorplot, echo = TRUE}
-plot(id.census.sp, main = "Idaho Counties", sub="2018 Census Data")
-plot(id.census.sf, main= "Idaho Counties", sub="2018 Census Data")
+plot(id.census.sp, main = "Idaho Counties", sub="2018 Census Data", col="blue", border="white")
+plot(id.census.sf, main= "Idaho Counties", sub="2018 Census Data", col="blue", border="white")
 #if you just want the sf geometry
-plot(st_geometry(id.census.sf))
+plot(st_geometry(id.census.sf), col="blue", border="white")
 
 #hard to plot by attributes in base plot with Spatial* objects
 plot(id.census.sp$income)
@@ -65,7 +66,29 @@ plot(id.census.sf["income"], main= "Idaho Income", sub="Median county value as o
 
 ```
 
-##  
+## Plotting raster data in baseplot
+```{r rasterplot}
+id.elev <- raster("data/id_elev.tif")
+#create a reaster brick
+id.terrain <- terrain(id.elev, opt=c('slope', 'TRI', 'TPI'))
+plot(id.terrain)
+```
+
+## Adding functionality with `spplot`
+- `spplot` follows the `lattice` approach for creating graphics
+- Allows functionality for `Spatial*` objects similar to those for `sf` in base `plot`
+- add layers using `list` and `sp.layout`
+```{r}
+#set up a color palette
+income.pal <- brewer.pal(n = 7, name = "Greens")
+spplot(id.census.sp, col.regions = income.pal, cuts = 6)
+
+#plot a single variable
+spplot(id.census.sp, 'income', col.regions = income.pal, cuts = 6)
+spplot(id.census.sp, 'age', col.regions = brewer.pal(n = 7, name = "Blues"), cuts = 6)
+
+spplot(id.terrain)
+```
 ## Additional references
 [Data Visualization: A Practical Introduction by Kieran Healy](https://socviz.co)
 
