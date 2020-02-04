@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Introduction to Visualization</title>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="generator" content="pandoc" />
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <base target="_blank">
+
+  <script type="text/javascript">
+    var SLIDE_CONFIG = {
+      // Slide settings
+      settings: {
+                title: 'Introduction to Visualization',
+                        useBuilds: true,
+        usePrettify: true,
+        enableSlideAreas: true,
+        enableTouch: true,
+                      },
+
+      // Author information
+      presenters: [
+            {
+        name:  'Matt Williamson' ,
+        company: '',
+        gplus: '',
+        twitter: '',
+        www: '',
+        github: ''
+      },
+            ]
+    };
+  </script>
+
+  <link href="site_libs/ioslides-13.5.1/fonts/fonts.css" rel="stylesheet" />
+  <link href="site_libs/ioslides-13.5.1/theme/css/default.css" rel="stylesheet" />
+  <link href="site_libs/ioslides-13.5.1/theme/css/phone.css" rel="stylesheet" />
+  <script src="site_libs/ioslides-13.5.1/js/modernizr.custom.45394.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/prettify.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/lang-r.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/lang-yaml.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/hammer.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/slide-controller.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/slide-deck.js"></script>
+
+  <style type="text/css">
+
+    b, strong {
+      font-weight: bold;
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    summary {
+      display: list-item;
+    }
+
+    slides > slide {
+      -webkit-transition: all 0.4s ease-in-out;
+      -moz-transition: all 0.4s ease-in-out;
+      -o-transition: all 0.4s ease-in-out;
+      transition: all 0.4s ease-in-out;
+    }
+
+    .auto-fadein {
+      -webkit-transition: opacity 0.6s ease-in;
+      -webkit-transition-delay: 0.4s;
+      -moz-transition: opacity 0.6s ease-in 0.4s;
+      -o-transition: opacity 0.6s ease-in 0.4s;
+      transition: opacity 0.6s ease-in 0.4s;
+      opacity: 0;
+    }
+/* https://github.com/ropensci/plotly/pull/524#issuecomment-468142578 */
+slide:not(.current) .plotly.html-widget{
+  display: block;
+}
+
+  </style>
+
+
+</head>
+
+<body style="opacity: 0">
+
+<slides>
+
+  <slide class="title-slide segue nobackground">
+        <!-- The content of this hgroup is replaced programmatically through the slide_config.json. -->
+    <hgroup class="auto-fadein">
+      <h1 data-config-title><!-- populated from slide_config.json --></h1>
+      <h2 data-config-subtitle><!-- populated from slide_config.json --></h2>
+      <p data-config-presenter><!-- populated from slide_config.json --></p>
+            <p style="margin-top: 6px; margin-left: -2px;">2/1/2020</p>
+          </hgroup>
+  </slide>
+
+<slide class=""><hgroup><h2>Today’s objectives</h2></hgroup><article  id="todays-objectives">
+
+<ul>
+<li><p>Explore plotting vector data using <code>plot</code>, <code>spplot</code>, and <code>ggplot2</code></p></li>
+<li><p>Explore plotting raster data using <code>plot</code>, <code>rasterViz</code></p></li>
+<li><p>Map multiple layers using <code>spplot</code>, <code>ggplot2</code></p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Building a vector dataset</h2></hgroup><article  id="building-a-vector-dataset">
+
+<pre class = 'prettyprint lang-r'>census_api_key(&quot;90b94953d2f24e81e890229e0128174f5ba80d3f&quot;)
+# download censu data
+id.income &lt;- get_acs(geography = &quot;county&quot;, variables = c(&quot;B19013_001&quot;, 
+    &quot;B01002_001&quot;), state = &quot;ID&quot;, year = 2018, geometry = TRUE) %&gt;% 
+    mutate(rename = str_replace_all(.$variable, (c(B19013_001 = &quot;income&quot;, 
+        B01002_001 = &quot;age&quot;)))) %&gt;% # select the columns to keep
+dplyr::select(c(GEOID, rename, estimate)) %&gt;% # have to use spread because pivot_wider not currently
+# working for sf objects
+spread(., key = rename, value = estimate)
+
+# join our nonprofit data set
+id.nonprof &lt;- read.csv(&quot;./data/bmfcount.csv&quot;, stringsAsFactors = FALSE, 
+    colClasses = &quot;character&quot;)
+
+id.census.sf &lt;- id.income %&gt;% left_join(., id.nonprof, by = c(GEOID = &quot;FIPS&quot;))
+
+id.census.sp &lt;- as(id.census.sf, &quot;Spatial&quot;)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Plotting spatial data in base <code>plot</code></h2></hgroup><article  id="plotting-spatial-data-in-base-plot">
+
+<ul>
+<li>Base <code>plot</code> handles <code>Spatial*</code> and <code>sf</code> objects differently</li>
+<li>Base <code>plot</code> is useful for quick exploration of data and figure drafting</li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Plotting spatial data in base <code>plot</code></h2></hgroup><article  id="plotting-spatial-data-in-base-plot-1">
+
+<pre class = 'prettyprint lang-r'>plot(id.census.sp, main = &quot;Idaho Counties&quot;, sub = &quot;2018 Census Data&quot;, 
+    col = &quot;blue&quot;, border = &quot;white&quot;)</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/vectorplot-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Plotting <code>sf</code> data in base <code>plot</code></h2></hgroup><article  id="plotting-sf-data-in-base-plot">
+
+<pre class = 'prettyprint lang-r'>plot(id.census.sf, main = &quot;Idaho Counties&quot;, sub = &quot;2018 Census Data&quot;, 
+    col = &quot;blue&quot;, border = &quot;white&quot;)</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-2-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Plotting <code>sf</code> data in base <code>plot</code></h2></hgroup><article  id="plotting-sf-data-in-base-plot-1">
+
+<pre class = 'prettyprint lang-r'># if you just want the sf geometry
+plot(st_geometry(id.census.sf), col = &quot;blue&quot;, border = &quot;white&quot;)</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-3-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Plotting attributes of <code>Spatial*</code> data in base <code>plot</code></h2></hgroup><article  id="plotting-attributes-of-spatial-data-in-base-plot">
+
+<pre class = 'prettyprint lang-r'># hard to plot by attributes in base plot with Spatial*
+# objects
+plot(id.census.sp$income)</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-4-1.png" width="720" /></p>
+
+<pre class = 'prettyprint lang-r'># Easier with sf</pre>
+
+</article></slide><slide class=""><hgroup><h2>Plotting attributes of <code>sf</code> data in base <code>plot</code></h2></hgroup><article  id="plotting-attributes-of-sf-data-in-base-plot">
+
+<pre class = 'prettyprint lang-r'>plot(id.census.sf[&quot;income&quot;], main = &quot;Idaho Income&quot;, sub = &quot;Median county value as of 2018&quot;)</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-5-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Plotting raster data in baseplot</h2></hgroup><article  id="plotting-raster-data-in-baseplot">
+
+<pre class = 'prettyprint lang-r'>id.elev &lt;- raster(&quot;data/id_elev.tif&quot;)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Plotting raster <code>bricks</code> in baseplot</h2></hgroup><article  id="plotting-raster-bricks-in-baseplot">
+
+<pre class = 'prettyprint lang-r'># create a reaster brick
+id.terrain &lt;- terrain(id.elev, opt = c(&quot;slope&quot;, &quot;aspect&quot;, &quot;TRI&quot;, 
+    &quot;TPI&quot;))
+plot(id.terrain)</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-6-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Adding functionality with <code>spplot</code></h2></hgroup><article  id="adding-functionality-with-spplot">
+
+<ul>
+<li><p><code>spplot</code> follows the <code>lattice</code> approach for creating graphics</p></li>
+<li><p>Allows functionality for <code>Spatial*</code> objects similar to those for <code>sf</code> in base <code>plot</code></p></li>
+</ul>
+
+<pre class = 'prettyprint lang-r'># set up a color palette
+income.pal &lt;- brewer.pal(n = 7, name = &quot;Greens&quot;)
+spplot(id.census.sp, col.regions = income.pal, cuts = 6)</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-7-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Plotting a single variable in <code>spplot</code></h2></hgroup><article  id="plotting-a-single-variable-in-spplot">
+
+<pre class = 'prettyprint lang-r'>spplot(id.census.sp, &quot;income&quot;, col.regions = income.pal, cuts = 6)</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-8-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Adding layers</h2></hgroup><article  id="adding-layers">
+
+<ul>
+<li><p>Rare that we only want to visualize one aspect of spatial data</p></li>
+<li><p>Adding layers allows additional information and detail</p></li>
+<li><p>Important to ask &ldquo;is a map the best way to display this?&rdquo;</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Adding layers in <code>spplot</code></h2></hgroup><article  id="adding-layers-in-spplot">
+
+<ul>
+<li><p>add layers using <code>list</code> and <code>sp.layout</code></p></li>
+<li><p>order matters!!</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Adding layers in <code>spplot</code></h2></hgroup><article  id="adding-layers-in-spplot-1">
+
+<pre class = 'prettyprint lang-r'>county.layer &lt;- list(&quot;sp.polygons&quot;, id.census.sp, fill = &quot;transparent&quot;, 
+    col = &quot;blue&quot;, lwd = 1.5, first = FALSE)
+
+spplot(id.census.sp, &quot;income&quot;, col.regions = income.pal, cuts = 6, 
+    sp.layout = county.layer)</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/spplotlyr-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Adding rasters in <code>spplot</code></h2></hgroup><article  id="adding-rasters-in-spplot">
+
+<pre class = 'prettyprint lang-r'>spplot(id.elev, sp.layout = county.layer)</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-9-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Adding rasters in <code>spplot</code></h2></hgroup><article  id="adding-rasters-in-spplot-1">
+
+<pre class = 'prettyprint lang-r'>spplot(id.terrain, sp.layout = county.layer)</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-10-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Adding map elements with <code>spplot</code></h2></hgroup><article  id="adding-map-elements-with-spplot">
+
+<ul>
+<li><p>You’ll often want additional components for maps</p></li>
+<li><p>These can also be added with <code>sp.layout</code></p></li>
+<li><p>Need to specify size and coordinates for elements</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Adding map elements with <code>spplot</code></h2></hgroup><article  id="adding-map-elements-with-spplot-1">
+
+<pre class = 'prettyprint lang-r'>id.proj &lt;- spTransform(id.census.sp, CRS(&quot;+init=EPSG:32611&quot;))  # Can&#39;t make a scale if not projected!
+id.proj@bbox  # Check dimensions to help guide offset choices</pre>
+
+<pre >##         min     max
+## x  480643.9  993117
+## y 4649552.9 5427992</pre>
+
+<pre class = 'prettyprint lang-r'># expand bbox to make room for map elements
+new.bbox &lt;- matrix(c(480000, 1010000, 4600000, 5450000), ncol = 2, 
+    byrow = TRUE, dimnames = list(c(&quot;x&quot;, &quot;y&quot;), c(&quot;min&quot;, &quot;max&quot;)))
+id.proj@bbox &lt;- new.bbox
+bbox(id.proj)  #check new bbox</pre>
+
+<pre >##       min     max
+## x  480000 1010000
+## y 4600000 5450000</pre>
+
+<pre class = 'prettyprint lang-r'>county.layer &lt;- list(&quot;sp.polygons&quot;, id.proj, fill = &quot;transparent&quot;, 
+    col = &quot;green&quot;, lwd = 1.5, first = FALSE)
+
+scale &lt;- list(&quot;SpatialPolygonsRescale&quot;, layout.scale.bar(), scale = 1e+05, 
+    fill = c(&quot;transparent&quot;, &quot;black&quot;), offset = c(490500, 4615000), 
+    first = FALSE)
+
+# The scale argument sets length of bar in map units
+text1 = list(&quot;sp.text&quot;, c(490500, 4604800), &quot;0&quot;, cex = 0.5, first = FALSE)
+text2 = list(&quot;sp.text&quot;, c(590500, 4604800), &quot;100 km&quot;, cex = 0.5, 
+    first = FALSE)
+
+arrow = list(&quot;SpatialPolygonsRescale&quot;, layout.north.arrow(), 
+    offset = c(980000, 5400000), scale = 60000, first = FALSE)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Adding map elements with <code>spplot</code></h2></hgroup><article  id="adding-map-elements-with-spplot-2">
+
+<pre class = 'prettyprint lang-r'>spplot(id.proj, &quot;income&quot;, sp.layout = list(county.layer, scale, 
+    text1, text2, arrow))</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-11-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Using <code>rasterViz</code> for plotting multiple rasters</h2></hgroup><article  id="using-rasterviz-for-plotting-multiple-rasters">
+
+<ul>
+<li><p><code>rasterViz</code> also builds on <code>lattice</code> approach</p></li>
+<li><p>lots of functionality for space, time, and spacetime data</p></li>
+<li><p>especially useful for layering <code>rasters</code></p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Using <code>rasterViz</code> for plotting multiple rasters</h2></hgroup><article  id="using-rasterviz-for-plotting-multiple-rasters-1">
+
+<pre class = 'prettyprint lang-r'># build a hillshade
+id.hills &lt;- hillShade(id.terrain[[1]], id.terrain[[2]], angle = 40, 
+    direction = 270)
+hills &lt;- levelplot(id.hills, par.settings = GrTheme())
+# crop raster - make sure projections match!
+elev.crop &lt;- mask(id.elev, id.census.sp)
+elev.lp &lt;- levelplot(elev.crop)
+# combine rasters
+hills + elev.lp</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-12-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Fancier graphics with <code>ggplot2</code></h2></hgroup><article  id="fancier-graphics-with-ggplot2">
+
+<ul>
+<li><p><code>ggplot2</code> built on grammer of graphics</p></li>
+<li><p>Plots build in layers denoted by different <code>geom_</code>, <code>aes</code>, and <code>scale_</code></p></li>
+<li><p>Lots of functionality, but slow</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Fancier graphics with <code>ggplot2</code></h2></hgroup><article  id="fancier-graphics-with-ggplot2-1">
+
+<pre class = 'prettyprint lang-r'># get tract-level income data
+tv.income.tct &lt;- get_acs(geography = &quot;tract&quot;, variables = &quot;B19013_001&quot;, 
+    state = &quot;ID&quot;, year = 2018, geometry = TRUE) %&gt;% filter(str_detect(NAME, 
+    &quot;Ada | Boise | Canyon | Gem | Owyhee&quot;))
+
+cty.map &lt;- ggplot() + geom_sf(data = id.census.sf, fill = &quot;gray&quot;)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Adding layers in <code>ggplot2</code></h2></hgroup><article  id="adding-layers-in-ggplot2">
+
+<pre class = 'prettyprint lang-r'>cty.map + geom_sf(data = tv.income.tct, aes(fill = estimate)) + 
+    scale_color_viridis()</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-14-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Is this a reasonable way to look at this data?</h2></hgroup><article  id="is-this-a-reasonable-way-to-look-at-this-data">
+
+<pre class = 'prettyprint lang-r'>med.inc &lt;- median(id.census.sf$income)
+
+ggplot() + geom_point(data = id.census.sf, aes(x = income, y = reorder(GEOID, 
+    income))) + geom_vline(xintercept = med.inc)</pre>
+
+<p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-15-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Looking Ahead</h2></hgroup><article  id="looking-ahead">
+
+<ul>
+<li><p>Plotting in R can be slow, we’ll explore options in &ldquo;Repetitive tasks, functional programming, and bench-marking&rdquo;</p></li>
+<li><p>We will explore base-maps, multi-panel graphics, combined plots, and more complex layouts in &ldquo;Next Level Visualization&rdquo;</p></li>
+<li><p>We can explore interactive and web-based maps using the <code>leafletR</code> and <code>tmap</code> packages in &ldquo;Flex Dashboards, web mapping, and interactive maps&rdquo;</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Additional references</h2></hgroup><article  id="additional-references">
+
+<p><a href='https://socviz.co' title=''>Data Visualization: A Practical Introduction by Kieran Healy</a></p>
+
+<p><a href='https://oscarperpinan.github.io/rastervis/#levelplot' title=''>The rasterViz package</a></p>
+
+<p><a href='https://r-spatial.github.io/sf/articles/sf5.html' title=''>Plotting Simple Features</a></p></article></slide>
+
+
+  <slide class="backdrop"></slide>
+
+</slides>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+<!-- map slide visiblity events into shiny -->
+<script>
+  (function() {
+    if (window.jQuery) {
+       window.jQuery(document).on('slideleave', function(e) {
+         window.jQuery(e.target).trigger('hidden');
+      });
+       window.jQuery(document).on('slideenter', function(e) {
+         window.jQuery(e.target).trigger('shown');
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>
