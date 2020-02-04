@@ -1,0 +1,221 @@
+---
+title: "Introduction to Visualization"
+author: "Matt Williamson"
+date: "2/1/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidycensus)
+library(tidyverse)
+library(sf)
+library(raster)
+library(tmap)
+library(rasterVis)
+library(latticeExtra)
+library(RColorBrewer)
+library(viridis)
+library(tigris)
+```
+
+## Today's objectives
+- Explore plotting vector data using `plot`, `spplot`, and `ggplot2`
+- Explore plotting raster data using `plot`, `rasterViz`
+- Map multiple layers using `spplot`, `ggplot2`
+
+## Visualization and spatial data
+
+
+## Building a vector dataset
+```{r}
+census_api_key("90b94953d2f24e81e890229e0128174f5ba80d3f")
+
+id.income <- get_acs(geography = "county", 
+              variables = c("B19013_001", "B01002_001"),
+              state = "ID", 
+              year = 2018, geometry = TRUE) %>% #download censu data
+  mutate(rename = str_replace_all(.$variable,(c("B19013_001"="income", "B01002_001"="age" )))) %>% 
+  dplyr::select(c(GEOID, rename, estimate)) %>% #select the columns to keep
+  spread(., key = rename, value = estimate) #have to use spread because pivot_wider not currently working for sf objects
+
+#join our nonprofit data set
+id.nonprof <- read.csv("./data/bmfcount.csv", stringsAsFactors = FALSE, colClasses = "character")
+
+id.census.sf <- id.income %>% 
+  left_join(., id.nonprof, by = c("GEOID" = "FIPS"))
+
+id.census.sp <- as(id.census.sf, "Spatial")
+```
+
+
+## Plotting spatial data in base `plot`
+
+- Base `plot` handles `Spatial*` and `sf` objects differently
+- Base `plot` is useful for quick exploration of data and figure drafting
+
+```{r vectorplot, echo = TRUE}
+plot(id.census.sp, main = "Idaho Counties", sub="2018 Census Data", col="blue", border="white")
+plot(id.census.sf, main= "Idaho Counties", sub="2018 Census Data", col="blue", border="white")
+#if you just want the sf geometry
+plot(st_geometry(id.census.sf), col="blue", border="white")
+
+#hard to plot by attributes in base plot with Spatial* objects
+plot(id.census.sp$income)
+#Easier with sf
+plot(id.census.sf["income"], main= "Idaho Income", sub="Median county value as of 2018")
+
+```
+
+## Plotting raster data in baseplot
+```{r rasterplot}
+id.elev <- raster("data/id_elev.tif")
+#create a reaster brick
+id.terrain <- terrain(id.elev, opt=c('slope', 'aspect','TRI', 'TPI'))
+plot(id.terrain)
+```
+
+## Adding functionality with `spplot`
+- `spplot` follows the `lattice` approach for creating graphics
+
+- Allows functionality for `Spatial*` objects similar to those for `sf` in base `plot`
+
+```{r}
+#set up a color palette
+income.pal <- brewer.pal(n = 7, name = "Greens")
+spplot(id.census.sp, col.regions = income.pal, cuts = 6)
+
+#plot a single variable
+spplot(id.census.sp, 'income', col.regions = income.pal, cuts = 6)
+spplot(id.census.sp, 'age', col.regions = brewer.pal(n = 7, name = "Blues"), cuts = 6)
+
+spplot(id.terrain)
+```
+
+## Adding layers 
+
+- Rare that we only want to visualize one aspect of spatial data
+
+- Adding layers allows additional information and detail
+
+- Important to ask "is a map the best way to display this?"
+
+## Adding layers in `spplot`
+
+- add layers using `list` and `sp.layout`
+- order matters!!
+
+- 
+```{r, spplotlyr}
+county.layer <- list("sp.polygons", id.census.sp, fill="transparent", col = "green", lwd = 1.5, first=FALSE)
+
+spplot(id.census.sp, "income", sp.layout = county.layer)
+
+#also works with rasters
+spplot(elev, sp.layout = county.layer)
+spplot(id.terrain, sp.layout = county.layer)
+
+```
+
+## Adding map elements with `spplot`
+- You'll often want additional components for maps
+
+- These can also be added with `sp.layout`
+
+- Need to specify size and coordinates for elements
+
+## Adding map elements with `spplot`
+```{r scale, eval=FALSE}
+id.proj <- spTransform(id.census.sp, CRS("+init=EPSG:32611"))  # Can't make a scale if not projected!
+id.proj@bbox  # Check dimensions to help guide offset choices
+#expand bbox to make room for map elements
+new.bbox <- matrix(c(480000, 1010000, 4600000, 5450000), ncol=2, byrow = TRUE, dimnames = list(c("x", "y"),c( "min", "max")))
+id.proj@bbox <- new.bbox
+bbox(id.proj) #check new bbox
+
+county.layer <- list("sp.polygons", id.proj, fill="transparent", col = "green", lwd = 1.5, first=FALSE)
+
+scale <- list("SpatialPolygonsRescale", layout.scale.bar(), scale = 100000, fill = c("transparent", 
+    "black"), offset = c(490500, 4615000), first=FALSE)
+
+# The scale argument sets length of bar in map units
+text1 = list("sp.text", c(490500, 4604800), "0", cex =0.5, first=FALSE)
+text2 = list("sp.text", c(590500, 4604800), "100 km", cex=0.5, first=FALSE)
+
+arrow = list("SpatialPolygonsRescale", layout.north.arrow(), offset = c(980000, 
+    5400000), scale = 60000, first=FALSE)
+
+spplot(id.proj, "income", sp.layout = list(county.layer,scale, text1, text2, arrow))
+```
+
+## Using `rasterViz` for plotting multiple rasters
+- `rasterViz` also builds on `lattice` approach
+
+- lots of functionality for space, time, and spacetime data
+
+- especially useful for layering `rasters`
+
+## Using `rasterViz` for plotting multiple rasters
+```{r}
+#build a hillshade
+id.hills <- hillShade(id.terrain[[1]], id.terrain[[2]], angle=40, direction = 270)
+hills <- levelplot(id.hills, par.settings = GrTheme())
+#crop raster - make sure projections match!
+elev.crop <- mask(id.elev, id.census.sp)
+elev.lp <- levelplot(elev.crop)
+#combine rasters
+hills + elev.lp
+```
+
+
+## Fancier graphics with `ggplot2`
+
+- `ggplot2` built on grammer of graphics
+
+- Plots build in layers denoted by different `geom_`, `aes`, and `scale_`
+
+- Lots of functionality, but slow
+
+## Fancier graphics with `ggplot2`
+```{r}
+
+#get tract-level income data
+tv.income.tct <- get_acs(geography = "tract", 
+              variables = "B19013_001",
+              state = "ID", 
+              year = 2018, geometry = TRUE) %>% 
+  filter(str_detect(NAME, "Ada | Boise | Canyon | Gem | Owyhee") )
+
+cty.map <- ggplot() +
+  geom_sf(data = id.census.sf, fill = "gray")
+
+cty.map +
+  geom_sf(data = tv.income.tct, aes(fill = estimate)) +
+  scale_color_viridis()
+
+```
+## Is this a reasonable way to look at this data?
+```{r}
+med.inc <- median(id.census.sf$income)
+
+ggplot() +
+  geom_point(data=id.census.sf, aes(x=income, y = reorder(GEOID, income))) +
+  geom_vline(xintercept = med.inc)
+```
+
+
+## Looking Ahead
+- Plotting in R can be slow, we'll explore options in "Repetitive tasks, functional programming, and bench-marking"
+
+- We will explore base-maps, multi-panel graphics, combined plots, and more complex layouts in "Next Level Visualization"
+
+- We can explore interactive and web-based maps using the `leafletR` and `tmap` packages in "Flex Dashboards, web mapping, and interactive maps"
+
+
+
+## Additional references
+[Data Visualization: A Practical Introduction by Kieran Healy](https://socviz.co)
+
+[The rasterViz package](https://oscarperpinan.github.io/rastervis/#levelplot)
+
+[Plotting Simple Features](https://r-spatial.github.io/sf/articles/sf5.html)
