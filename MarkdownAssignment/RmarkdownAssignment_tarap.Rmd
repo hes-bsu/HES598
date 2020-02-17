@@ -1,0 +1,109 @@
+---
+title: "RMarkdown Assignment"
+author: "Tara Pozzi"
+date: "2/5/2020"
+output: 
+  bookdown::html_document2: default
+bibliography: spatialproj.bib
+citations: yes
+  
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidycensus)
+library(sp)
+library(ggplot2)
+library(viridis)
+library(scales)
+```
+## Introduction
+
+Broadly speaking, my thesis aims to identify the barriers flood risk managers may face in gathering Light Dection and Ranging (LiDAR) data for their communities. In order to identify these barriers, I am investigating into the risk perception, peer influence, and structural barriers flood risk managers might encounter in their practice in Idaho. LiDAR provides the data necessary to understand, at a much more detailed level, the topography of community watersheds to then estimate more accurately their true flood risk. Furthermore, Idaho is projected to see an increase in frequency and size of natural disasters such as wildfires and floods (@ralph_vision_2014,@corringham_atmospheric_2019, @melillo_climate_2014, @gardiner_us_2019). LiDAR is a tool that communities can use to build resiliency into their emergency planning efforts and ultimately ensure the safety of Idahoans in the coming years. 
+
+Spatial data is necessary to answer my question because I want to be able to detect trends in risk perception throughout Idaho, as well as be able to compare these risk perceptions to the actual, predicted flood risk for each community. Spatial data will help compile several existing data sources such as topography, historic flooding data, land use change, etc. Furthermore, R will be instrumental in showing this because it can be done all in one place!
+
+## Study Area
+
+This research takes place across the state of Idaho and looks at information at the county and community level. This area is important to study becuase as of 2018, only 17% of Idaho had access to LiDAR (@noauthor_idaho_nodate). This project will help Idaho get access to what it needs to be 100% mapped.  
+
+```{r study area}
+census_api_key("3f1a61d7b9d2f870de53940d461dda896938261b", install=TRUE, overwrite=TRUE)
+
+# check out what variables I may want to use
+v.18 <- load_variables(2018,"acs5", cache=TRUE)
+v.18
+
+# download the census data for population now that we have the variable number
+
+id.population <- get_acs(geography="county",
+                  variables = "B01003_001",
+                  state = "ID",
+                  year = 2018, geometry=TRUE) %>%
+
+# now that we have imported our data, we will want to change the column name 
+  
+  mutate(rename=
+           str_replace_all(.$variable, 
+                           (c("B01003_001"="Population")))) %>%   # you can create a pipe function to do this in a more seamless manner
+ # now lets specify the columns we want to keep
+   dplyr::select(c(GEOID, rename, estimate))  %>%
+   
+ # need to spread data
+   spread(., key=rename, value=estimate)
+
+### now create the spatial file for this data, so call up the counties for Idaho 
+id.census.sp <- as(id.census.sf, "Spatial")
+
+# now lets plot what the spatial data looks like
+plot(id.census.sp, main="Idaho Counties", 
+     sub="2018 Census Data",
+     col="purple",
+     border="green")
+```
+
+## Map an attribute of your data
+
+```{r attributeplot}
+#call up necessary packages
+library(ggplot2)
+library(ggplotgui)
+library(psych)
+library(plotly)
+
+# first make a map of just the spatial extents of your information
+pop.map <- ggplot()+
+  geom_sf(data=id.census.sf, fill="gray")+
+  scale_fill_viridis()
+pop.map
+
+# now let's plot this data with scale to see the differences in each county visually
+pop.map +
+  geom_sf(data = id.population, aes(fill = Population)) +
+  scale_color_viridis()
+
+
+```
+
+## Plot your data a differnt way
+
+```{r graph}
+# now let's plot this data in another that could be helpful to view
+library(ggplot2)
+library(ggplotgui)
+library(plotly)
+library(psych)
+
+# ggplot_shiny(id.population)
+graph <- ggplot(id.population, aes(x = GEOID, y = Population)) +
+  geom_point() +
+  labs(x = 'GEOID for Each County', y = 'Popoulation') +
+  theme_bw()
+graph
+```
+
+## What did you learn?
+
+This excercise was really helpful to step through the process of attaching data, normally viewed in a graph or table, with a spatial element. In this example, I looked at population numbers for each county throughout Idaho which was really helpful to visualize the where, physically, throughout the state the most and least amount of people live. I noticed that there are four main pockets of higher population numbers throughout the state, three of those being in the southern part with Ada county having the highest amount by far. I will say that because of a lot of the stay has low population numbers, it is hard to see the finer differences in numbers from the spatial graph because they all show up purple. However, graphing this data in a scatter plot was helpful to distinguish the numbers more clearly. As far as helping answer my research qeuestion, I think that both a spatial and graphical representation of the data is necesasry to accurately answer my questions. 
