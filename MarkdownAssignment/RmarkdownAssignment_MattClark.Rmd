@@ -1,0 +1,75 @@
+---
+title: "RMarkdown Assignment"
+author: "Matt Clark"
+date: "2/14/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidycensus)
+library(sp)
+library(ggplot2)
+library(viridis)
+library(scales)
+library(ggmap)
+library(maps)
+library(ggnetwork)
+library(geomnet)
+library(GGally)
+```
+
+```{r, include=FALSE}
+sites<-data.frame(Site=c("Makangale","Kifundi","Msituu mkuu","bottom just for mapping"),
+                  lon=c(39.690753,39.710927,39.837124,39.651140),
+                  lat=c(-4.906206,-4.940105,-4.997158,-5.477887))
+
+pbbox <- make_bbox(lon = sites$lon, lat = sites$lat, f = .1)
+ll_means <- sapply(sites[2:3], mean)
+register_google(key = "AIzaSyAs88ik0Q7x8yY7JcvRzVLSYvUt9IkQr58")
+pb_map2 <- get_map(location = ll_means,  maptype =  "satellite", source = "google", zoom = 10)
+```
+
+
+## Introduction
+
+
+Our aptitude for social learning is widely accepted as critical for the success of our species. Behavioral imitation is one of the most common forms of social learning. Via imitation, technological innovations can diffuse in populations, impacting both individual well-being and population-level adaptation to environmental change. With few studies that measure transmission fidelity in a naturalistic setting, where outcomes have real economic and health outcomes - we have an opportunity to explore how environmental constraints and social learning interact when outcomes matter. This project seeks to further investigate how and why behaviors are modified during the transmission process and how modification (both enrounious and intentional) affect performance targets.    
+
+
+## Study Area
+
+This project will leverage an ongoing initiative to spread fuel-efficient cookstoves on Pemba Island, Tanzania. This initiative has funded the building of a small number of improved cookstoves across communities which have subsequently been voluntarily copied by other community members. To answer the research questions above, I will collect data on the visual similarity of all copied cookstoves and the models they were copied from to assess direct transmission fidelity. This research will examine the spread of fuel-efficient cookstoves throughout three wards, each containing two nearby villages on Pemba Island, Tanzania. From June 1 to Aug 15 2020, I will map all the seeded and voluntarily copied fuel-efficient cookstoves in Makangale, Msituu mkuu, and Kifundi wards on Pemba Island, Tanzania.
+
+```{r studyarea}
+ggmap(pb_map2) + 
+  geom_point(data = sites[1:3,], color = "red", size = 4) +
+  geom_text(data = sites[1:3,], aes(label = paste("  ", as.character(Site), sep="")), size=6, hjust = 0, color = "white")
+
+
+```
+
+## Map an attribute of your data
+I currently do not have attribute data for this project.
+
+
+## Plot your data a differnt way
+
+
+```{r, include=FALSE}
+
+Pd<-data.frame(Social_relatedness=sort(rpois(55,3)),
+               Visual_fidelity = sort(rbeta(55, 0.45,1)))
+```
+
+```{r}
+ggplot(Pd,aes(x=Social_relatedness, y=Visual_fidelity))+
+  geom_point(size=3)+
+  theme_classic()+
+  ggtitle("Simulated Stove Transmission Fidelity Data")
+```
+
+## What did you learn?
+
+This project has helped me think about which components of my data actually need to be spatial. I think that spatial data and plotting skills will be useful for planning/implimenting my research, but I'm not completely convinced that I will need to do spatial analyses. 
