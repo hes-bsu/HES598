@@ -18,8 +18,6 @@ navbar:
       href: lesson_project_management.html
     - text: Intro to git with Rmarkdown
       href: lesson_git_markdown.html
-    - text: Reclassify, mosaic, and other raster operations
-      href: lesson_raster_opps.html
   - text: Course Materials
     icon: fa-desktop  fa-1x
     menu:
@@ -31,6 +29,8 @@ navbar:
       href: lesson_align_join_extract.html
     - text: Introduction to visualization
       href: lesson_intro_viz.html
+    - text: Reclassify, mosaic, and other raster operations
+      href: lesson_raster_opps.html  
   right:
   - text: Contact
     href: contact.html
