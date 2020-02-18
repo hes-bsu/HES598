@@ -8,7 +8,9 @@ output: ioslides_presentation
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(raster)
-
+library(FedData)
+library(tidyverse)
+library(sf)
 ```
 
 ## Learning Objectives
@@ -25,8 +27,6 @@ library(raster)
 
 - `R` treats `rasters` as large matrices making math pretty easy
 
-## Slide with R Output
-
 ```{r cars, echo = TRUE}
 if(!file.exists('data/rs/samples.rds')) {
   download.file('https://biogeo.ucdavis.edu/data/rspatial/rsdata.zip', dest = 'data/rsdata.zip')
@@ -35,7 +35,7 @@ if(!file.exists('data/rs/samples.rds')) {
 
 ## Load an image
 
-```{r pressure}
+```{r getdata}
 raslist <-paste0('data/rs/LC08_044034_20170614_B', 1:11, ".tif")
 landsat <- stack(raslist)
 landsatRGB <- landsat[[c(4,3,2)]]
@@ -58,7 +58,7 @@ par(mfrow =c(1,1))
 
 - Operationally just a series of cell-wise arithmetic
 
-```{r}
+```{r ndvimath}
 NDVI.numerator <- landsat[[5]] - landsat[[4]] #Landsat NIR = band 5, red = 4
 NDVI.denominator <- landsat[[5]] + landsat[[4]]
 NDVI <- NDVI.numerator/NDVI.denominator
@@ -72,13 +72,13 @@ plot(NDVI, col=rev(terrain.colors(20)), main = "NDVI")
 
 - rescaling data
 
-```{r}
+```{r centerndvi}
 NDVI.centered <- NDVI - cellStats(NDVI, "mean")
 plot(NDVI.centered, col=rev(terrain.colors(20)), main = "NDVI (centered)")
 ```
 
 ## Manual Scaling
-```{r}
+```{r scalendvi2}
 NDVI.scaled <- (NDVI - cellStats(NDVI, "mean"))/cellStats(NDVI,"sd")
 plot(NDVI.scaled, col=rev(terrain.colors(20)), main = "NDVI (scaled)")
 ```
@@ -86,7 +86,7 @@ plot(NDVI.scaled, col=rev(terrain.colors(20)), main = "NDVI (scaled)")
 ## Using `scale` in `raster`
 
 - `raster` package recreates a number of generic functions for `Raster` objects
-```{r}
+```{r scalendvi}
 NDVI.scaled2 <- scale(NDVI)
 plot(NDVI.scaled2, col=rev(terrain.colors(20)), main = "NDVI (scaled)")
 ```
@@ -105,7 +105,7 @@ plot(veg, col=rev(terrain.colors(20)), main = "Vegetation")
 ## Reclassifying (cont'd)
 
 - Based on percentiles in the data
-```{r}
+```{r percreclass, echo=TRUE}
 ndvi.percentile <- quantile(NDVI, probs = seq(0,1, 0.1), names=FALSE)
 
 #build a reclassification matrix
@@ -118,7 +118,130 @@ for (i in 1:length(ndvi.percentile)){
 perc.rcl.df[11,2] <- Inf #set the upper limit
 
 ndvi.perc.recl <- reclassify(NDVI, perc.rcl.df) 
+```
+
+## Reclassified
+```{r reclplot, echo=TRUE}
 plot(ndvi.perc.recl, col=rev(terrain.colors(20)), main = "Percentiles")
 ```
 
+
 ## Reclassifying categorical maps
+
+- Useful for land cover, vegetation, etc
+
+- Need to create a lookup table for `reclassify`
+```{r echo=FALSE}
+#download NLCD data from MRLC website
+nlcdAB <- raster("data/nlcd_adaboise.tif")
+
+AB <- c("Ada", "Boise")
+
+AB.poly <- tigris::counties(st = "ID") %>%
+  as(.,"sf") %>% 
+  filter(NAME %in% AB) %>% 
+  st_transform(., crs = proj4string(nlcdAB)) %>% 
+  as(., "Spatial") 
+
+
+```
+## NLCD
+```{r nlcdplot echo=FALSE}
+plot(nlcdAB)
+plot(AB.poly, border = "blue", add = TRUE)
+```
+
+## NLCD reclassified
+- Let's reclassify the developed categories 
+
+- Create a lookup table based on the original values in the NLCD
+
+- use `grepl` to find and replace the developed categories
+
+```{r nlcdclass, echo=TRUE}
+original.val <- unique(nlcdAB)
+#reclassify developed categories
+reclass.val <- ifelse(grepl("^2", original.val), "21", original.val) 
+
+reclass.tabl <- matrix(c(as.numeric(original.val), as.numeric(reclass.val)), ncol = 2)
+
+nlcd.reclass <- reclassify(nlcdAB, reclass.tabl)
+```
+
+## Reclassified NLCD
+```{r pltrecls}
+plot(nlcd.reclass)
+```
+
+
+## Mosaicing rasters
+
+- Lots of satellite imagery comes in "tiles"
+
+- Speeding up processing often requires "tiling"
+
+- Mosaicing allows us to put them back together
+
+
+## Using merge to combine NLCD 
+
+- when objects have the same origin and extent you can use `raster::merge`
+
+- in areas where objects overlap, priority is based on the order of the arguments
+
+- setting the `tolerance` option can relax the origin and extent enforcement
+
+```{r plotnlcd}
+nlcdCGO <- raster("data/nlcd_canyongemowyhee.tif")
+par(mfrow =c(1,2))
+plot(nlcdAB, ncldCGO)
+par(mfrow =c(1,1))
+```
+
+## The `merged` NLCD dataset for the Treasure Valley
+```{r nlcdmerge, echo=TRUE}
+nlcdmerge <- merge(nlcdAB, nlcdCGO)
+plot(nlcdmerge)
+```
+
+## Using `raster::mosaic`
+
+- similar to `merge`
+
+- Allows you to use a function (e.g., mean, max, min) when cells overlap
+
+- can use `do.call` when you have a large list of rasters
+
+```{r mos, echo=TRUE}
+nlcd.mosaic <- mosaic(nlcdAB, nlcdCGO, fun = min)
+
+nlcd.list <- list(nlcdAB, nlcdCGO)
+names(nlcd.list)[1:2] <- c('x', 'y')
+nlcd.list$fun <- mean
+nlcd.list$na.rm <- TRUE
+
+nlcd.mos <- do.call(mosaic, nlcd.list)
+```
+
+## NLCD mosaic
+```{r plotmos}
+tv.1 <- c("Canyon", "Gem", "Owyhee")
+tv.2 <- c("Ada", "Boise")
+
+tv.cty.1 <- tigris::counties(st = "ID") %>%
+  as(.,"sf") %>% 
+  filter(NAME %in% tv.1) %>% 
+  st_transform(., crs = proj4string(nlcdAB)) %>% 
+  as(., "Spatial") 
+
+tv.cty.2 <- tigris::counties(st = "ID") %>%
+  as(.,"sf") %>% 
+  filter(NAME %in% tv.2) %>% 
+  st_transform(., crs = proj4string(nlcdAB)) %>% 
+  as(., "Spatial") 
+
+plot(nlcd.mos)
+plot(tv.cty.1, border = "blue", add = TRUE)
+plot(tv.cty.2, border = "red", add = TRUE)
+```
+
