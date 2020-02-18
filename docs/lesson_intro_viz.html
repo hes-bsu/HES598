@@ -98,7 +98,7 @@ slide:not(.current) .plotly.html-widget{
         <!-- The content of this hgroup is replaced programmatically through the slide_config.json. -->
     <hgroup class="auto-fadein">
       <h1 data-config-title><!-- populated from slide_config.json --></h1>
-      <h2 data-config-subtitle><!-- populated from slide_config.json --></h2>
+      
       <p data-config-presenter><!-- populated from slide_config.json --></p>
             <p style="margin-top: 6px; margin-left: -2px;">2/1/2020</p>
           </hgroup>
@@ -115,20 +115,28 @@ slide:not(.current) .plotly.html-widget{
 </article></slide><slide class=""><hgroup><h2>Building a vector dataset</h2></hgroup><article  id="building-a-vector-dataset">
 
 <pre class = 'prettyprint lang-r'>census_api_key(&quot;90b94953d2f24e81e890229e0128174f5ba80d3f&quot;)
-# download censu data
-id.income &lt;- get_acs(geography = &quot;county&quot;, variables = c(&quot;B19013_001&quot;, 
-    &quot;B01002_001&quot;), state = &quot;ID&quot;, year = 2018, geometry = TRUE) %&gt;% 
-    mutate(rename = str_replace_all(.$variable, (c(B19013_001 = &quot;income&quot;, 
-        B01002_001 = &quot;age&quot;)))) %&gt;% # select the columns to keep
-dplyr::select(c(GEOID, rename, estimate)) %&gt;% # have to use spread because pivot_wider not currently
-# working for sf objects
-spread(., key = rename, value = estimate)
+#download censu data
+id.income &lt;- get_acs(geography = &quot;county&quot;, 
+              variables = c(&quot;B19013_001&quot;, &quot;B01002_001&quot;),
+              state = &quot;ID&quot;, 
+              year = 2018, geometry = TRUE) %&gt;% 
+  mutate(rename = 
+           str_replace_all(.$variable,
+                           (c(&quot;B19013_001&quot;=&quot;income&quot;,
+                                         &quot;B01002_001&quot;=&quot;age&quot; )))) %&gt;%
+  #select the columns to keep
+  dplyr::select(c(GEOID, rename, estimate)) %&gt;% 
+  #have to use spread because pivot_wider 
+  #not currently working for sf objects
+  spread(., key = rename, value = estimate) 
 
-# join our nonprofit data set
-id.nonprof &lt;- read.csv(&quot;./data/bmfcount.csv&quot;, stringsAsFactors = FALSE, 
-    colClasses = &quot;character&quot;)
+#join our nonprofit data set
+id.nonprof &lt;- read.csv(&quot;./data/bmfcount.csv&quot;, 
+                       stringsAsFactors = FALSE, 
+                       colClasses = &quot;character&quot;)
 
-id.census.sf &lt;- id.income %&gt;% left_join(., id.nonprof, by = c(GEOID = &quot;FIPS&quot;))
+id.census.sf &lt;- id.income %&gt;% 
+  left_join(., id.nonprof, by = c(&quot;GEOID&quot; = &quot;FIPS&quot;))
 
 id.census.sp &lt;- as(id.census.sf, &quot;Spatial&quot;)</pre>
 
@@ -141,38 +149,45 @@ id.census.sp &lt;- as(id.census.sf, &quot;Spatial&quot;)</pre>
 
 </article></slide><slide class=""><hgroup><h2>Plotting spatial data in base <code>plot</code></h2></hgroup><article  id="plotting-spatial-data-in-base-plot-1">
 
-<pre class = 'prettyprint lang-r'>plot(id.census.sp, main = &quot;Idaho Counties&quot;, sub = &quot;2018 Census Data&quot;, 
-    col = &quot;blue&quot;, border = &quot;white&quot;)</pre>
+<pre class = 'prettyprint lang-r'>plot(id.census.sp, main = &quot;Idaho Counties&quot;, 
+     sub=&quot;2018 Census Data&quot;, 
+     col=&quot;blue&quot;, 
+     border=&quot;white&quot;)</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/vectorplot-1.png" width="720" /></p>
 
 </article></slide><slide class=""><hgroup><h2>Plotting <code>sf</code> data in base <code>plot</code></h2></hgroup><article  id="plotting-sf-data-in-base-plot">
 
-<pre class = 'prettyprint lang-r'>plot(id.census.sf, main = &quot;Idaho Counties&quot;, sub = &quot;2018 Census Data&quot;, 
-    col = &quot;blue&quot;, border = &quot;white&quot;)</pre>
+<pre class = 'prettyprint lang-r'>plot(id.census.sf, main= &quot;Idaho Counties&quot;, 
+     sub=&quot;2018 Census Data&quot;, 
+     col=&quot;blue&quot;, 
+     border=&quot;white&quot;)</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-2-1.png" width="720" /></p>
 
 </article></slide><slide class=""><hgroup><h2>Plotting <code>sf</code> data in base <code>plot</code></h2></hgroup><article  id="plotting-sf-data-in-base-plot-1">
 
-<pre class = 'prettyprint lang-r'># if you just want the sf geometry
-plot(st_geometry(id.census.sf), col = &quot;blue&quot;, border = &quot;white&quot;)</pre>
+<pre class = 'prettyprint lang-r'>#if you just want the sf geometry
+plot(st_geometry(id.census.sf), 
+     col=&quot;blue&quot;, 
+     border=&quot;white&quot;)</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-3-1.png" width="720" /></p>
 
 </article></slide><slide class=""><hgroup><h2>Plotting attributes of <code>Spatial*</code> data in base <code>plot</code></h2></hgroup><article  id="plotting-attributes-of-spatial-data-in-base-plot">
 
-<pre class = 'prettyprint lang-r'># hard to plot by attributes in base plot with Spatial*
-# objects
+<pre class = 'prettyprint lang-r'>#hard to plot by attributes in base plot with Spatial* objects
 plot(id.census.sp$income)</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-4-1.png" width="720" /></p>
 
-<pre class = 'prettyprint lang-r'># Easier with sf</pre>
+<pre class = 'prettyprint lang-r'>#Easier with sf</pre>
 
 </article></slide><slide class=""><hgroup><h2>Plotting attributes of <code>sf</code> data in base <code>plot</code></h2></hgroup><article  id="plotting-attributes-of-sf-data-in-base-plot">
 
-<pre class = 'prettyprint lang-r'>plot(id.census.sf[&quot;income&quot;], main = &quot;Idaho Income&quot;, sub = &quot;Median county value as of 2018&quot;)</pre>
+<pre class = 'prettyprint lang-r'>plot(id.census.sf[&quot;income&quot;], 
+     main= &quot;Idaho Income&quot;, 
+     sub=&quot;Median county value as of 2018&quot;)</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-5-1.png" width="720" /></p>
 
@@ -182,9 +197,9 @@ plot(id.census.sp$income)</pre>
 
 </article></slide><slide class=""><hgroup><h2>Plotting raster <code>bricks</code> in baseplot</h2></hgroup><article  id="plotting-raster-bricks-in-baseplot">
 
-<pre class = 'prettyprint lang-r'># create a reaster brick
-id.terrain &lt;- terrain(id.elev, opt = c(&quot;slope&quot;, &quot;aspect&quot;, &quot;TRI&quot;, 
-    &quot;TPI&quot;))
+<pre class = 'prettyprint lang-r'>#create a reaster brick
+id.terrain &lt;- terrain(id.elev, 
+                      opt=c(&#39;slope&#39;, &#39;aspect&#39;,&#39;TRI&#39;, &#39;TPI&#39;))
 plot(id.terrain)</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-6-1.png" width="720" /></p>
@@ -196,15 +211,19 @@ plot(id.terrain)</pre>
 <li><p>Allows functionality for <code>Spatial*</code> objects similar to those for <code>sf</code> in base <code>plot</code></p></li>
 </ul>
 
-<pre class = 'prettyprint lang-r'># set up a color palette
+<pre class = 'prettyprint lang-r'>#set up a color palette
 income.pal &lt;- brewer.pal(n = 7, name = &quot;Greens&quot;)
-spplot(id.census.sp, col.regions = income.pal, cuts = 6)</pre>
+spplot(id.census.sp, 
+       col.regions = income.pal, 
+       cuts = 6)</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-7-1.png" width="720" /></p>
 
 </article></slide><slide class=""><hgroup><h2>Plotting a single variable in <code>spplot</code></h2></hgroup><article  id="plotting-a-single-variable-in-spplot">
 
-<pre class = 'prettyprint lang-r'>spplot(id.census.sp, &quot;income&quot;, col.regions = income.pal, cuts = 6)</pre>
+<pre class = 'prettyprint lang-r'>spplot(id.census.sp, &#39;income&#39;, 
+       col.regions = income.pal, 
+       cuts = 6)</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-8-1.png" width="720" /></p>
 
@@ -225,11 +244,15 @@ spplot(id.census.sp, col.regions = income.pal, cuts = 6)</pre>
 
 </article></slide><slide class=""><hgroup><h2>Adding layers in <code>spplot</code></h2></hgroup><article  id="adding-layers-in-spplot-1">
 
-<pre class = 'prettyprint lang-r'>county.layer &lt;- list(&quot;sp.polygons&quot;, id.census.sp, fill = &quot;transparent&quot;, 
-    col = &quot;blue&quot;, lwd = 1.5, first = FALSE)
+<pre class = 'prettyprint lang-r'>county.layer &lt;- list(&quot;sp.polygons&quot;, id.census.sp, 
+                     fill=&quot;transparent&quot;, 
+                     col = &quot;blue&quot;, 
+                     lwd = 1.5, first=FALSE)
 
-spplot(id.census.sp, &quot;income&quot;, col.regions = income.pal, cuts = 6, 
-    sp.layout = county.layer)</pre>
+spplot(id.census.sp, &#39;income&#39;, 
+       col.regions = income.pal, 
+       cuts = 6, 
+       sp.layout = county.layer)</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/spplotlyr-1.png" width="720" /></p>
 
@@ -262,35 +285,43 @@ id.proj@bbox  # Check dimensions to help guide offset choices</pre>
 ## x  480643.9  993117
 ## y 4649552.9 5427992</pre>
 
-<pre class = 'prettyprint lang-r'># expand bbox to make room for map elements
-new.bbox &lt;- matrix(c(480000, 1010000, 4600000, 5450000), ncol = 2, 
-    byrow = TRUE, dimnames = list(c(&quot;x&quot;, &quot;y&quot;), c(&quot;min&quot;, &quot;max&quot;)))
+<pre class = 'prettyprint lang-r'>#expand bbox to make room for map elements
+new.bbox &lt;- matrix(c(480000, 1010000, 4600000, 5450000), 
+                   ncol=2, byrow = TRUE, 
+                   dimnames = list(c(&quot;x&quot;, &quot;y&quot;),c( &quot;min&quot;, &quot;max&quot;)))
 id.proj@bbox &lt;- new.bbox
-bbox(id.proj)  #check new bbox</pre>
+bbox(id.proj) #check new bbox</pre>
 
 <pre >##       min     max
 ## x  480000 1010000
 ## y 4600000 5450000</pre>
 
-<pre class = 'prettyprint lang-r'>county.layer &lt;- list(&quot;sp.polygons&quot;, id.proj, fill = &quot;transparent&quot;, 
-    col = &quot;green&quot;, lwd = 1.5, first = FALSE)
+<pre class = 'prettyprint lang-r'>county.layer &lt;- list(&quot;sp.polygons&quot;, id.proj, 
+                     fill=&quot;transparent&quot;, 
+                     col = &quot;green&quot;, 
+                     lwd = 1.5, first=FALSE)
 
-scale &lt;- list(&quot;SpatialPolygonsRescale&quot;, layout.scale.bar(), scale = 1e+05, 
-    fill = c(&quot;transparent&quot;, &quot;black&quot;), offset = c(490500, 4615000), 
-    first = FALSE)
+scale &lt;- list(&quot;SpatialPolygonsRescale&quot;, 
+              layout.scale.bar(), scale = 100000, 
+              fill = c(&quot;transparent&quot;, &quot;black&quot;), 
+              offset = c(490500, 4615000), 
+              first=FALSE)
 
 # The scale argument sets length of bar in map units
-text1 = list(&quot;sp.text&quot;, c(490500, 4604800), &quot;0&quot;, cex = 0.5, first = FALSE)
-text2 = list(&quot;sp.text&quot;, c(590500, 4604800), &quot;100 km&quot;, cex = 0.5, 
-    first = FALSE)
+text1 = list(&quot;sp.text&quot;, c(490500, 4604800), &quot;0&quot;, 
+             cex =0.5, first=FALSE)
+text2 = list(&quot;sp.text&quot;, c(590500, 4604800), &quot;100 km&quot;, 
+             cex=0.5, first=FALSE)
 
 arrow = list(&quot;SpatialPolygonsRescale&quot;, layout.north.arrow(), 
-    offset = c(980000, 5400000), scale = 60000, first = FALSE)</pre>
+             offset = c(980000, 5400000), 
+             scale = 60000, first=FALSE)</pre>
 
 </article></slide><slide class=""><hgroup><h2>Adding map elements with <code>spplot</code></h2></hgroup><article  id="adding-map-elements-with-spplot-2">
 
-<pre class = 'prettyprint lang-r'>spplot(id.proj, &quot;income&quot;, sp.layout = list(county.layer, scale, 
-    text1, text2, arrow))</pre>
+<pre class = 'prettyprint lang-r'>spplot(id.proj, &quot;income&quot;, 
+       sp.layout = 
+         list(county.layer,scale, text1, text2, arrow))</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-11-1.png" width="720" /></p>
 
@@ -304,14 +335,16 @@ arrow = list(&quot;SpatialPolygonsRescale&quot;, layout.north.arrow(),
 
 </article></slide><slide class=""><hgroup><h2>Using <code>rasterViz</code> for plotting multiple rasters</h2></hgroup><article  id="using-rasterviz-for-plotting-multiple-rasters-1">
 
-<pre class = 'prettyprint lang-r'># build a hillshade
-id.hills &lt;- hillShade(id.terrain[[1]], id.terrain[[2]], angle = 40, 
-    direction = 270)
+<pre class = 'prettyprint lang-r'>#build a hillshade
+id.hills &lt;- hillShade(id.terrain[[1]], 
+                      id.terrain[[2]], 
+                      angle=40, 
+                      direction = 270)
 hills &lt;- levelplot(id.hills, par.settings = GrTheme())
-# crop raster - make sure projections match!
+#crop raster - make sure projections match!
 elev.crop &lt;- mask(id.elev, id.census.sp)
 elev.lp &lt;- levelplot(elev.crop)
-# combine rasters
+#combine rasters
 hills + elev.lp</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-12-1.png" width="720" /></p>
@@ -326,17 +359,21 @@ hills + elev.lp</pre>
 
 </article></slide><slide class=""><hgroup><h2>Fancier graphics with <code>ggplot2</code></h2></hgroup><article  id="fancier-graphics-with-ggplot2-1">
 
-<pre class = 'prettyprint lang-r'># get tract-level income data
-tv.income.tct &lt;- get_acs(geography = &quot;tract&quot;, variables = &quot;B19013_001&quot;, 
-    state = &quot;ID&quot;, year = 2018, geometry = TRUE) %&gt;% filter(str_detect(NAME, 
-    &quot;Ada | Boise | Canyon | Gem | Owyhee&quot;))
+<pre class = 'prettyprint lang-r'>#get tract-level income data
+tv.income.tct &lt;- get_acs(geography = &quot;tract&quot;, 
+              variables = &quot;B19013_001&quot;,
+              state = &quot;ID&quot;, 
+              year = 2018, geometry = TRUE) %&gt;% 
+  filter(str_detect(NAME, &quot;Ada | Boise | Canyon | Gem | Owyhee&quot;) )
 
-cty.map &lt;- ggplot() + geom_sf(data = id.census.sf, fill = &quot;gray&quot;)</pre>
+cty.map &lt;- ggplot() +
+  geom_sf(data = id.census.sf, fill = &quot;gray&quot;)</pre>
 
 </article></slide><slide class=""><hgroup><h2>Adding layers in <code>ggplot2</code></h2></hgroup><article  id="adding-layers-in-ggplot2">
 
-<pre class = 'prettyprint lang-r'>cty.map + geom_sf(data = tv.income.tct, aes(fill = estimate)) + 
-    scale_color_viridis()</pre>
+<pre class = 'prettyprint lang-r'>cty.map +
+  geom_sf(data = tv.income.tct, aes(fill = estimate)) +
+  scale_color_viridis()</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-14-1.png" width="720" /></p>
 
@@ -344,8 +381,11 @@ cty.map &lt;- ggplot() + geom_sf(data = id.census.sf, fill = &quot;gray&quot;)</
 
 <pre class = 'prettyprint lang-r'>med.inc &lt;- median(id.census.sf$income)
 
-ggplot() + geom_point(data = id.census.sf, aes(x = income, y = reorder(GEOID, 
-    income))) + geom_vline(xintercept = med.inc)</pre>
+ggplot() +
+  geom_point(data=id.census.sf, 
+             aes(x=income, 
+                 y = reorder(GEOID, income))) +
+  geom_vline(xintercept = med.inc)</pre>
 
 <p><img src="lesson_intro_viz_files/figure-html/unnamed-chunk-15-1.png" width="720" /></p>
 

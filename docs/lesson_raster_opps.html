@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Raster Operations</title>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="generator" content="pandoc" />
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <base target="_blank">
+
+  <script type="text/javascript">
+    var SLIDE_CONFIG = {
+      // Slide settings
+      settings: {
+                title: 'Raster Operations',
+                        useBuilds: true,
+        usePrettify: true,
+        enableSlideAreas: true,
+        enableTouch: true,
+                      },
+
+      // Author information
+      presenters: [
+            {
+        name:  'Matt Williamson' ,
+        company: '',
+        gplus: '',
+        twitter: '',
+        www: '',
+        github: ''
+      },
+            ]
+    };
+  </script>
+
+  <link href="site_libs/ioslides-13.5.1/fonts/fonts.css" rel="stylesheet" />
+  <link href="site_libs/ioslides-13.5.1/theme/css/default.css" rel="stylesheet" />
+  <link href="site_libs/ioslides-13.5.1/theme/css/phone.css" rel="stylesheet" />
+  <script src="site_libs/ioslides-13.5.1/js/modernizr.custom.45394.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/prettify.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/lang-r.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/lang-yaml.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/hammer.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/slide-controller.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/slide-deck.js"></script>
+
+  <style type="text/css">
+
+    b, strong {
+      font-weight: bold;
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    summary {
+      display: list-item;
+    }
+
+    slides > slide {
+      -webkit-transition: all 0.4s ease-in-out;
+      -moz-transition: all 0.4s ease-in-out;
+      -o-transition: all 0.4s ease-in-out;
+      transition: all 0.4s ease-in-out;
+    }
+
+    .auto-fadein {
+      -webkit-transition: opacity 0.6s ease-in;
+      -webkit-transition-delay: 0.4s;
+      -moz-transition: opacity 0.6s ease-in 0.4s;
+      -o-transition: opacity 0.6s ease-in 0.4s;
+      transition: opacity 0.6s ease-in 0.4s;
+      opacity: 0;
+    }
+/* https://github.com/ropensci/plotly/pull/524#issuecomment-468142578 */
+slide:not(.current) .plotly.html-widget{
+  display: block;
+}
+
+  </style>
+
+
+</head>
+
+<body style="opacity: 0">
+
+<slides>
+
+  <slide class="title-slide segue nobackground">
+        <!-- The content of this hgroup is replaced programmatically through the slide_config.json. -->
+    <hgroup class="auto-fadein">
+      <h1 data-config-title><!-- populated from slide_config.json --></h1>
+      
+      <p data-config-presenter><!-- populated from slide_config.json --></p>
+            <p style="margin-top: 6px; margin-left: -2px;">2/17/2020</p>
+          </hgroup>
+  </slide>
+
+<slide class=""><hgroup><h2>Learning Objectives</h2></hgroup><article  id="learning-objectives">
+
+<ul>
+<li><p>Explore basic raster operations (raster math, moving window analysis)</p></li>
+<li><p>Learn workflow for raster reclassification</p></li>
+<li><p>Learn basic approach for merging neighboring rasters</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>A bit of remote sensing</h2></hgroup><article  id="a-bit-of-remote-sensing">
+
+<ul>
+<li><p>Deriving vegetation indices largely a function of calculating the right ratios.</p></li>
+<li><p><code>R</code> treats <code>rasters</code> as large matrices making math pretty easy</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Slide with R Output</h2></hgroup><article  id="slide-with-r-output">
+
+<pre class = 'prettyprint lang-r'>if(!file.exists(&#39;data/rs/samples.rds&#39;)) {
+  download.file(&#39;https://biogeo.ucdavis.edu/data/rspatial/rsdata.zip&#39;, dest = &#39;data/rsdata.zip&#39;)
+  unzip(&#39;data/rsdata.zip&#39;, exdir=&#39;data&#39;)}</pre>
+
+</article></slide><slide class=""><hgroup><h2>Load an image</h2></hgroup><article  id="load-an-image">
+
+<pre >## [1] TRUE</pre>
+
+<pre >## [1] TRUE</pre>
+
+</article></slide><slide class=""><hgroup><h2>Plot the image</h2></hgroup><article  id="plot-the-image">
+
+<p><img src="lesson_raster_opps_files/figure-html/unnamed-chunk-1-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Calculate Normalized Difference Vegetation Index</h2></hgroup><article  id="calculate-normalized-difference-vegetation-index">
+
+<ul>
+<li><p>NDVI is a commonly used expression of &ldquo;greenness&rdquo; used to characterize productivity</p></li>
+<li><p>Operationally just a series of cell-wise arithmetic</p></li>
+</ul>
+
+<p><img src="lesson_raster_opps_files/figure-html/unnamed-chunk-2-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Raster math continued</h2></hgroup><article  id="raster-math-continued">
+
+<ul>
+<li><p>More complex operations possible</p></li>
+<li><p>rescaling data</p></li>
+</ul>
+
+<p><img src="lesson_raster_opps_files/figure-html/unnamed-chunk-3-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Manual Scaling</h2></hgroup><article  id="manual-scaling">
+
+<p><img src="lesson_raster_opps_files/figure-html/unnamed-chunk-4-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Using <code>scale</code> in <code>raster</code></h2></hgroup><article  id="using-scale-in-raster">
+
+<ul>
+<li><code>raster</code> package recreates a number of generic functions for <code>Raster</code> objects <img src="lesson_raster_opps_files/figure-html/unnamed-chunk-5-1.png" width="720" /></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Reclassifying rasters</h2></hgroup><article  id="reclassifying-rasters">
+
+<ul>
+<li><p>Useful for converting continuous rasters into categorical (or ordinal) data</p></li>
+<li><p>Thresholding based on a minimum value</p></li>
+</ul>
+
+<p><img src="lesson_raster_opps_files/figure-html/unnamed-chunk-6-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Reclassifying (cont’d)</h2></hgroup><article  id="reclassifying-contd">
+
+<ul>
+<li>Based on percentiles in the data <img src="lesson_raster_opps_files/figure-html/unnamed-chunk-7-1.png" width="720" /></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Reclassifying categorical maps</h2></hgroup><article  id="reclassifying-categorical-maps"></article></slide>
+
+
+  <slide class="backdrop"></slide>
+
+</slides>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+<!-- map slide visiblity events into shiny -->
+<script>
+  (function() {
+    if (window.jQuery) {
+       window.jQuery(document).on('slideleave', function(e) {
+         window.jQuery(e.target).trigger('hidden');
+      });
+       window.jQuery(document).on('slideenter', function(e) {
+         window.jQuery(e.target).trigger('shown');
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>

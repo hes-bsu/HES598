@@ -29,6 +29,8 @@ navbar:
       href: lesson_align_join_extract.html
     - text: Introduction to visualization
       href: lesson_intro_viz.html
+    - text: Reclassify, mosaic, and other raster operations
+      href: lesson_raster_opps.html  
   right:
   - text: Contact
     href: contact.html

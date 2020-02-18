@@ -1,0 +1,142 @@
+---
+title: "RMarkdown Assignment"
+author: "Sarah Halperin"
+date: "2/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidycensus)
+library(sp)
+library(ggplot2)
+library(viridis)
+library(scales)
+library(tidycensus)
+library(tidyverse)
+library(sf)
+library(raster)
+library(tmap)
+library(rasterVis)
+library(latticeExtra)
+library(RColorBrewer)
+```
+
+
+## Introduction
+
+The United States has some of the most productive, versatile, and resilient agricultural lands providing food security, wildlife habitat, climate regulation, scenic beauty, and cultural heritage. However, these vital socio-ecological systems have been irreversible lost to development. Between 1992 and 2012, almost 31 million acres of American farmland was lost. The loss of farmland may have major impacts on ecosystem services or the societal benefits obtained from farmland. It is important for decision-makers to understand the multiple ecosystem services provided by agriculture in order to make informed decisions regarding farmland preservation. We plan to use use the Boise Metropolitan Area (Treasure Valley) as a case study to represent the issue of farmland loss throughout the US. Our goal is to develop approaches to accurately measure and effectively commmunicate the multiple ecosystem services provided by agriculture, so we help inform decisions about when, where, and how to preserve farmland. Our objectives are: 
+
+1. Model ecosystem services to make informed decision on where to preserve farmland
+2. Determine the policy mechanisms that idaho decision makers can consider for farmland preservation 
+3. Create innovative materials to disseminate information to local stakeholders and the public 
+
+Spatial data plays a key role in the first objective and will provide the basis for the third objective. 
+
+
+## Study Area
+
+The Boise Metropolitan Area or Treasure Valley in Idaho has experienced a rapid loss in agricultural land in the last 30 years. Therefore, it serves as an excellent case study to represent current and future loss of agricultural land in the U.S. and the world. 
+
+
+```{r studyarea, include=FALSE}
+#Using the example from our class
+census_api_key("e48f8656b9936d7d733225854f9f04d67cc64588")
+#download censu data
+TV.population <- get_acs(geography = "county", 
+              variables = "B01003_001",
+              state = "ID", 
+              county = c(001,027), #Ada and Canyon County https://www.census.gov/prod/techdoc/cbp/cbp95/st-cnty.pdf
+              year = 2018, geometry = TRUE) %>% 
+
+  #select the columns to keep
+  dplyr::select(c(GEOID,NAME, variable, estimate))
+  #have to use spread because pivot_wider 
+  #not currently working for sf objects
+
+TV.population.sp <- as(TV.population, "Spatial")
+
+
+
+plot(TV.population.sp, main = "Treasure Valley", 
+     sub="2018", 
+     col="blue", 
+     border="white")
+
+
+```
+
+## Map an attribute of your data
+
+```{r attributeplot}
+population.pal <- brewer.pal(n = 2, name = "Greens")
+
+#Style 1
+spplot(TV.population.sp, "estimate", main ="Treasure Valley Population", sub = "Total Population in 2018",
+       col.regions = population.pal, 
+       cuts = 1)
+```
+
+#Style 2
+```{r, include= FALSE}
+id.pop <- get_acs(geography = "tract", 
+              variables = "B01003_001",
+              state = "ID", 
+              year = 2018, geometry = TRUE) 
+
+id.pop.tv <- get_acs(geography = "tract", 
+              variables = "B01003_001",
+              state = "ID", 
+              year = 2018, geometry = TRUE) %>% 
+  filter(str_detect(NAME, "Ada |Canyon") )
+```
+
+```{r}
+id.tv.map <- ggplot() +
+  geom_sf(data = id.pop, fill = "gray") +
+  geom_sf(data = id.pop.tv, aes(fill = estimate)) +
+  scale_fill_viridis()
+id.tv.map
+```
+
+## Plot your data a differnt way
+
+Throughout this course I will be encouraging you to plot your data in ways that don't require you to generate a map. This might help you see patterns that a map might make hard to detect. It might also help you recognize that your _is_ specifically tied to the spatial arrangement of your data (making maps and spatial analysis a critical component of your project). I use `ggplot2` as the primary means for generating these plots. There's a cheatsheet available for `ggplot2` as well (got to Help > Cheatsheets inside RStudio). I also recommend [Data Visualization: A Practical Introduction by Kieran Healy](https://socviz.co). His website has the code for building the plots in his book.
+```{r, include=FALSE}
+id.pop.tv <- get_acs(geography = "tract", 
+              variables = "B01003_001",
+              state = "ID", 
+              year = 2018, geometry = TRUE) %>% 
+  filter(str_detect(NAME, "Ada |Canyon") )
+```
+
+```{r}
+id.pop.ada<-id.pop.tv %>%
+  filter(str_detect(NAME, "Ada") ) %>%
+  mutate (County = "Ada")
+
+
+id.pop.canyon<-id.pop.tv %>%
+  filter(str_detect(NAME, "Canyon") ) %>%
+  mutate (County = "Canyon")
+
+id.pop.tv.c<-rbind(id.pop.canyon, id.pop.ada)
+
+
+ggplot() +
+  geom_point(data=id.pop.tv.c, 
+             aes(x=estimate, 
+                 y =reorder(NAME,estimate), colour=County))+
+  scale_x_continuous(name = "Population")
+
+#I would have liked to make the y axis shorter with just the census tract names but I ran out of time. 
+```
+
+## What did you learn?
+Plotting my data spatially versus a more traditional plot made me think about what would be interesting for a reader. When I was looking at it spatially it is interesting to see the data in location to all of Idaho vs my two counties of interest. When the data is presented in a traditional plot I do not think that is as important. From the map you can tell that high population is associated with Boise city center. This is harder to see when you show it in a traditional plot with just the names of the census tracts. Seeing where the population is distributed beyond the Boise city center can help come up with hypothesis of what areas may have the most ecosystem services and is another way to look at the landscape besides landcover classes. I also learned that this will take a long time to learn. While I wanted to spend ages playing around, I just do not have time for that. 
+
+
+**Remember, you can use ? to at the prompt to learn more about a command (e.g., ?plot will tell you about the usage of the plot command). Send me questions if you need help!! Good luck.**
+
+**Once you've gotten everything in the Rmakrdown document, press the `knit` button and you'll see your work rendered as a webpage**
