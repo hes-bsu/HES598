@@ -105,7 +105,7 @@ slide:not(.current) .plotly.html-widget{
         <!-- The content of this hgroup is replaced programmatically through the slide_config.json. -->
     <hgroup class="auto-fadein">
       <h1 data-config-title><!-- populated from slide_config.json --></h1>
-      <h2 data-config-subtitle><!-- populated from slide_config.json --></h2>
+      
       <p data-config-presenter><!-- populated from slide_config.json --></p>
             <p style="margin-top: 6px; margin-left: -2px;">1/20/2020</p>
           </hgroup>
@@ -141,7 +141,7 @@ p.caption {
 
 </article></slide><slide class=""><hgroup><h2>Vector Data</h2></hgroup><article  id="vector-data-2">
 
-<div style="text-align: center" class="figure">
+<div class="figure" style="text-align: center">
 <img src="images/points-lines-polygons-vector-data-types.png" alt="Image Source: Colin Williams (NEON)" width="379" />
 
 <p class="caption">
@@ -176,7 +176,7 @@ Image Source: Colin Williams (NEON)
 <li><p>Historically the most widely-used spatial data management package</p></li>
 <li><p>Combined with <code>rgdal</code> performs many of the commonly used GIS functions</p></li>
 <li><p>Many of the spatial packages depend on funcitons in <code>sp</code></p></li>
-<li>Stores data as <code>Spatial*</code> objects (each attribute stored in slots)
+<li><p>Stores data as <code>Spatial*</code> objects (each attribute stored in slots)</p>
 
 <ul>
 <li>SpatialPolgyonsDataFrame, SpatialLines, SpatialPointsDataframe, etc…</li>
@@ -246,14 +246,14 @@ st_geometry(idaho.sf)</pre>
 </article></slide><slide class=""><hgroup><h2>The Workhorse: <code>raster</code></h2></hgroup><article  id="the-workhorse-raster">
 
 <ul>
-<li><code>raster</code> has functions for the majority of raster operations (not always the fastest)
+<li><p><code>raster</code> has functions for the majority of raster operations (not always the fastest)</p>
 
 <ul>
 <li><code>mosaic</code>, <code>extract</code>, <code>reclassify</code>, etc.</li>
 </ul></li>
 <li><p>Lots of options for memory management and large problems</p></li>
 <li><p>Depends on (and improves) <code>sp</code></p></li>
-<li>Lots of other &lsquo;operation-specific&rsquo; packages
+<li><p>Lots of other &lsquo;operation-specific&rsquo; packages</p>
 
 <ul>
 <li><code>fasterize</code>, <code>velox</code></li>
@@ -283,7 +283,7 @@ extent(r) &lt;- bbox(id.elev) #sets the extent of r to match that of the id.elev
 </article></slide><slide class=""><hgroup><h2>RasterBricks, RasterStacks, NetCDF</h2></hgroup><article  id="rasterbricks-rasterstacks-netcdf">
 
 <ul>
-<li>Often more than 2 dimensions of data
+<li><p>Often more than 2 dimensions of data</p>
 
 <ul>
 <li>Data through time, satelitte bands</li>
