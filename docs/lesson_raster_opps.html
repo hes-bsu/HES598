@@ -119,21 +119,35 @@ slide:not(.current) .plotly.html-widget{
 <li><p><code>R</code> treats <code>rasters</code> as large matrices making math pretty easy</p></li>
 </ul>
 
-</article></slide><slide class=""><hgroup><h2>Slide with R Output</h2></hgroup><article  id="slide-with-r-output">
-
 <pre class = 'prettyprint lang-r'>if(!file.exists(&#39;data/rs/samples.rds&#39;)) {
-  download.file(&#39;https://biogeo.ucdavis.edu/data/rspatial/rsdata.zip&#39;, dest = &#39;data/rsdata.zip&#39;)
+  download.file(&#39;https://biogeo.ucdavis.edu/data/rspatial/rsdata.zip&#39;, 
+                dest = &#39;data/rsdata.zip&#39;)
   unzip(&#39;data/rsdata.zip&#39;, exdir=&#39;data&#39;)}</pre>
 
 </article></slide><slide class=""><hgroup><h2>Load an image</h2></hgroup><article  id="load-an-image">
 
+<pre class = 'prettyprint lang-r'>raslist &lt;-paste0(&#39;data/rs/LC08_044034_20170614_B&#39;, 1:11, &quot;.tif&quot;)
+landsat &lt;- stack(raslist)
+landsatRGB &lt;- landsat[[c(4,3,2)]]
+landsatFCC &lt;- landsat[[c(5,4,3)]]
+identical(crs(landsat), crs(landsatRGB))</pre>
+
 <pre >## [1] TRUE</pre>
+
+<pre class = 'prettyprint lang-r'>identical(crs(landsatRGB), crs(landsatFCC))</pre>
 
 <pre >## [1] TRUE</pre>
 
 </article></slide><slide class=""><hgroup><h2>Plot the image</h2></hgroup><article  id="plot-the-image">
 
-<p><img src="lesson_raster_opps_files/figure-html/unnamed-chunk-1-1.png" width="720" /></p>
+<pre class = 'prettyprint lang-r'>par.orr &lt;- par()
+par(mfrow =c(1,2))
+plotRGB(landsatRGB, axes=TRUE, stretch=&quot;lin&quot;, main=&quot;Landsat True Color Composite&quot;)
+plotRGB(landsatFCC, axes=TRUE, stretch=&quot;lin&quot;, main=&quot;Landsat False Color Composite&quot;)</pre>
+
+<p><img src="lesson_raster_opps_files/figure-html/lsplot-1.png" width="720" /></p>
+
+<pre class = 'prettyprint lang-r'>par(par.orr)</pre>
 
 </article></slide><slide class=""><hgroup><h2>Calculate Normalized Difference Vegetation Index</h2></hgroup><article  id="calculate-normalized-difference-vegetation-index">
 
@@ -142,7 +156,14 @@ slide:not(.current) .plotly.html-widget{
 <li><p>Operationally just a series of cell-wise arithmetic</p></li>
 </ul>
 
-<p><img src="lesson_raster_opps_files/figure-html/unnamed-chunk-2-1.png" width="720" /></p>
+<pre class = 'prettyprint lang-r'>#Landsat NIR = band 5, red = 4
+NDVI.numerator &lt;- landsat[[5]] - landsat[[4]] 
+NDVI.denominator &lt;- landsat[[5]] + landsat[[4]]
+NDVI &lt;- NDVI.numerator/NDVI.denominator</pre>
+
+</article></slide><slide class=""><hgroup><h2>Plot NDVI</h2></hgroup><article  id="plot-ndvi">
+
+<p><img src="lesson_raster_opps_files/figure-html/unnamed-chunk-1-1.png" width="720" /></p>
 
 </article></slide><slide class=""><hgroup><h2>Raster math continued</h2></hgroup><article  id="raster-math-continued">
 
@@ -151,17 +172,28 @@ slide:not(.current) .plotly.html-widget{
 <li><p>rescaling data</p></li>
 </ul>
 
-<p><img src="lesson_raster_opps_files/figure-html/unnamed-chunk-3-1.png" width="720" /></p>
+<pre class = 'prettyprint lang-r'>NDVI.centered &lt;- NDVI - cellStats(NDVI, &quot;mean&quot;)
+plot(NDVI.centered, col=rev(terrain.colors(20)), main = &quot;NDVI (centered)&quot;)</pre>
+
+<p><img src="lesson_raster_opps_files/figure-html/centerndvi-1.png" width="720" /></p>
 
 </article></slide><slide class=""><hgroup><h2>Manual Scaling</h2></hgroup><article  id="manual-scaling">
 
-<p><img src="lesson_raster_opps_files/figure-html/unnamed-chunk-4-1.png" width="720" /></p>
+<pre class = 'prettyprint lang-r'>NDVI.scaled &lt;- (NDVI - cellStats(NDVI, &quot;mean&quot;))/cellStats(NDVI,&quot;sd&quot;)
+plot(NDVI.scaled, col=rev(terrain.colors(20)), main = &quot;NDVI (scaled)&quot;)</pre>
+
+<p><img src="lesson_raster_opps_files/figure-html/scalendvi2-1.png" width="720" /></p>
 
 </article></slide><slide class=""><hgroup><h2>Using <code>scale</code> in <code>raster</code></h2></hgroup><article  id="using-scale-in-raster">
 
 <ul>
-<li><code>raster</code> package recreates a number of generic functions for <code>Raster</code> objects <img src="lesson_raster_opps_files/figure-html/unnamed-chunk-5-1.png" width="720" /></li>
+<li><code>raster</code> package recreates a number of generic functions for <code>Raster</code> objects</li>
 </ul>
+
+<pre class = 'prettyprint lang-r'>NDVI.scaled2 &lt;- scale(NDVI)
+plot(NDVI.scaled2, col=rev(terrain.colors(20)), main = &quot;NDVI (scaled)&quot;)</pre>
+
+<p><img src="lesson_raster_opps_files/figure-html/scalendvi-1.png" width="720" /></p>
 
 </article></slide><slide class=""><hgroup><h2>Reclassifying rasters</h2></hgroup><article  id="reclassifying-rasters">
 
@@ -170,15 +202,118 @@ slide:not(.current) .plotly.html-widget{
 <li><p>Thresholding based on a minimum value</p></li>
 </ul>
 
-<p><img src="lesson_raster_opps_files/figure-html/unnamed-chunk-6-1.png" width="720" /></p>
+<pre class = 'prettyprint lang-r'>veg &lt;- reclassify(NDVI,cbind(-Inf, 0.4,NA))
+plot(veg, col=rev(terrain.colors(20)), main = &quot;Vegetation&quot;)</pre>
+
+<p><img src="lesson_raster_opps_files/figure-html/vegclass-1.png" width="720" /></p>
 
 </article></slide><slide class=""><hgroup><h2>Reclassifying (cont’d)</h2></hgroup><article  id="reclassifying-contd">
 
 <ul>
-<li>Based on percentiles in the data <img src="lesson_raster_opps_files/figure-html/unnamed-chunk-7-1.png" width="720" /></li>
+<li>Based on percentiles in the data</li>
 </ul>
 
-</article></slide><slide class=""><hgroup><h2>Reclassifying categorical maps</h2></hgroup><article  id="reclassifying-categorical-maps"></article></slide>
+<pre class = 'prettyprint lang-r'>ndvi.percentile &lt;- quantile(NDVI, probs = seq(0,1, 0.1), names=FALSE)
+
+#build a reclassification matrix
+perc.rcl.df &lt;- NULL
+for (i in 1:length(ndvi.percentile)){
+  perc.rcl.v &lt;- c(ndvi.percentile[i], ndvi.percentile[i+1], i)
+  perc.rcl.df &lt;- rbind(perc.rcl.df, perc.rcl.v)
+  rownames(perc.rcl.df) &lt;- NULL
+}
+perc.rcl.df[11,2] &lt;- Inf #set the upper limit
+
+ndvi.perc.recl &lt;- reclassify(NDVI, perc.rcl.df) </pre>
+
+</article></slide><slide class=""><hgroup><h2>Reclassified</h2></hgroup><article  id="reclassified">
+
+<pre class = 'prettyprint lang-r'>plot(ndvi.perc.recl, col=rev(terrain.colors(20)), main = &quot;Percentiles&quot;)</pre>
+
+<p><img src="lesson_raster_opps_files/figure-html/reclplot-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Reclassifying categorical maps</h2></hgroup><article  id="reclassifying-categorical-maps">
+
+<ul>
+<li><p>Useful for land cover, vegetation, etc</p></li>
+<li><p>Need to create a lookup table for <code>reclassify</code></p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>NLCD</h2></hgroup><article  id="nlcd">
+
+<p><img src="lesson_raster_opps_files/figure-html/nlcdplot-1.png" width="720" /><img src="lesson_raster_opps_files/figure-html/nlcdplot-2.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>NLCD reclassified</h2></hgroup><article  id="nlcd-reclassified">
+
+<ul>
+<li><p>Let’s reclassify the developed categories</p></li>
+<li><p>Create a lookup table based on the original values in the NLCD</p></li>
+<li><p>use <code>grepl</code> to find and replace the developed categories</p></li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>original.val &lt;- unique(nlcdAB)
+#reclassify developed categories
+reclass.val &lt;- ifelse(grepl(&quot;^2&quot;, original.val), &quot;21&quot;, original.val) 
+
+reclass.tabl &lt;- matrix(c(as.numeric(original.val), as.numeric(reclass.val)), ncol = 2)
+
+nlcd.reclass &lt;- reclassify(nlcdAB, reclass.tabl)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Reclassified NLCD</h2></hgroup><article  id="reclassified-nlcd">
+
+<p><img src="lesson_raster_opps_files/figure-html/pltrecls-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Mosaicing rasters</h2></hgroup><article  id="mosaicing-rasters">
+
+<ul>
+<li><p>Lots of satellite imagery comes in &ldquo;tiles&rdquo;</p></li>
+<li><p>Speeding up processing often requires &ldquo;tiling&rdquo;</p></li>
+<li><p>Mosaicing allows us to put them back together</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Using merge to combine NLCD</h2></hgroup><article  id="using-merge-to-combine-nlcd">
+
+<ul>
+<li><p>when objects have the same origin and extent you can use <code>raster::merge</code></p></li>
+<li><p>in areas where objects overlap, priority is based on the order of the arguments</p></li>
+<li><p>setting the <code>tolerance</code> option can relax the origin and extent enforcement</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>The <code>merged</code> NLCD dataset for the Treasure Valley</h2></hgroup><article  id="the-merged-nlcd-dataset-for-the-treasure-valley">
+
+<pre class = 'prettyprint lang-r'>nlcdmerge &lt;- merge(nlcdAB, nlcdCGO)
+plot(nlcdmerge)</pre>
+
+<p><img src="lesson_raster_opps_files/figure-html/nlcdmerge-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Using <code>raster::mosaic</code></h2></hgroup><article  id="using-rastermosaic">
+
+<ul>
+<li><p>similar to <code>merge</code></p></li>
+<li><p>Allows you to use a function (e.g., mean, max, min) when cells overlap</p></li>
+<li><p>can use <code>do.call</code> when you have a large list of rasters</p></li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>nlcd.mosaic &lt;- mosaic(nlcdAB, nlcdCGO, fun = min)
+
+nlcd.list &lt;- list(nlcdAB, nlcdCGO)
+names(nlcd.list)[1:2] &lt;- c(&#39;x&#39;, &#39;y&#39;)
+nlcd.list$fun &lt;- mean
+nlcd.list$na.rm &lt;- TRUE
+
+nlcd.mos &lt;- do.call(mosaic, nlcd.list)</pre>
+
+</article></slide><slide class=""><hgroup><h2>NLCD mosaic</h2></hgroup><article  id="nlcd-mosaic">
+
+<p><img src="lesson_raster_opps_files/figure-html/plotmos-1.png" width="720" /></p>
+
+</article></slide><slide class=""><hgroup><h2>Addtional resources</h2></hgroup><article  id="addtional-resources">
+
+<p><a href='https://rspatial.org/rs/rs.pdf' title=''>Robert Hijmans and Ani Ghosh Remote Sensing Book</a></p>
+
+<p><a href='https://cran.r-project.org/web/packages/landsat/landsat.pdf' title=''>The landsat package</a></p>
+
+<p><a href='https://docs.ropensci.org/getlandsat/' title=''>The getlandsat package</a></p></article></slide>
 
 
   <slide class="backdrop"></slide>
