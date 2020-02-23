@@ -27,15 +27,15 @@ library(sf)
 
 - `R` treats `rasters` as large matrices making math pretty easy
 
-```{r cars, echo = TRUE}
+```{r ldata, echo = TRUE}
 if(!file.exists('data/rs/samples.rds')) {
-  download.file('https://biogeo.ucdavis.edu/data/rspatial/rsdata.zip', dest = 'data/rsdata.zip')
+  download.file('https://biogeo.ucdavis.edu/data/rspatial/rsdata.zip', 
+                dest = 'data/rsdata.zip')
   unzip('data/rsdata.zip', exdir='data')}
 ```
 
 ## Load an image
-
-```{r getdata}
+```{r getdata, echo=TRUE}
 raslist <-paste0('data/rs/LC08_044034_20170614_B', 1:11, ".tif")
 landsat <- stack(raslist)
 landsatRGB <- landsat[[c(4,3,2)]]
@@ -45,11 +45,12 @@ identical(crs(landsatRGB), crs(landsatFCC))
 ```
 
 ## Plot the image
-```{r}
+```{r lsplot, echo=TRUE, warning=FALSE}
+par.orr <- par()
 par(mfrow =c(1,2))
 plotRGB(landsatRGB, axes=TRUE, stretch="lin", main="Landsat True Color Composite")
 plotRGB(landsatFCC, axes=TRUE, stretch="lin", main="Landsat False Color Composite")
-par(mfrow =c(1,1))
+par(par.orr)
 ```
 
 ## Calculate Normalized Difference Vegetation Index
@@ -57,12 +58,15 @@ par(mfrow =c(1,1))
 - NDVI is a commonly used expression of "greenness" used to characterize productivity
 
 - Operationally just a series of cell-wise arithmetic
-
-```{r ndvimath}
-NDVI.numerator <- landsat[[5]] - landsat[[4]] #Landsat NIR = band 5, red = 4
+```{r ndvimath, echo=TRUE}
+#Landsat NIR = band 5, red = 4
+NDVI.numerator <- landsat[[5]] - landsat[[4]] 
 NDVI.denominator <- landsat[[5]] + landsat[[4]]
 NDVI <- NDVI.numerator/NDVI.denominator
+```
 
+## Plot NDVI
+```{r}
 plot(NDVI, col=rev(terrain.colors(20)), main = "NDVI")
 ```
 
@@ -72,13 +76,13 @@ plot(NDVI, col=rev(terrain.colors(20)), main = "NDVI")
 
 - rescaling data
 
-```{r centerndvi}
+```{r centerndvi, echo=TRUE}
 NDVI.centered <- NDVI - cellStats(NDVI, "mean")
 plot(NDVI.centered, col=rev(terrain.colors(20)), main = "NDVI (centered)")
 ```
 
 ## Manual Scaling
-```{r scalendvi2}
+```{r scalendvi2, echo=TRUE}
 NDVI.scaled <- (NDVI - cellStats(NDVI, "mean"))/cellStats(NDVI,"sd")
 plot(NDVI.scaled, col=rev(terrain.colors(20)), main = "NDVI (scaled)")
 ```
@@ -86,7 +90,7 @@ plot(NDVI.scaled, col=rev(terrain.colors(20)), main = "NDVI (scaled)")
 ## Using `scale` in `raster`
 
 - `raster` package recreates a number of generic functions for `Raster` objects
-```{r scalendvi}
+```{r scalendvi, echo=TRUE}
 NDVI.scaled2 <- scale(NDVI)
 plot(NDVI.scaled2, col=rev(terrain.colors(20)), main = "NDVI (scaled)")
 ```
@@ -97,7 +101,7 @@ plot(NDVI.scaled2, col=rev(terrain.colors(20)), main = "NDVI (scaled)")
 
 - Thresholding based on a minimum value
 
-```{r}
+```{r vegclass, echo=TRUE}
 veg <- reclassify(NDVI,cbind(-Inf, 0.4,NA))
 plot(veg, col=rev(terrain.colors(20)), main = "Vegetation")
 ```
@@ -121,6 +125,7 @@ ndvi.perc.recl <- reclassify(NDVI, perc.rcl.df)
 ```
 
 ## Reclassified
+
 ```{r reclplot, echo=TRUE}
 plot(ndvi.perc.recl, col=rev(terrain.colors(20)), main = "Percentiles")
 ```
@@ -131,7 +136,8 @@ plot(ndvi.perc.recl, col=rev(terrain.colors(20)), main = "Percentiles")
 - Useful for land cover, vegetation, etc
 
 - Need to create a lookup table for `reclassify`
-```{r echo=FALSE}
+
+```{r echo=FALSE, message=FALSE}
 #download NLCD data from MRLC website
 nlcdAB <- raster("data/nlcd_adaboise.tif")
 
@@ -141,17 +147,22 @@ AB.poly <- tigris::counties(st = "ID") %>%
   as(.,"sf") %>% 
   filter(NAME %in% AB) %>% 
   st_transform(., crs = proj4string(nlcdAB)) %>% 
-  as(., "Spatial") 
-
-
+  as(., "Spatial")
+nlcdAB <- crop(nlcdAB, AB.poly)
 ```
+
 ## NLCD
+<<<<<<< HEAD
+=======
+
+>>>>>>> 42ac145af02b1ca7d240b4ca86db65e6866b2208
 ```{r nlcdplot, echo=FALSE}
 plot(nlcdAB)
 plot(AB.poly, border = "blue", add = TRUE)
 ```
 
 ## NLCD reclassified
+
 - Let's reclassify the developed categories 
 
 - Create a lookup table based on the original values in the NLCD
@@ -169,8 +180,9 @@ nlcd.reclass <- reclassify(nlcdAB, reclass.tabl)
 ```
 
 ## Reclassified NLCD
+
 ```{r pltrecls}
-plot(nlcd.reclass)
+plot(nlcd.reclass,main="NLCD reclassified")
 ```
 
 
@@ -192,13 +204,20 @@ plot(nlcd.reclass)
 - setting the `tolerance` option can relax the origin and extent enforcement
 
 ```{r plotnlcd}
+
 nlcdCGO <- raster("data/nlcd_canyongemowyhee.tif")
-par(mfrow =c(1,2))
-plot(nlcdAB, ncldCGO)
-par(mfrow =c(1,1))
+tv.1 <- c("Canyon", "Gem", "Owyhee")
+tv.cty.1 <- tigris::counties(st = "ID") %>%
+  as(.,"sf") %>% 
+  filter(NAME %in% tv.1) %>% 
+  st_transform(., crs = proj4string(nlcdCGO)) %>% 
+  as(., "Spatial") 
+nlcdCGO <- crop(nlcdCGO,tv.cty.1)
+
 ```
 
 ## The `merged` NLCD dataset for the Treasure Valley
+
 ```{r nlcdmerge, echo=TRUE}
 nlcdmerge <- merge(nlcdAB, nlcdCGO)
 plot(nlcdmerge)
@@ -224,6 +243,7 @@ nlcd.mos <- do.call(mosaic, nlcd.list)
 ```
 
 ## NLCD mosaic
+
 ```{r plotmos}
 tv.1 <- c("Canyon", "Gem", "Owyhee")
 tv.2 <- c("Ada", "Boise")
@@ -231,7 +251,7 @@ tv.2 <- c("Ada", "Boise")
 tv.cty.1 <- tigris::counties(st = "ID") %>%
   as(.,"sf") %>% 
   filter(NAME %in% tv.1) %>% 
-  st_transform(., crs = proj4string(nlcdAB)) %>% 
+  st_transform(., crs = proj4string(nlcdCGO)) %>% 
   as(., "Spatial") 
 
 tv.cty.2 <- tigris::counties(st = "ID") %>%
@@ -243,5 +263,13 @@ tv.cty.2 <- tigris::counties(st = "ID") %>%
 plot(nlcd.mos)
 plot(tv.cty.1, border = "blue", add = TRUE)
 plot(tv.cty.2, border = "red", add = TRUE)
+
 ```
 
+## Addtional resources
+
+[Robert Hijmans and Ani Ghosh Remote Sensing Book](https://rspatial.org/rs/rs.pdf)
+
+[The landsat package](https://cran.r-project.org/web/packages/landsat/landsat.pdf)
+
+[The getlandsat package](https://docs.ropensci.org/getlandsat/)
