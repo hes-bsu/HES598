@@ -30,7 +30,9 @@ navbar:
     - text: Introduction to visualization
       href: lesson_intro_viz.html
     - text: Reclassify, mosaic, and other raster operations
-      href: lesson_raster_opps.html  
+      href: lesson_raster_opps.html
+    - text: Benchmarking, functions, repeated operations
+      href: lesson_functional_prog.html
   right:
   - text: Contact
     href: contact.html
