@@ -146,7 +146,7 @@ AB.poly <- tigris::counties(st = "ID") %>%
 
 ```
 ## NLCD
-```{r nlcdplot echo=FALSE}
+```{r nlcdplot, echo=FALSE}
 plot(nlcdAB)
 plot(AB.poly, border = "blue", add = TRUE)
 ```
