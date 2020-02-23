@@ -82,7 +82,7 @@ You can expect the following from me:
 
 ###  `r advdate(mon, 6)`: Reclassify, mosaic, and other raster operations
 
-###  `r advdate(mon, 7)`: Repetitive tasks, functional programming, and bench-marking
+###  `r advdate(mon, 7)`: Repetitive tasks, functions, and bench-marking
 
 ###  `r advdate(mon, 8)`: Intro to parallel computing for spatial data
 
