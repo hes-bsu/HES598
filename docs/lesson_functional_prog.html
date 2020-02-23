@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Matt Williamson" />
+
+
+<title>Functional programming and benchmarking</title>
+
+<script src="site_libs/jquery-1.12.4/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/readable.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.3/htmlwidgets.js"></script>
+<script src="site_libs/d3-3.5.6/d3.min.js"></script>
+<link href="site_libs/profvis-0.3.6/profvis.css" rel="stylesheet" />
+<script src="site_libs/profvis-0.3.6/profvis.js"></script>
+<link href="site_libs/highlight-6.2.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlight-6.2.0/highlight.js"></script>
+<script src="site_libs/profvis-binding-0.3.6/profvis.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+<link rel="stylesheet" href="site_libs_extra/academicons-1.8.0/css/academicons.css"/>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 66px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h2 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h3 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h4 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h5 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h6 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html"></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="syllabus.html">
+    <span class="fa fa-map"></span>
+     
+    Syllabus
+  </a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    <span class="fa fa-book"></span>
+     
+    Resources
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="computer_setup.html">Computer Setup</a>
+    </li>
+    <li>
+      <a href="setting_up_git.html">Setting up Git Repository</a>
+    </li>
+    <li>
+      <a href="lesson_intro_r_rstudio.html">Intro to Programming, R, &amp; RStudio</a>
+    </li>
+    <li>
+      <a href="lesson_project_management.html">Project Management</a>
+    </li>
+    <li>
+      <a href="lesson_git_markdown.html">Intro to git with Rmarkdown</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    <span class="fa fa-desktop  fa-1x"></span>
+     
+    Course Materials
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="lesson_welcome_to_space.html">Getting started with spatial data in R</a>
+    </li>
+    <li>
+      <a href="lesson_datatype_intro.html">Introduction to spatial datatypes</a>
+    </li>
+    <li>
+      <a href="lesson_align_join_extract.html">Finding alignment, joins, and extraction</a>
+    </li>
+    <li>
+      <a href="lesson_intro_viz.html">Introduction to visualization</a>
+    </li>
+    <li>
+      <a href="lesson_raster_opps.html">Reclassify, mosaic, and other raster operations</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="contact.html">Contact</a>
+</li>
+<li>
+  <a href="https://github.com/hes-bsu/HES598">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Functional programming and benchmarking</h1>
+<h4 class="author">Matt Williamson</h4>
+<h4 class="date">2/23/2020</h4>
+
+</div>
+
+
+<div id="todays-objectives" class="section level2">
+<h2>Today’s Objectives</h2>
+<ul>
+<li><p>Introduce profiling and microbenchmarking to evaluate efficiency</p></li>
+<li><p>Introduce functional programming for repetitive tasks</p></li>
+<li><p>Combine functional programming with mosaics to speed up processing</p></li>
+</ul>
+</div>
+<div id="what-is-efficiency" class="section level2">
+<h2>What is efficiency?</h2>
+</div>
+<div id="what-is-efficiency-1" class="section level2">
+<h2>What is efficiency?</h2>
+<ul>
+<li><p>Algorithmic efficiency</p></li>
+<li><p>Programmer efficiency</p></li>
+<li><p>Goal: <em>Fast enough</em> computationally, <em>fast as possible</em> for the programmer</p></li>
+</ul>
+</div>
+<div id="benchmarking-vs.profiling" class="section level2">
+<h2>Benchmarking vs. Profiling</h2>
+<ul>
+<li><p><strong>Benchmarking</strong>: tests the performance of specific operations repeatedly</p></li>
+<li><p><strong>Profiling</strong>: evaluates many lines of code to find “bottlenecks”</p></li>
+</ul>
+</div>
+<div id="benchmarking" class="section level2">
+<h2>Benchmarking</h2>
+<ul>
+<li>easiest way is using <code>system.time()</code></li>
+</ul>
+<pre class="r"><code>income.tct.sp &lt;- income.tct.sf %&gt;% as(., &quot;Spatial&quot;)
+elev &lt;- raster(&quot;./data/id_elev.tif&quot;)
+
+
+raster.time &lt;- system.time(rasterize(x=income.tct.sp, y=elev, 
+                          field = &quot;estimate&quot;))
+
+
+faster.time &lt;- system.time(fasterize(sf=income.tct.sf, raster=elev, 
+                       field = &quot;estimate&quot;))
+raster.time</code></pre>
+<pre><code>##    user  system elapsed 
+##   1.009   0.088   1.235</code></pre>
+<pre class="r"><code>faster.time</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.010   0.000   0.012</code></pre>
+</div>
+<div id="benchmarking-with-microbenchmark" class="section level2">
+<h2>Benchmarking with <code>microbenchmark</code></h2>
+<ul>
+<li><p><code>system.time</code> provides a sample</p></li>
+<li><p><code>microbenchmark</code> generates multiple (default is 100) samples</p></li>
+</ul>
+<pre class="r"><code>raster.time.mb &lt;- microbenchmark(rasterize(x=income.tct.sp, y=elev, 
+                          field = &quot;estimate&quot;), times=25)
+
+faster.time.mb &lt;- microbenchmark(fasterize(sf=income.tct.sf,
+                                           raster=elev,
+                                           field = &quot;estimate&quot;), 
+                                 times=25)</code></pre>
+</div>
+<div id="microbenchmark-results-for-rasterize" class="section level2">
+<h2>Microbenchmark results for <code>rasterize</code></h2>
+<ul>
+<li><p>Note that results are in <em>milliseconds</em></p></li>
+<li><p>One thousand function calls per second</p></li>
+<li><p>Takes roughly 1 second per call</p></li>
+</ul>
+<pre class="r"><code>raster.time.mb</code></pre>
+<pre><code>## Unit: milliseconds
+##                                                        expr      min
+##  rasterize(x = income.tct.sp, y = elev, field = &quot;estimate&quot;) 834.9582
+##        lq     mean   median       uq      max neval
+##  910.8754 993.6689 941.0433 1042.778 1355.348    25</code></pre>
+</div>
+<div id="microbenchmark-results-for-fasterize" class="section level2">
+<h2>Microbenchmark results for <code>fasterize</code></h2>
+<ul>
+<li><p>Note that results are in <em>milliseconds</em></p></li>
+<li><p><code>fasterize</code> is 113 faster than <code>raster</code></p></li>
+</ul>
+<pre class="r"><code>faster.time.mb</code></pre>
+<pre><code>## Unit: milliseconds
+##                                                              expr      min
+##  fasterize(sf = income.tct.sf, raster = elev, field = &quot;estimate&quot;) 6.924171
+##       lq    mean   median      uq     max neval
+##  7.77771 9.75005 8.276602 10.9734 17.4053    25</code></pre>
+</div>
+<div id="profiling" class="section level2">
+<h2>Profiling</h2>
+<ul>
+<li><p>Designed to locate bottle necks in large chunks of code</p></li>
+<li><p>Pinpoint which parts of your script or function takes the longes to run</p></li>
+</ul>
+</div>
+<div id="profile-example" class="section level2">
+<h2>Profile example</h2>
+<pre class="r"><code>rasterize.prof &lt;- profvis(expr = {
+  #load packages
+  library(raster)
+  library(tidycensus)
+  library(tidyverse)
+  #download data and convert to Spatial
+  income.tct.sp &lt;- get_acs(geography = &quot;tract&quot;, 
+              variables = &quot;B19013_001&quot;,
+              state = &quot;ID&quot;, 
+              year = 2018, geometry = TRUE) %&gt;% as(., &quot;Spatial&quot;)
+  elev &lt;- raster(&quot;./data/id_elev.tif&quot;)
+  #process into raster
+  income.tct.rst &lt;- rasterize(x=income.tct.sp,
+                                           y=elev,
+                                           field = &quot;estimate&quot;)
+}, interval = 0.01, prof_output = &#39;fstr-prof&#39; )</code></pre>
+<pre><code>## Getting data from the 2014-2018 5-year ACS</code></pre>
+<pre><code>## Downloading feature geometry from the Census website.  To cache shapefiles for use in future sessions, set `options(tigris_use_cache = TRUE)`.</code></pre>
+</div>
+<div id="profile-results" class="section level2">
+<h2>Profile results</h2>
+<pre class="r"><code>rasterize.prof</code></pre>
+<div id="htmlwidget-6b9a62c74c3d2f691c8d" style="width:100%;height:600px;" class="profvis html-widget"></div>
+<script type="application/json" data-for="htmlwidget-6b9a62c74c3d2f691c8d">{"x":{"message":{"prof":{"time":[1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,10,10,10,10,10,10,10,10,10,10,10,10,10,10,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,13,13,13,13,13,13,13,13,13,13,13,13,13,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,17,17,17,17,17,17,17,17,17,17,17,17,17,17,18,18,18,18,18,18,18,18,18,18,18,18,18,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,22,22,22,22,22,22,22,22,22,22,22,23,23,23,23,23,23,23,23,23,23,23,24,24,24,24,24,24,24,24,24,24,24,25,25,25,25,25,25,25,25,25,25,25,26,26,26,26,26,26,26,26,26,26,26,26,27,27,27,27,27,27,27,27,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,29,29,29,29,29,29,29,29,29,29,29,29,29,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,31,31,31,31,31,31,31,31,31,31,31,31,31,32,32,32,32,32,32,32,32,32,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,34,34,34,34,34,34,34,34,34,34,34,34,34,35,35,35,35,35,35,35,35,35,35,35,35,35,36,36,36,36,36,36,36,36,36,36,36,36,36,36,37,37,37,37,37,37,37,37,37,37,38,38,38,38,38,38,38,38,38,38,39,39,39,39,39,39,40,40,40,40,40,40,40,40,40,40,40,40,40,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,43,43,43,43,43,43,43,43,43,43,43,43,44,44,44,44,44,44,44,44,44,45,45,45,45,45,45,45,45,46,46,46,46,46,46,46,46,46,46,46,46,46,46,46,47,47,47,47,47,47,47,47,47,47,47,47,47,47,48,48,48,48,48,48,48,48,48,48,48,49,49,49,49,49,49,49,49,49,49,49,49,49,49,50,50,50,50,50,50,50,51,51,51,51,51,51,51,51,51,51,51,51,51,52,52,52,52,52,52,52,52,52,52,52,52,52,52,52,52,52,52,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,54,54,54,54,54,54,54,54,54,54,54,54,54,54,54,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,56,56,56,56,56,56,56,56,56,56,56,56,56,56,56,57,57,57,57,57,57,57,57,57,57,57,57,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,59,60,60,60,60,60,60,60,60,60,60,60,61,61,61,61,61,61,61,61,61,61,61,61,61,61,62,62,62,62,62,62,62,62,62,63,63,63,63,63,63,63,63,63,64,64,64,64,64,64,64,64,64,65,65,65,65,65,65,65,65,65,66,66,66,66,66,66,66,66,66,67,67,67,67,67,67,67,67,67,68,68,68,68,68,68,68,68,68,69,69,69,69,69,69,69,69,69,70,70,70,70,70,70,70,70,70,71,71,71,71,71,71,71,71,71,72,72,72,72,72,72,72,72,72,73,73,73,73,73,73,73,73,73,74,74,74,74,74,74,74,74,74,75,75,75,75,75,75,75,75,75,76,76,76,76,76,76,76,76,76,77,77,77,77,77,77,77,77,77,78,78,78,78,78,78,78,78,78,79,79,79,79,79,79,79,79,79,80,80,80,80,80,80,80,80,80,81,81,81,81,81,81,81,81,81,82,82,82,82,82,82,82,82,82,83,83,83,83,83,83,83,83,83,84,84,84,84,84,84,84,84,84,85,85,85,85,85,85,85,85,85,86,86,86,86,86,86,86,86,86,87,87,87,87,87,87,87,87,87,88,88,88,88,88,88,88,88,88,89,89,89,89,89,89,89,89,89,90,90,90,90,90,90,90,90,90,91,91,91,91,91,91,91,91,91,92,92,92,92,92,92,92,92,92,93,93,93,93,93,93,93,93,93,94,94,94,94,94,94,94,94,94],"depth":[9,8,7,6,5,4,3,2,1,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,11,10,9,8,7,6,5,4,3,2,1,13,12,11,10,9,8,7,6,5,4,3,2,1,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,12,11,10,9,8,7,6,5,4,3,2,1,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,14,13,12,11,10,9,8,7,6,5,4,3,2,1,34,33,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,13,12,11,10,9,8,7,6,5,4,3,2,1,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,14,13,12,11,10,9,8,7,6,5,4,3,2,1,13,12,11,10,9,8,7,6,5,4,3,2,1,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,11,10,9,8,7,6,5,4,3,2,1,11,10,9,8,7,6,5,4,3,2,1,11,10,9,8,7,6,5,4,3,2,1,11,10,9,8,7,6,5,4,3,2,1,12,11,10,9,8,7,6,5,4,3,2,1,8,7,6,5,4,3,2,1,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,13,12,11,10,9,8,7,6,5,4,3,2,1,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,13,12,11,10,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,13,12,11,10,9,8,7,6,5,4,3,2,1,13,12,11,10,9,8,7,6,5,4,3,2,1,14,13,12,11,10,9,8,7,6,5,4,3,2,1,10,9,8,7,6,5,4,3,2,1,10,9,8,7,6,5,4,3,2,1,6,5,4,3,2,1,13,12,11,10,9,8,7,6,5,4,3,2,1,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,12,11,10,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,8,7,6,5,4,3,2,1,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,14,13,12,11,10,9,8,7,6,5,4,3,2,1,11,10,9,8,7,6,5,4,3,2,1,14,13,12,11,10,9,8,7,6,5,4,3,2,1,7,6,5,4,3,2,1,13,12,11,10,9,8,7,6,5,4,3,2,1,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,12,11,10,9,8,7,6,5,4,3,2,1,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,11,10,9,8,7,6,5,4,3,2,1,14,13,12,11,10,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1],"label":["is.data.frame","colnames<-","load_data_acs","withCallingHandlers","suppressWarnings","get_acs","eval","eval","%>%","sort.int","sort.default","sort",".f","map","rev","id","spread.data.frame","spread","function_list[[k]]","withVisible","freduce","_fseq","eval","eval","withVisible","%>%","get_acs","eval","eval","%>%",".External","unzip","load_tiger","tracts","use_tigris","withCallingHandlers","suppressMessages","get_acs","eval","eval","%>%",".Call","CPL_read_ogr","st_read.character","st_read","load_tiger","tracts","use_tigris","withCallingHandlers","suppressMessages","get_acs","eval","eval","%>%","as.list","vapply","st_sfc","process_cpl_read_ogr","st_read.character","st_read","load_tiger","tracts","use_tigris","withCallingHandlers","suppressMessages","get_acs","eval","eval","%>%","[[<-.data.frame","[[<-","sf_join","right_join.sf","right_join","eval","eval","%>%","get_acs","eval","eval","%>%","sp::Polygon","FUN","lapply","...elt","stopifnot","sp::Polygons","FUN","lapply","sfc2SpatialPolygons",".as_Spatial","as_Spatial","sp::addAttrToGeom","asMethod","as","function_list[[k]]","withVisible","freduce","_fseq","eval","eval","withVisible","%>%","[[","lapply","sfc2SpatialPolygons",".as_Spatial","as_Spatial","sp::addAttrToGeom","asMethod","as","function_list[[k]]","withVisible","freduce","_fseq","eval","eval","withVisible","%>%",".getNamespaceInfo","getExportedValue","::","FUN","lapply","...elt","stopifnot","sp::Polygons","FUN","lapply","sfc2SpatialPolygons",".as_Spatial","as_Spatial","sp::addAttrToGeom","asMethod","as","function_list[[k]]","withVisible","freduce","_fseq","eval","eval","withVisible","%>%","sfc2SpatialPolygons",".as_Spatial","as_Spatial","sp::addAttrToGeom","asMethod","as","function_list[[k]]","withVisible","freduce","_fseq","eval","eval","withVisible","%>%","FUN","lapply","findLocalsList1","findLocalsList","funEnv","make.functionContext","cmpfun","doTryCatch","tryCatchOne","tryCatchList","tryCatch","compiler:::tryCmpfun","asMethod","as","bbox","validityMethod","isTRUE","anyStrings","validObject","sp::SpatialPolygons","sfc2SpatialPolygons",".as_Spatial","as_Spatial","sp::addAttrToGeom","asMethod","as","function_list[[k]]","withVisible","freduce","_fseq","eval","eval","withVisible","%>%","as.data.frame.integer","as.data.frame","data.frame","rgdal::GDALinfo","doTryCatch","tryCatchOne","tryCatchList","tryCatch","try",".rasterFromGDAL","doTryCatch","tryCatchOne","tryCatchList","tryCatch","try",".rasterObjectFromFile",".local","raster","raster","cbind","FUN","lapply",".local","geom","geom","data.frame",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","factor","as.factor","split.default","split","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","factor","as.factor","split.default","split","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","factor","as.factor","split.default","split","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","[.data.frame","[","FUN","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","[","FUN","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","[[.data.frame","[[","[.data.frame","[","FUN","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","factor","as.factor","split.default","split","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".identC","is","installClassMethod","envRefInferField","$","$","initialize","initialize","methods::new","SpPoly$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","@<-","initialize","initialize","methods::new","SpPoly$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","is","initialize","initialize","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","new.env","initialize","initialize","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","is","initialize","initialize","methods::new","SpPoly$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".getClassesFromCache","getClassDef","getClass","envRefInferField","$","$",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","$","$",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","as.character","unique","factor","as.factor","split.default","split","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","assign","Rcpp::cpp_object_initializer",".Object$initialize","initialize","initialize","methods::new","SpPoly$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","methodsPackageMetaName","classMetaName","getClassDef","is","installClassMethod","envRefInferField","$","$","initialize","initialize","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","new_CppObject_xp","Rcpp::cpp_object_initializer",".Object$initialize","initialize","initialize","methods::new","SpPoly$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","eval.parent","$","$",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","factor","as.factor","split.default","split","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","assign","Rcpp::cpp_object_initializer",".Object$initialize","initialize","initialize","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","new_CppObject_xp","Rcpp::cpp_object_initializer",".Object$initialize","initialize","initialize","methods::new","SpPoly$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","as.environment","as.environment","Rcpp::cpp_object_initializer",".Object$initialize","initialize","initialize","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","as.environment","as.environment","$","$",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","initialize","initialize","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","<GC>","split","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","exists","envRefInferField","$","$","<Anonymous>","[.data.frame","[","FUN","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","getClassDef","is","$","$","<Anonymous>","[.data.frame","[","FUN","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","Rcpp::cpp_object_initializer",".Object$initialize","initialize","initialize","methods::new","SpPoly$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","tryCatch",".External","pp$addPart",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","pp$addPart",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","factor","as.factor","split.default","split","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","[.data.frame","[","FUN","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","$","initialize","initialize","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","as.environment","as.environment","Rcpp::cpp_object_initializer",".Object$initialize","initialize","initialize","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","$",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","envRefInferField","$","$","initialize","initialize","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","methodsPackageMetaName","classMetaName","getClassDef","is","installClassMethod","envRefInferField","$","$","initialize","initialize","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","exists","$","$","eval","eval","eval.parent","$","$","eval","eval","eval.parent","$","$",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","factor","as.factor","split.default","split","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","factor","as.factor","split.default","split","lapply","split.data.frame","split","standardGeneric","split",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","is","installClassMethod","envRefInferField","$","$","initialize","initialize","methods::new","SpPoly$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","Rcpp::cpp_object_initializer",".Object$initialize","initialize","initialize","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","as.environment","as.environment","$","$","eval","eval","eval.parent","$","$","eval","eval","eval.parent","$","$",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","exists","$","$","eval","eval","eval.parent","$","$","eval","eval","eval.parent","$","$",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".getClassesFromCache","getClassDef","getClass","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","as.environment","as.environment","$","$","initialize","initialize","methods::new","SpPolyPart$new",".makeSpPolygons",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize",".External","p$rasterize","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize","possibleExtends","<Anonymous>","setValues","setValues",".fasterize",".polygonsToRaster",".local","rasterize","rasterize"],"filenum":[null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1],"linenum":[null,null,null,null,null,null,null,null,7,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,11,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13,null,null,null,null,null,null,null,null,13],"memalloc":[24.1492538452148,24.1492538452148,24.1492538452148,24.1492538452148,24.1492538452148,24.1492538452148,24.1492538452148,24.1492538452148,24.1492538452148,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.4100189208984,24.8624954223633,24.8624954223633,24.8624954223633,24.8624954223633,24.8624954223633,24.8624954223633,24.8624954223633,24.8624954223633,24.8624954223633,24.8624954223633,24.8624954223633,24.8963851928711,24.8963851928711,24.8963851928711,24.8963851928711,24.8963851928711,24.8963851928711,24.8963851928711,24.8963851928711,24.8963851928711,24.8963851928711,24.8963851928711,24.8963851928711,24.8963851928711,26.5339584350586,26.5339584350586,26.5339584350586,26.5339584350586,26.5339584350586,26.5339584350586,26.5339584350586,26.5339584350586,26.5339584350586,26.5339584350586,26.5339584350586,26.5339584350586,26.5339584350586,26.5339584350586,26.5339584350586,27.5574340820312,27.5574340820312,27.5574340820312,27.5574340820312,27.5574340820312,27.5574340820312,27.5574340820312,27.5574340820312,27.5574340820312,27.5574340820312,27.5574340820312,27.5574340820312,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,28.1302490234375,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,29.2072448730469,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,31.5709381103516,32.8207931518555,32.8207931518555,32.8207931518555,32.8207931518555,32.8207931518555,32.8207931518555,32.8207931518555,32.8207931518555,32.8207931518555,32.8207931518555,32.8207931518555,32.8207931518555,32.8207931518555,32.8207931518555,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,34.7678070068359,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,37.336311340332,41.9028167724609,41.9028167724609,41.9028167724609,41.9028167724609,41.9028167724609,41.9028167724609,41.9028167724609,41.9028167724609,41.9028167724609,41.9028167724609,41.9028167724609,41.9028167724609,41.9028167724609,50.2491760253906,50.2491760253906,50.2491760253906,50.2491760253906,50.2491760253906,50.2491760253906,50.2491760253906,50.2491760253906,50.2491760253906,50.2491760253906,50.2491760253906,50.2491760253906,50.2491760253906,50.2491760253906,50.2491760253906,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.0312957763672,51.9020919799805,51.9020919799805,51.9020919799805,51.9020919799805,51.9020919799805,51.9020919799805,51.9020919799805,51.9020919799805,51.9020919799805,51.9020919799805,51.9020919799805,51.9020919799805,51.9020919799805,51.9020919799805,52.5345077514648,52.5345077514648,52.5345077514648,52.5345077514648,52.5345077514648,52.5345077514648,52.5345077514648,52.5345077514648,52.5345077514648,52.5345077514648,52.5345077514648,52.5345077514648,52.5345077514648,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,53.7735977172852,54.8765563964844,54.8765563964844,54.8765563964844,54.8765563964844,54.8765563964844,54.8765563964844,54.8765563964844,54.8765563964844,54.8765563964844,54.8765563964844,54.8765563964844,54.8765563964844,54.8765563964844,54.8765563964844,54.8765563964844,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,54.9637832641602,55.0428619384766,55.0428619384766,55.0428619384766,55.0428619384766,55.0428619384766,55.0428619384766,55.0428619384766,55.0428619384766,55.0428619384766,55.0428619384766,55.0428619384766,55.1209106445312,55.1209106445312,55.1209106445312,55.1209106445312,55.1209106445312,55.1209106445312,55.1209106445312,55.1209106445312,55.1209106445312,55.1209106445312,55.1209106445312,55.228141784668,55.228141784668,55.228141784668,55.228141784668,55.228141784668,55.228141784668,55.228141784668,55.228141784668,55.228141784668,55.228141784668,55.228141784668,55.3023223876953,55.3023223876953,55.3023223876953,55.3023223876953,55.3023223876953,55.3023223876953,55.3023223876953,55.3023223876953,55.3023223876953,55.3023223876953,55.3023223876953,55.3310241699219,55.3310241699219,55.3310241699219,55.3310241699219,55.3310241699219,55.3310241699219,55.3310241699219,55.3310241699219,55.3310241699219,55.3310241699219,55.3310241699219,55.3310241699219,55.5304412841797,55.5304412841797,55.5304412841797,55.5304412841797,55.5304412841797,55.5304412841797,55.5304412841797,55.5304412841797,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.6796035766602,55.7474746704102,55.7474746704102,55.7474746704102,55.7474746704102,55.7474746704102,55.7474746704102,55.7474746704102,55.7474746704102,55.7474746704102,55.7474746704102,55.7474746704102,55.7474746704102,55.7474746704102,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,55.9234619140625,56.0817260742188,56.0817260742188,56.0817260742188,56.0817260742188,56.0817260742188,56.0817260742188,56.0817260742188,56.0817260742188,56.0817260742188,56.0817260742188,56.0817260742188,56.0817260742188,56.0817260742188,56.1706237792969,56.1706237792969,56.1706237792969,56.1706237792969,56.1706237792969,56.1706237792969,56.1706237792969,56.1706237792969,56.1706237792969,56.4512405395508,56.4512405395508,56.4512405395508,56.4512405395508,56.4512405395508,56.4512405395508,56.4512405395508,56.4512405395508,56.4512405395508,56.4512405395508,56.4512405395508,56.4512405395508,56.4512405395508,56.4512405395508,56.4512405395508,56.6954193115234,56.6954193115234,56.6954193115234,56.6954193115234,56.6954193115234,56.6954193115234,56.6954193115234,56.6954193115234,56.6954193115234,56.6954193115234,56.6954193115234,56.6954193115234,56.6954193115234,56.8794174194336,56.8794174194336,56.8794174194336,56.8794174194336,56.8794174194336,56.8794174194336,56.8794174194336,56.8794174194336,56.8794174194336,56.8794174194336,56.8794174194336,56.8794174194336,56.8794174194336,56.980827331543,56.980827331543,56.980827331543,56.980827331543,56.980827331543,56.980827331543,56.980827331543,56.980827331543,56.980827331543,56.980827331543,56.980827331543,56.980827331543,56.980827331543,56.980827331543,57.2365798950195,57.2365798950195,57.2365798950195,57.2365798950195,57.2365798950195,57.2365798950195,57.2365798950195,57.2365798950195,57.2365798950195,57.2365798950195,57.3179779052734,57.3179779052734,57.3179779052734,57.3179779052734,57.3179779052734,57.3179779052734,57.3179779052734,57.3179779052734,57.3179779052734,57.3179779052734,57.351806640625,57.351806640625,57.351806640625,57.351806640625,57.351806640625,57.351806640625,57.4016189575195,57.4016189575195,57.4016189575195,57.4016189575195,57.4016189575195,57.4016189575195,57.4016189575195,57.4016189575195,57.4016189575195,57.4016189575195,57.4016189575195,57.4016189575195,57.4016189575195,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.0611114501953,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.1226043701172,27.2019195556641,27.2019195556641,27.2019195556641,27.2019195556641,27.2019195556641,27.2019195556641,27.2019195556641,27.2019195556641,27.2019195556641,27.2019195556641,27.2019195556641,27.2019195556641,27.364387512207,27.364387512207,27.364387512207,27.364387512207,27.364387512207,27.364387512207,27.364387512207,27.364387512207,27.364387512207,27.4647445678711,27.4647445678711,27.4647445678711,27.4647445678711,27.4647445678711,27.4647445678711,27.4647445678711,27.4647445678711,27.6506958007812,27.6506958007812,27.6506958007812,27.6506958007812,27.6506958007812,27.6506958007812,27.6506958007812,27.6506958007812,27.6506958007812,27.6506958007812,27.6506958007812,27.6506958007812,27.6506958007812,27.6506958007812,27.6506958007812,28.2942352294922,28.2942352294922,28.2942352294922,28.2942352294922,28.2942352294922,28.2942352294922,28.2942352294922,28.2942352294922,28.2942352294922,28.2942352294922,28.2942352294922,28.2942352294922,28.2942352294922,28.2942352294922,28.6242370605469,28.6242370605469,28.6242370605469,28.6242370605469,28.6242370605469,28.6242370605469,28.6242370605469,28.6242370605469,28.6242370605469,28.6242370605469,28.6242370605469,29.0573043823242,29.0573043823242,29.0573043823242,29.0573043823242,29.0573043823242,29.0573043823242,29.0573043823242,29.0573043823242,29.0573043823242,29.0573043823242,29.0573043823242,29.0573043823242,29.0573043823242,29.0573043823242,29.2254486083984,29.2254486083984,29.2254486083984,29.2254486083984,29.2254486083984,29.2254486083984,29.2254486083984,29.3485107421875,29.3485107421875,29.3485107421875,29.3485107421875,29.3485107421875,29.3485107421875,29.3485107421875,29.3485107421875,29.3485107421875,29.3485107421875,29.3485107421875,29.3485107421875,29.3485107421875,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.3942031860352,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.5782775878906,29.8805770874023,29.8805770874023,29.8805770874023,29.8805770874023,29.8805770874023,29.8805770874023,29.8805770874023,29.8805770874023,29.8805770874023,29.8805770874023,29.8805770874023,29.8805770874023,29.8805770874023,29.8805770874023,29.8805770874023,30.2847213745117,30.2847213745117,30.2847213745117,30.2847213745117,30.2847213745117,30.2847213745117,30.2847213745117,30.2847213745117,30.2847213745117,30.2847213745117,30.2847213745117,30.2847213745117,30.2847213745117,30.2847213745117,30.2847213745117,30.4504852294922,30.4504852294922,30.4504852294922,30.4504852294922,30.4504852294922,30.4504852294922,30.4504852294922,30.4504852294922,30.4504852294922,30.4504852294922,30.4504852294922,30.4504852294922,30.4504852294922,30.4504852294922,30.4504852294922,30.5964508056641,30.5964508056641,30.5964508056641,30.5964508056641,30.5964508056641,30.5964508056641,30.5964508056641,30.5964508056641,30.5964508056641,30.5964508056641,30.5964508056641,30.5964508056641,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.7335357666016,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,30.9319381713867,31.1950531005859,31.1950531005859,31.1950531005859,31.1950531005859,31.1950531005859,31.1950531005859,31.1950531005859,31.1950531005859,31.1950531005859,31.1950531005859,31.1950531005859,31.4933013916016,31.4933013916016,31.4933013916016,31.4933013916016,31.4933013916016,31.4933013916016,31.4933013916016,31.4933013916016,31.4933013916016,31.4933013916016,31.4933013916016,31.4933013916016,31.4933013916016,31.4933013916016,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,31.775390625,36.5495147705078,36.5495147705078,36.5495147705078,36.5495147705078,36.5495147705078,36.5495147705078,36.5495147705078,36.5495147705078,36.5495147705078],"meminc":[0,0,0,0,0,0,0,0,0,0.260765075683594,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.452476501464844,0,0,0,0,0,0,0,0,0,0,0.0338897705078125,0,0,0,0,0,0,0,0,0,0,0,0,1.6375732421875,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1.02347564697266,0,0,0,0,0,0,0,0,0,0,0,0.57281494140625,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1.07699584960938,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2.36369323730469,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1.24985504150391,0,0,0,0,0,0,0,0,0,0,0,0,0,1.94701385498047,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2.56850433349609,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4.56650543212891,0,0,0,0,0,0,0,0,0,0,0,0,8.34635925292969,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.782119750976562,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.870796203613281,0,0,0,0,0,0,0,0,0,0,0,0,0,0.632415771484375,0,0,0,0,0,0,0,0,0,0,0,0,1.23908996582031,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1.10295867919922,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0872268676757812,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0790786743164062,0,0,0,0,0,0,0,0,0,0,0.0780487060546875,0,0,0,0,0,0,0,0,0,0,0.107231140136719,0,0,0,0,0,0,0,0,0,0,0.0741806030273438,0,0,0,0,0,0,0,0,0,0,0.0287017822265625,0,0,0,0,0,0,0,0,0,0,0,0.199417114257812,0,0,0,0,0,0,0,0.149162292480469,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.06787109375,0,0,0,0,0,0,0,0,0,0,0,0,0.175987243652344,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.15826416015625,0,0,0,0,0,0,0,0,0,0,0,0,0.088897705078125,0,0,0,0,0,0,0,0,0.280616760253906,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.244178771972656,0,0,0,0,0,0,0,0,0,0,0,0,0.183998107910156,0,0,0,0,0,0,0,0,0,0,0,0,0.101409912109375,0,0,0,0,0,0,0,0,0,0,0,0,0,0.255752563476562,0,0,0,0,0,0,0,0,0,0.0813980102539062,0,0,0,0,0,0,0,0,0,0.0338287353515625,0,0,0,0,0,0.0498123168945312,0,0,0,0,0,0,0,0,0,0,0,0,-30.3405075073242,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.061492919921875,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.079315185546875,0,0,0,0,0,0,0,0,0,0,0,0.162467956542969,0,0,0,0,0,0,0,0,0.100357055664062,0,0,0,0,0,0,0,0.185951232910156,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.643539428710938,0,0,0,0,0,0,0,0,0,0,0,0,0,0.330001831054688,0,0,0,0,0,0,0,0,0,0,0.433067321777344,0,0,0,0,0,0,0,0,0,0,0,0,0,0.168144226074219,0,0,0,0,0,0,0.123062133789062,0,0,0,0,0,0,0,0,0,0,0,0,0.0456924438476562,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.184074401855469,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.302299499511719,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.404144287109375,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.165763854980469,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.145965576171875,0,0,0,0,0,0,0,0,0,0,0,0.1370849609375,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.198402404785156,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.263114929199219,0,0,0,0,0,0,0,0,0,0,0.298248291015625,0,0,0,0,0,0,0,0,0,0,0,0,0,0.282089233398438,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4.77412414550781,0,0,0,0,0,0,0,0],"filename":[null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>"]},"interval":10,"files":[{"filename":"<expr>","content":"rasterize.prof <- profvis(expr = {\n  #load packages\n  library(raster)\n  library(tidycensus)\n  library(tidyverse)\n  #download data and convert to Spatial\n  income.tct.sp <- get_acs(geography = \"tract\", \n              variables = \"B19013_001\",\n              state = \"ID\", \n              year = 2018, geometry = TRUE) %>% as(., \"Spatial\")\n  elev <- raster(\"./data/id_elev.tif\")\n  #process into raster\n  income.tct.rst <- rasterize(x=income.tct.sp,\n                                           y=elev,\n                                           field = \"estimate\")\n}, interval = 0.01, prof_output = 'fstr-prof' )","normpath":"<expr>"}],"prof_output":"fstr-prof","highlight":{"output":["^output\\$"],"gc":["^<GC>$"],"stacktrace":["^\\.\\.stacktraceo(n|ff)\\.\\.$"]},"split":"h"}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="section" class="section level2">
+<h2></h2>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
