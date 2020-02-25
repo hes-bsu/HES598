@@ -15,6 +15,7 @@ library(raster)
 library(fasterize)
 library(tidycensus)
 library(velox)
+library(sp)
 #load data for use later
 census_api_key("90b94953d2f24e81e890229e0128174f5ba80d3f")
 
@@ -82,12 +83,12 @@ faster.time
 raster.time.mb <- microbenchmark(rasterize(x=income.tct.sp, 
                                            y=elev.p, 
                                            field = "estimate"),
-                                 times=25)
+                                 times=15)
 
 faster.time.mb <- microbenchmark(fasterize(sf=income.tct.sf,
                                            raster=elev.p,
                                            field = "estimate"), 
-                                 times=25)
+                                 times=15)
 ```
 
 ## Microbenchmark results for `rasterize`
@@ -106,7 +107,7 @@ raster.time.mb
 
 - Note that results are in _milliseconds_
 
-- `fasterize` is `r floor(median(raster.time.mb$time)/median(faster.time.mb$time))` faster than `raster`
+- `fasterize` is `r floor(median(raster.time.mb$time)/median(faster.time.mb$time))` times faster than `raster`
 
 ```{r mbfaster}
 faster.time.mb
@@ -132,7 +133,10 @@ rasterize.prof <- profvis(expr = {
   income.tct.sp <- get_acs(geography = "tract", 
               variables = "B19013_001",
               state = "ID", 
-              year = 2018, geometry = TRUE) %>% as(., "Spatial")
+              year = 2018, geometry = TRUE) %>% 
+    st_transform(. , idaho.cent) %>% 
+    as(., "Spatial")
+  
   elev <- raster("./data/id_elev.tif")
   #process into raster
   income.tct.rst <- rasterize(x=income.tct.sp,
@@ -180,7 +184,7 @@ crop.box1 <- raster(xmn = 744169.7,xmx=1244169.7,
 elev.crop1 <- crop(elev.p, crop.box1)
 idaho.inc.crop1 <- crop(income.tct.sp, crop.box1)
 elev.crop.vx1 <- velox::velox(elev.crop1)
-elev.ext1 <- elev.crop.vx$extract(sp=idaho.inc.crop1, 
+elev.ext1 <- elev.crop.vx1$extract(sp=idaho.inc.crop1, 
                                   fun = function(x) 
                                     mean(x, na.rm = TRUE))
 
@@ -196,7 +200,7 @@ crop.box2 <- raster(xmn = 1244169.7,xmx=1744169.7,
 elev.crop2 <- crop(elev.p, crop.box2)
 idaho.inc.crop2 <- crop(income.tct.sp, crop.box2)
 elev.crop.vx2 <- velox::velox(elev.crop2)
-elev.ext2 <- elev.crop.vx$extract(sp=idaho.inc.crop2, 
+elev.ext2 <- elev.crop.vx2$extract(sp=idaho.inc.crop2, 
                                   fun = function(x) 
                                     mean(x, na.rm = TRUE))
 
@@ -264,27 +268,33 @@ small_extract_rst <- function(rstr,counter, crprstr,vec){
   flt.rst <- crprstr == counter
   rst.crp <- crop(rstr,flt.rst)
   vec.crp <- crop(vec, rst.crp)
-  rst.extract <-extract(rst.crp, vec.crp, fun=mean)
+  rst.extract <-raster::extract(rst.crp, vec.crp, fun=mean)
 }
 ```
 
 ## Compare the timing
 
-- `velox` is `r floor(median(rs.timing$time)/median(vx.timing$time))` faster
-
-```{r funtime, cache=TRUE}
-vx.timing <- microbenchmark(lapply(values(raster.boxes), 
-                   function(x) small_extract(rstr=elev.p,
-                                             counter=x,
+```{r funtime}
+vx.timing <- microbenchmark(small_extract(rstr=elev.p,
+                                             counter=1,
                                           crprstr = raster.boxes,
-                                          income.tct.sp)), 
-                   times = 20)
-rs.timing <- microbenchmark(lapply(values(raster.boxes), 
-                   function(x) small_extract_rst(rstr=elev.p,
-                                             counter=x,
+                                          income.tct.sp), 
+                   times = 10)
+rs.timing <- microbenchmark(small_extract_rst(rstr=elev.p,
+                                             counter=1,
                                           crprstr = raster.boxes,
-                                          income.tct.sp)), 
-                   times = 20)
+                                          income.tct.sp), 
+                   times = 10)
 
+```
+
+## Compare the timing
+
+- `velox` is `r floor(median(rs.timing$time)/median(vx.timing$time))` time faster
+
+```{r}
+vx.timing
+
+rs.timing
 ```
 
