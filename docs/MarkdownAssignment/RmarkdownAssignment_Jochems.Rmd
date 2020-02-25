@@ -1,0 +1,115 @@
+---
+title: "RMarkdown Assignment"
+author: "Louis Jochems"
+date: "2/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(fasterize)
+library(raster)
+library(velox)
+library(sf)
+library(sp)
+library(tigris)
+library(tidyverse)
+library(maps)
+library(mapproj)
+library(patchwork)
+library(tidycensus)
+library(tmap)
+library(rasterVis)
+library(latticeExtra)
+library(RColorBrewer)
+library(viridis)
+library(tigris)
+```
+
+## Introduction
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. R Markdown can do the majority of things a typical word processing program (e.g., Microsoft Word), but requires a bit of knowledge about how the syntax works. There's a lot of help online, but the things I tended to use most when I first started were the RMarkdown Cheat Sheet and Reference guide (got to Help > Cheatsheets inside RStudio) and the [Markdown syntax page](https://daringfireball.net/projects/markdown/syntax).
+
+For this exercise, I want you to get comfortable using Rmarkdown to generate blogpost-style html pages that describe your project and help introduce some of the plotting techniques we learned in class. As a bonus, you'll get to see some of the benefits of being able to write and code in one place. We'll play with some additional approaches for producing publication-quality documents later in the semester. 
+
+**Important: Please save your file into the "MarkdownAssignment" folder in our git project using: MarkdownAssignment_YOURNAME.Rmd as the filename. If you don't you risk overwriting other people's work.**
+
+## Introduce your dissertation or thesis
+
+Write a few sentences about your dissertation or thesis project. What questions are you trying to address? Why is it important? What role does spatial data play in helping you answer your question?
+
+My dissertation involves detecting and predicting the spread of a newly invading macrophyte (Hydrocharis morsus-ranae L; EFB) in Great Lakes wetlands. I am addressing whether we can detect EFB from remotely sensed imagery amongst heterogenous wetland features based on its biophysical/sprectral characteristics. Moreover, because EFB is not yet fully established in all Great Lakes, I am also investigating whether we can accurately predict vulnerable wetlands based on EFB's environmental/anthropogenic drivers. These questions are important to address so that managers can properly control/mitigate EFB's spread and priortize protection of vulnerable wetlands to future invasions. Spatial data plays a huge role in answering my questions because predicting EFB's current and potential distribution in its invasive range requires many types of spatial data. 
+
+Rmarkdown will allow you to cite pulished works using `BibTex` style citations. You can learn more about how to do that [here](https://www.earthdatascience.org/courses/earth-analytics/document-your-science/add-citations-to-rmarkdown-report/). You can export the BibTex formatted citations from Zotero, Mendeley, or directly from Google Scholar. Use the Rmarkdown cheatsheet to get the syntax for linking to other webpages.
+
+## Study Area
+
+Tell me a little bit about your study area. Where is it located (state, country). Why is it a good place for your study? Use a code chunk like the one below to generate a map of your study area. You can insert new code chunks by pushing the green "Insert" button at the top of the text editor in RStudio.
+
+My study area is Great Lakes coastal wetlands in the state of Michigan. This area is a good place for my research questions because 1) EFB is not yet established there, which makes it ideal for testing whether we can detect and predict its spread and 2) there is great concern from a management perspective about its potential spread and thus a lot of effort for field data collection and a robust predictive model to quickly mitigate its spread. 
+
+You'll notice that you can include code chunks from several different languages (R, python, stan) this can be useful if you're programming across platforms, but I've found the implementation for languages outside of R to be pretty difficult.
+
+**IMPORTANT: You'll need to make sure that any necessary packages are loaded in the first code chunk (called `setup` in this document) or explicitly reference them using `::` as each time you press the `knit` button initiaties a fresh R session outside of your current environment.**
+
+## Map an attribute of your data
+
+After you've made your study area map, trying plotting some attributes of your data. Remember, there's a lot of functionality that we haven't explored yet so be sure to checkout the package documentation and reference webpages if you're having trouble figuring out how to render the data you'd like to display.
+
+```{r studyarea/attribute map}
+setwd("Z:/SDMData/RSpatialFiles")
+invaded_sites <- st_read("Z:/SDMData/RSpatialFiles/MI_InvadedSites2011_18.shp")
+MI_boundary <- st_read("Z:/SDMData/RSpatialFiles/MichiganBoundaries.shp")
+GL_coastlines <- st_read("Z:/SDMData/RSpatialFiles/GreatLakesCoastlines.shp")
+wetland_polys <- st_read("Z:/SDMData/RSpatialFiles/great_lakes_coastal_wetlands.shp")
+CWMP_surveys <- st_read("Z:/SDMData/RSpatialFiles/CWMPSurveys_EFB2011-18.shp")
+
+survey.map <- ggplot() +
+  geom_sf(data=invaded_sites,aes(color=cut(invaded_sites$Mean___Cov,6)),size=2.5) +
+  scale_color_brewer(palette="OrRd", name= "Mean EFB % Cover",
+                      labels=c("0.9-14%","14.1-27%","27.1-40%","40.1-53%","53.1-66%","66.1-81%")) +
+  ggtitle("Mean % EFB Cover at CWMP Survey Sites, Michigan (2011-2018)") +
+  xlab("Longitude")+
+  ylab("Latitude")
+
+survey.map +
+  geom_sf(data = GL_coastlines)+
+  geom_sf(data = CWMP_surveys,size=0.5)
+
+```
+
+
+
+## Plot your data a differnt way
+
+Throughout this course I will be encouraging you to plot your data in ways that don't require you to generate a map. This might help you see patterns that a map might make hard to detect. It might also help you recognize that your _is_ specifically tied to the spatial arrangement of your data (making maps and spatial analysis a critical component of your project). I use `ggplot2` as the primary means for generating these plots. There's a cheatsheet available for `ggplot2` as well (got to Help > Cheatsheets inside RStudio). I also recommend [Data Visualization: A Practical Introduction by Kieran Healy](https://socviz.co). His website has the code for building the plots in his book.
+
+```{r}
+#all surveyed sites from 2011-2018 (including absence sites) against geomorphic class
+#not very informative 
+boxplot(CWMP_surveys$MeanEFB_Co~CWMP_surveys$Geomorphic)
+
+#invaded sites only 
+boxplot(invaded_sites$Mean___Cov~invaded_sites$class, 
+        xlab= "Geomorphic Class of Surveyed Wetland",
+        ylab="Mean Percent Cover of EFB")
+
+#or over time 
+boxplot(invaded_sites$Mean___Cov~invaded_sites$Year,
+        xlab="Year",
+        ylab="Mean Percent Cover of EFB")
+
+
+```
+
+## What did you learn?
+
+Tell me a little bit about how plotting your data spatially versus as a more traditional plot affects your thinking. Did you notice anything interesting about the spatial arrangment of the data? Are there trends in the data that the map makes hard to see? What about interactions. This doesn't have to be exhaustive, I just want you to reflect a little bit on how data visualtizaiton can help clarify your research questions.
+
+
+I noticed that my map shows that sites with EFB are generally located near shipping routes as well as areas with high urban/agricultural landuse activity (through knowledge of area, should include LULC layer in future). Moreover, there seems to be clusters of invaded sites, likely due to EFB's dispersal (both biologicaly and through human activity). The difficulty with this invasive spp. is that there are absent sites that are also near human activity, where EFB has yet to invade. Moroever, plotting mean % cover against geomorphic class and over time is not fully informative because no clear trends appear, likely due to a multitude of factors influence EFB's spread across Michigan. However, these plots are very helpful to think about the spatio-temporal dynamics of EFB in addition to its environmental/anthropogenic drivers. 
+
+**Remember, you can use ? to at the prompt to learn more about a command (e.g., ?plot will tell you about the usage of the plot command). Send me questions if you need help!! Good luck.**
+
+**Once you've gotten everything in the Rmakrdown document, press the `knit` button and you'll see your work rendered as a webpage**
