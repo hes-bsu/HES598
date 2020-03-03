@@ -33,6 +33,8 @@ navbar:
       href: lesson_raster_opps.html
     - text: Benchmarking, functions, repeated operations
       href: lesson_functional_prog.html
+    - text: Introduction to parallel processing
+      href: lesson_intro_parallel.html
   right:
   - text: Contact
     href: contact.html
