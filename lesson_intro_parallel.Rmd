@@ -66,7 +66,7 @@ apply(X=test.matrix, MARGIN = 1:2, exp)
 folder_url <- "https://drive.google.com/open?id=1xSsKYpB2o9SEIo6pZDFWYqVthb162_Zo"
 folder <- drive_get(as_id(folder_url))
 tif_files <- drive_ls(folder)
-lapply(tif_files$id, function(x) drive_download(as_id(x)))
+lapply(tif_files$id, function(x) drive_download(as_id(x), overwrite = TRUE))
 
 rstr.names <- list.files(pattern = "*.tif")
 rstrs <- lapply(rstr.names, raster)
@@ -93,7 +93,7 @@ plot(mos)
 folder_url <- "https://drive.google.com/open?id=1xSsKYpB2o9SEIo6pZDFWYqVthb162_Zo"
 folder <- drive_get(as_id(folder_url))
 tif_files <- drive_ls(folder)
-map(tif_files$id, function(x) drive_download(as_id(x), overwrite = TRUE))
+map(tif_files$id, ~drive_download(as_id(.x), overwrite = TRUE))
 ```
 
 ## Parallelism and spatial computing
