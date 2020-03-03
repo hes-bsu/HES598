@@ -1,0 +1,61 @@
+---
+title: "Introduction to parallelization"
+author: "Matt Williamson"
+date: "3/2/2020"
+output: 
+    ioslides_presentation:
+        css: style.css
+        theme: readable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Today's objectives
+
+- Introduce the `apply` and `map_` family of functions for repeated operations
+
+- Describe parallel computing and introduce `embarassingly parallel` computation
+
+- Introduce `mclapply` and `future_map` for local parallelization
+
+## The `apply` function
+
+- `apply` requires three arguments: an `array`, the `margin`, and the `function` you want to execute
+
+- `arrays`are R data objects that contain 1, 2, or more dimensions
+
+- `margins` identify which parts of the array to apply the `function` over (1 = rows, 2 = columns, 1:2 = all cells in a matrix) 
+
+## An example with `apply`
+
+```{r}
+#create data
+test.matrix <- matrix(rnorm(200), 20, 10)
+dim(test.matrix)
+# generate column means
+apply(X=test.matrix, MARGIN = 2, mean)
+#generate row sums
+apply(X=test.matrix, MARGIN = 1, sum)
+#exponentiate each cell of the data
+apply(X=test.matrix, MARGIN = 1:2, exp)
+
+```
+
+
+## The `apply` family
+
+- A flexible group of functions that replace `for` or `while` loops
+
+- Translates loops in C++ code, often provides speed-up
+
+- Which member of the 'family' depends on input data and output desired
+
+- Can be tricky to get desired behavior (*algorithmic efficiency* vs. *programmer efficiency*)
+
+
+## Using `lapply` for spatial data
+
+
+
