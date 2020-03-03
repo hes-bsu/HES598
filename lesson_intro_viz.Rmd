@@ -2,7 +2,10 @@
 title: "Introduction to Visualization"
 author: "Matt Williamson"
 date: "2/1/2020"
-output: ioslides_presentation
+output: 
+    ioslides_presentation:
+        css: style.css
+        theme: readable
 ---
 
 ```{r setup, include=FALSE}

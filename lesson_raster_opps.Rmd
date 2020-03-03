@@ -2,7 +2,10 @@
 title: "Raster Operations"
 author: "Matt Williamson"
 date: "2/17/2020"
-output: ioslides_presentation
+output: 
+    ioslides_presentation:
+        css: style.css
+        theme: readable
 ---
 
 ```{r setup, include=FALSE}
