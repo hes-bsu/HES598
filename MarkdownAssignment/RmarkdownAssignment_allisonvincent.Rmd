@@ -84,20 +84,19 @@ We are identifying snow in our images by the normalized difference snow index (N
 
 ## load the landsat validation data and the starfm modeled data
 landsat_ndsi <- brick("./2016_landsat_East_whole_w.tif") 
-starfm_ndsi <- brick("./2016_East_v4_r7_04252016_fusion.tif")  
+starfm_ndsi <- raster("starfm_day40.tif")  
 
 proj4string(landsat_ndsi)
 
 
 ## Each raster brick layer is one day, select the day we want to analyze
 landsat_4.25 <- brick(landsat_ndsi[[40]])
-starfm_4.25 <- brick(starfm_ndsi[[40]])
 
 ## Reproject our rasters to match our shapefile projection
 landsat_4.25 <- projectRaster(landsat_4.25, crs = co_utm)
 proj4string(landsat_4.25)
 
-starfm_4.25 <- projectRaster(starfm_4.25, crs = co_utm)
+starfm_4.25 <- projectRaster(starfm_ndsi, crs = co_utm)
 proj4string(starfm_4.25)
 
 ## Landsat 'no data' values are currently set to 0. Creating a mask to change them to -11111, which is the 'no data' value in the model output
