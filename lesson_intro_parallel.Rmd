@@ -117,9 +117,10 @@ detectCores()
 - relies on "forking" 
 
 - Can be slower than standard processing if the dataset being copied to the child process is large
+
 ```{r mcltest}
-counties <- tigris::counties("id")
-counties.p <- spTransform(counties, proj4string(mos))
+counties.id <- tigris::counties("id")
+counties.p <- spTransform(counties.id, proj4string(mos))
 
 counties.ext <- mclapply(seq_along(counties.p), function(x){
   cty.sf = as(counties.p, "sf") 
