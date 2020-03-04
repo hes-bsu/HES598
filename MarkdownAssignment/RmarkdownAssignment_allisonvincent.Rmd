@@ -1,0 +1,143 @@
+---
+title: "RMarkdown Assignment"
+author: "Allison Vincent"
+date: "2/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidycensus)
+library(sp)
+library(sf)
+library(ggplot2)
+library(viridis)
+library(scales)
+library(rgdal)
+library(tigris)
+library(raster)
+library(dplyr)
+```
+
+## Introduce your dissertation or thesis
+
+
+My thesis research involves using a remote sensing data fusion model to monitor snow covered area in a mountain watershed. The questions we are trying to answer include:
+
+1. Can we constrain the spatiotemporal distribution of snow cover in mountain watersheds over a large area and long period of time to better understand water delivery to the Critical Zone (or shallow subsurface)?
+
+2. Can we create a high spatiotemporal resolution dataset to monitor snow covered area in a mountain watershed over a ~20 year period?
+
+
+This is important because the Critical Zone is home to a variety of biogeochemical processes that transform inorganic material into forms usable to life. However, in highly heterogeneous mountain areas, many of these Critical Zone processes and the rates in which they operate are still poorly understood. What we do know, however, is that water is a huge driver of these processes of interest. In mountain areas where the majority of the precipitation falls in winter as snow, the spatial patterns of snow and its melt characteristics dominate water delivery to the subsurface. Therefore, if we can better understand the water delivery via snow cover in these areas, we can potentially better understand the Critical Zone behaviors happening here.
+
+To do this, we are using a model to downscale MODIS (low spatial, high temporal resoultion) data to fill in the gaps of Landsat (high spatial, low temporal resolution) data to monitor snowcover in detail on a daily basis. I need to be able to work with spatial data to format input rasters to my model, analyze the output rasters and compare them to validation data, and eventually, peform spatial statistics on snow patterns in the results.   
+
+## Study Area 
+
+
+My study site is the East River watershed located in Gunnison County in the western-central mountains of Colorado, USA. The town of Crested Butte, CO is located here. This watershed covers approximately 1700 sq km and has a topographic relief of about 1420 m. The area gets approximately 600 mm of precipitation a year, the majority of which falls in winter as snow. These characteristics make it an ideal site to use to answer our questions about snow-drive Critical Zone processes in mountain areas.
+
+This location is also home to a Department of Energy Scientific Focus Area, so there are already a variety of collaborators from around the country working here to answer questions ranging from the workings of the atmosphere to the deep subsurface. Because of this, the area has been well monitored for several decades, and there is a wide variety of knowledge we can draw on to inform our research.
+
+
+```{r studyarea}
+## get our state and county polygons from tigris data
+co.area <- counties(state = 'CO', cb = TRUE, resolution = '20m')
+
+## check the projection of the raw file
+proj4string(co.area)
+              
+## read in the shapefile of the watershed
+ER <- readOGR("EastRiver_Project.shp")
+## check the projection of the shapefile
+proj4string(ER)
+
+## reproject the county boundaries to match the shapefile projection
+co_utm ="+proj=utm +zone=13 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
+co.area.utm <- spTransform(co.area, CRS(co_utm))
+
+proj4string(co.area.utm)
+
+## find the county of interest
+gunnison <- co.area.utm[co.area.utm$NAME == 'Gunnison', ]
+
+## create multiple plots to show the county of interest and the watershed boundary within that county
+par(mfrow=c(1,2)) 
+plot(co.area.utm, col='light gray', border='gray',  main = "Colorado Counties",
+     sub = "Gunnison County")
+plot(gunnison, add=TRUE, density=20, lwd=2, col='red')
+
+plot(gunnison, col='light gray', border='gray',
+     main = "Gunnison County",
+     sub = "East River Watershed")
+plot(ER, add=TRUE, density=20, lwd=2, col='blue')
+
+```
+
+## Map an attribute of your data
+
+We are identifying snow in our images by the normalized difference snow index (NDSI), which is similar to NDVI, but uses Landsat bands 3 and 6. This calculation has already been done (and has been multiplied by 10,000) to the rasters we are bringing in here. 
+
+```{r attributeplot}
+
+## load the landsat validation data and the starfm modeled data
+landsat_ndsi <- brick("./2016_landsat_East_whole_w.tif") 
+starfm_ndsi <- brick("./2016_East_v4_r7_04252016_fusion.tif")  
+
+proj4string(landsat_ndsi)
+
+
+## Each raster brick layer is one day, select the day we want to analyze
+landsat_4.25 <- brick(landsat_ndsi[[40]])
+starfm_4.25 <- brick(starfm_ndsi[[40]])
+
+## Reproject our rasters to match our shapefile projection
+landsat_4.25 <- projectRaster(landsat_4.25, crs = co_utm)
+proj4string(landsat_4.25)
+
+starfm_4.25 <- projectRaster(starfm_4.25, crs = co_utm)
+proj4string(starfm_4.25)
+
+## Landsat 'no data' values are currently set to 0. Creating a mask to change them to -11111, which is the 'no data' value in the model output
+landsat_masked <- Which(landsat_4.25 == 0, cells = TRUE)
+landsat_4.25[landsat_masked] <- -11111
+
+
+## Reclassify all data values less than or equal to -11111 as NA
+landsat_4.25 <- reclassify(landsat_4.25,cbind(-Inf, -11111, NA))
+starfm_4.25 <- reclassify(starfm_4.25,cbind(-Inf, -11111, NA))
+
+  
+## plot our data, overlaying the watershed boundary to the plots
+par(mfrow=c(1,2)) 
+plot(landsat_4.25, col = rev(cm.colors(40)), main = "NDSI from Landsat")
+plot(ER, border = "black", add = TRUE)
+plot(starfm_4.25, col = rev(cm.colors(40)), main = "NDSI from Model")
+plot(ER, border = "black", add = TRUE)
+  
+```
+
+## Plot your data a different way
+
+To plot these data in a non-map way, I decided to make histograms of the values of each raster. This way I can see the distributions of each and use that as another way to analyze how well my model is performing. 
+
+```{r}
+
+## Convert our rasters into vectors
+landsat_vec <- as.vector(landsat_4.25)
+starfm_vec <- as.vector(starfm_4.25)
+
+## Plot the values of each in histograms to visualize their distribution
+par(mfrow=c(1,2))
+hist(landsat_vec, main = "Histogram of Landsat NDSI values", xlab = "NSDI", col = "blue")
+hist(starfm_vec, main = "Histogram of Modeled NDSI values", xlab = "NDSI", col = "blue")
+
+
+```
+
+## What did you learn?
+
+
+When I plotted my data spatially, I noticed just from the colors present in the maps that the rasters were different from each other in terms of the diversity in their cell values. I thought it was curious that the colors plotted in the Landsat image were either on the very high or very low ends of the colorbar. In contrast, the model results in the second raster plotted colors (and thus values) more in between these two extremes. Plotting both as histograms helped me to better understand this behavior. The histograms show the same patterns as above, but from a different perspective. The histogram of the Landsat raster clearly shows the overwhelming frequency of cell values at the high and low ends. I think it is interesting that the modeled results also show that same bimodal distribution of values in the high and low ends, but have a much wider spread around those means. I am not entirely sure yet how this information will inform my research going forward, but this assignment gave me the opportunity to gain some new insights into my data. 
