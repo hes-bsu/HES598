@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Introduction to parallelization</title>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="generator" content="pandoc" />
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <base target="_blank">
+
+  <script type="text/javascript">
+    var SLIDE_CONFIG = {
+      // Slide settings
+      settings: {
+                title: 'Introduction to parallelization',
+                        useBuilds: true,
+        usePrettify: true,
+        enableSlideAreas: true,
+        enableTouch: true,
+                      },
+
+      // Author information
+      presenters: [
+            {
+        name:  'Matt Williamson' ,
+        company: '',
+        gplus: '',
+        twitter: '',
+        www: '',
+        github: ''
+      },
+            ]
+    };
+  </script>
+
+  <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="site_libs/bootstrap-3.3.5/css/readable.min.css" rel="stylesheet" />
+  <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+  <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+  <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+  <link href="site_libs/ioslides-13.5.1/fonts/fonts.css" rel="stylesheet" />
+  <link href="site_libs/ioslides-13.5.1/theme/css/default.css" rel="stylesheet" />
+  <link href="site_libs/ioslides-13.5.1/theme/css/phone.css" rel="stylesheet" />
+  <script src="site_libs/ioslides-13.5.1/js/modernizr.custom.45394.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/prettify.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/lang-r.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/prettify/lang-yaml.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/hammer.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/slide-controller.js"></script>
+  <script src="site_libs/ioslides-13.5.1/js/slide-deck.js"></script>
+
+  <style type="text/css">
+
+    b, strong {
+      font-weight: bold;
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    summary {
+      display: list-item;
+    }
+
+    slides > slide {
+      -webkit-transition: all 0.4s ease-in-out;
+      -moz-transition: all 0.4s ease-in-out;
+      -o-transition: all 0.4s ease-in-out;
+      transition: all 0.4s ease-in-out;
+    }
+
+    .auto-fadein {
+      -webkit-transition: opacity 0.6s ease-in;
+      -webkit-transition-delay: 0.4s;
+      -moz-transition: opacity 0.6s ease-in 0.4s;
+      -o-transition: opacity 0.6s ease-in 0.4s;
+      transition: opacity 0.6s ease-in 0.4s;
+      opacity: 0;
+    }
+/* https://github.com/ropensci/plotly/pull/524#issuecomment-468142578 */
+slide:not(.current) .plotly.html-widget{
+  display: block;
+}
+
+  </style>
+
+  <link rel="stylesheet" href="style.css" type="text/css" />
+
+</head>
+
+<body style="opacity: 0">
+
+<slides>
+
+  <slide class="title-slide segue nobackground">
+        <!-- The content of this hgroup is replaced programmatically through the slide_config.json. -->
+    <hgroup class="auto-fadein">
+      <h1 data-config-title><!-- populated from slide_config.json --></h1>
+      
+      <p data-config-presenter><!-- populated from slide_config.json --></p>
+            <p style="margin-top: 6px; margin-left: -2px;">3/2/2020</p>
+          </hgroup>
+  </slide>
+
+<slide class=""><hgroup><h2>Today’s objectives</h2></hgroup><article  id="todays-objectives">
+
+<ul>
+<li><p>Introduce the <code>apply</code> and <code>map_</code> family of functions for repeated operations</p></li>
+<li><p>Describe parallel computing and introduce <code>embarassingly parallel</code> computation</p></li>
+<li><p>Introduce <code>mclapply</code> and <code>future_map</code> for local parallelization</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>The <code>apply</code> function</h2></hgroup><article  id="the-apply-function">
+
+<ul>
+<li><p><code>apply</code> requires three arguments: an <code>array</code>, the <code>margin</code>, and the <code>function</code> you want to execute</p></li>
+<li><p><code>arrays</code>are R data objects that contain 1, 2, or more dimensions</p></li>
+<li><p><code>margins</code> identify which parts of the array to apply the <code>function</code> over (1 = rows, 2 = columns, 1:2 = all cells in a matrix)</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>An example with <code>apply</code></h2></hgroup><article  id="an-example-with-apply">
+
+<pre class = 'prettyprint lang-r'>#create data
+test.matrix &lt;- matrix(rnorm(200), 20, 10)
+dim(test.matrix)
+# generate column means
+apply(X=test.matrix, MARGIN = 2, mean)
+#generate row sums
+apply(X=test.matrix, MARGIN = 1, sum)
+#exponentiate each cell of the data
+apply(X=test.matrix, MARGIN = 1:2, exp)</pre>
+
+</article></slide><slide class=""><hgroup><h2>The <code>apply</code> family</h2></hgroup><article  id="the-apply-family">
+
+<ul>
+<li><p>A flexible group of functions that replace <code>for</code> or <code>while</code> loops</p></li>
+<li><p>Translates loops in C++ code, often provides speed-up</p></li>
+<li><p>Which member of the &lsquo;family&rsquo; depends on input data and output desired</p></li>
+<li><p>Can be tricky to get desired behavior (<em>algorithmic efficiency</em> vs. <em>programmer efficiency</em>)</p></li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Using <code>lapply</code> for spatial data</h2></hgroup><article  id="using-lapply-for-spatial-data">
+
+<pre class = 'prettyprint lang-r'>#get filenames from Google Drive
+
+folder_url &lt;- &quot;https://drive.google.com/open?id=1xSsKYpB2o9SEIo6pZDFWYqVthb162_Zo&quot;
+folder &lt;- drive_get(as_id(folder_url))
+tif_files &lt;- drive_ls(folder)
+lapply(tif_files$id, function(x) drive_download(as_id(x), overwrite = TRUE))
+
+rstr.names &lt;- list.files(pattern = &quot;*.tif&quot;)
+rstrs &lt;- lapply(rstr.names, raster)
+plot(rstrs[[1]])</pre>
+
+</article></slide><slide class=""><hgroup><h2>Mosaicing a list of rasters</h2></hgroup><article  id="mosaicing-a-list-of-rasters">
+
+<pre class = 'prettyprint lang-r'>names(rstrs)[1:2] &lt;- c(&#39;x&#39;, &#39;y&#39;)
+rstrs$fun &lt;- mean
+rstrs$na.rm &lt;- TRUE
+mos &lt;- do.call(mosaic, rstrs)
+plot(mos)</pre>
+
+</article></slide><slide class=""><hgroup><h2>The <code>map</code> function from <code>purrr</code> and the <code>tidyverse</code></h2></hgroup><article  id="the-map-function-from-purrr-and-the-tidyverse">
+
+<ul>
+<li>Acts like <code>apply</code> but can be more flexible and interpretable</li>
+<li>Has a similar &lsquo;family&rsquo; of functions designed for different situations</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>folder_url &lt;- &quot;https://drive.google.com/open?id=1xSsKYpB2o9SEIo6pZDFWYqVthb162_Zo&quot;
+folder &lt;- drive_get(as_id(folder_url))
+tif_files &lt;- drive_ls(folder)
+map(tif_files$id, ~drive_download(as_id(.x), overwrite = TRUE))</pre>
+
+</article></slide><slide class=""><hgroup><h2>Parallelism and spatial computing</h2></hgroup><article  id="parallelism-and-spatial-computing">
+
+<ul>
+<li><p><code>lapply</code> and <code>map</code> work serially</p></li>
+<li><p>Parallelization is useful when pieces of a problem are independent</p></li>
+<li><p>&ldquo;Embarassingly parallel&rdquo; refers to problems that can be broken down into small chunks and run simultaneously using your computer’s different processors</p></li>
+<li><p><code>mclapply</code> and <code>future_map</code> allow this in a general way; <code>raster</code> allows some implicit parallelism</p></li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>library(parallel)
+detectCores()</pre>
+
+</article></slide><slide class=""><hgroup><h2>Using <code>mclapply</code> to extract data</h2></hgroup><article  id="using-mclapply-to-extract-data">
+
+<ul>
+<li><p>relies on &ldquo;forking&rdquo;</p></li>
+<li><p>Can be slower than standard processing if the dataset being copied to the child process is large</p></li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>counties &lt;- tigris::counties(&quot;id&quot;)
+counties.p &lt;- spTransform(counties, proj4string(mos))
+
+counties.ext &lt;- mclapply(seq_along(counties.p), function(x){
+  cty.sf = as(counties.p, &quot;sf&quot;) 
+  cty.ext = cty.sf[x,] %&gt;% as(., &quot;Spatial&quot;)
+  raster::extract(mos, cty.ext)
+}, mc.cores = 4)</pre>
+
+</article></slide><slide class=""><hgroup><h2>Evaluating <code>mclapply</code> to extract data</h2></hgroup><article  id="evaluating-mclapply-to-extract-data">
+
+<pre class = 'prettyprint lang-r'>s.mclapply &lt;- system.time(mclapply(seq_along(counties.p), function(x){
+  cty.sf = as(counties.p, &quot;sf&quot;) 
+  cty.ext = cty.sf[x,] %&gt;% as(., &quot;Spatial&quot;)
+  raster::extract(mos, cty.ext)
+}, mc.cores = 4))
+
+s.lapply &lt;- system.time(lapply(seq_along(counties.p), function(x){
+  cty.sf = as(counties.p, &quot;sf&quot;) 
+  cty.ext = cty.sf[x,] %&gt;% as(., &quot;Spatial&quot;)
+  raster::extract(mos, cty.ext)
+}))
+s.mclapply
+s.lapply</pre>
+
+</article></slide><slide class=""><hgroup><h2>Translating to the <code>map_</code> family</h2></hgroup><article  id="translating-to-the-map_-family">
+
+<ul>
+<li>relies on the <code>furrr</code> package</li>
+</ul>
+
+<pre class = 'prettyprint lang-r'>library(furrr)
+future::plan(multiprocess)
+
+counties.ext &lt;- future_map(seq_along(counties.p), function(x){
+  library(sf) #each operation in a new session
+  cty.sf = as(counties.p, &quot;sf&quot;) 
+  cty.ext = cty.sf[x,] %&gt;% as(., &quot;Spatial&quot;)
+  raster::extract(mos, cty.ext)
+})</pre>
+
+</article></slide><slide class=""><hgroup><h2>Timing <code>future_</code></h2></hgroup><article  id="timing-future_">
+
+<pre class = 'prettyprint lang-r'>s.future &lt;- system.time(future_map(seq_along(counties.p), function(x){
+  library(sf) #each operation in a new session
+  cty.sf = as(counties.p, &quot;sf&quot;) 
+  cty.ext = cty.sf[x,] %&gt;% as(., &quot;Spatial&quot;)
+  raster::extract(mos, cty.ext)
+}))
+
+s.map &lt;- system.time(map(seq_along(counties.p), function(x){
+  library(sf) #each operation in a new session
+  cty.sf = as(counties.p, &quot;sf&quot;) 
+  cty.ext = cty.sf[x,] %&gt;% as(., &quot;Spatial&quot;)
+  raster::extract(mos, cty.ext)
+}))
+s.future
+s.map</pre>
+
+</article></slide><slide class=""><hgroup><h2>Additional directions</h2></hgroup><article  id="additional-directions">
+
+<ul>
+<li><p>socket clusters (<code>makeCluster</code>, <code>parLapply</code>) - Useful when data needs to be passed back and forth among jobs (see <a href='https://bookdown.org/rdpeng/rprogdatascience/parallel-computation.html' title=''>R Programming for Data Science</a>)</p></li>
+<li><p>lots of variations on <code>map_</code> (see the <a href='https://purrr.tidyverse.org/reference/map.html' title=''>purrr documentation</a>) and <code>apply</code></p></li>
+<li><p>The <code>foreach</code> package adds additional functionalilty (see <a href='https://www.r-bloggers.com/how-to-go-parallel-in-r-basics-tips/' title=''>this blog</a> for more info on parallel processing)</p></li>
+</ul></article></slide>
+
+
+  <slide class="backdrop"></slide>
+
+</slides>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+<!-- map slide visiblity events into shiny -->
+<script>
+  (function() {
+    if (window.jQuery) {
+       window.jQuery(document).on('slideleave', function(e) {
+         window.jQuery(e.target).trigger('hidden');
+      });
+       window.jQuery(document).on('slideenter', function(e) {
+         window.jQuery(e.target).trigger('shown');
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>
