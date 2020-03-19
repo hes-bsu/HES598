@@ -13,3 +13,14 @@ Covid example flexdashboard: https://github.com/martinctc/COVID-19-R
 
 Arcgis covid example: https://www.arcgis.com/apps/opsdashboard/index.html#/bda7594740fd40299423467b48e9ecf6
 
+
+Map examples 
+
+Cool map where you can short data (we could do how many at x age or sex etc.) https://rviews.rstudio.com/2019/10/09/building-interactive-world-maps-in-shiny/ 
+
+Leaflet examples: https://cartographicperspectives.org/index.php/journal/article/view/cp76-donohue-et-al/1307 ; https://rstudio.github.io/leaflet/shapes.html 
+
+Packages 
+
+1. leaflet 
+2. mapview 
