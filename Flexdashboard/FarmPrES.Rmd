@@ -10,6 +10,9 @@ output:
 library(flexdashboard)
 ```
 
+Project Description 
+===================================== 
+
 Column {data-width = 600}
 -----------------------------------------------------------------------
 
@@ -54,3 +57,6 @@ _**Project Objectives**_
 ```{r objectives_graphic, echo = FALSE, fig.align='center'}
 knitr::include_graphics("./images/projectObjectives.png")
 ```
+
+Treasure Valley Crops 
+===================================== 
