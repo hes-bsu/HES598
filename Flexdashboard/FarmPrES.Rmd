@@ -13,6 +13,7 @@ library(flexdashboard)
 Column {data-width = 600}
 -----------------------------------------------------------------------
 
+<<<<<<< HEAD
 
 ### WHAT'S AT STAKE WHEN THE TREASUE VALLEY LOSES FARMLAND TO GROWTH? 
 
@@ -28,11 +29,18 @@ _**Treasure Valley**_
 
 The Treasure Valley (Boise Metropolitan Area) located in southerwestern Idaho. This region is experiencing rapid urban development, which is occuring primarily on agricultural areas. If growth is restricted to high density, we can limit the loss of agricultural land by **30%**. 
 
+=======
+### WHAT'S AT STAKE WHEN THE TREASUE VALLEY LOSES FARMLAND TO GROWTH? 
+
+```{r}
+```
+>>>>>>> fa07c2e372b9fe67debd859181766e068cba9547
 
 Column {data-width = 400}
 -----------------------------------------------------------------------
 
 ### OUR TEAM 
+<<<<<<< HEAD
 Researchers Dr. Jodi Brandt, Dr. Jen Schneider, and PhD student Sarah Halperin at Boise State University are working to develop novel approaches to accurately **measure** and effectively **communicate** the multiple ecosystem services provided by agriculture, so we can make **informed decisions** about when, where, and how to **preserve farmland** 
 ```{r team_graphic, echo = FALSE, out.height= "5%", out.width= "5%"}
 knitr::include_graphics("./images/Team.png")
@@ -50,3 +58,15 @@ _**Project Objectives**_
 ```{r objectives_graphic, echo = FALSE, fig.align='center'}
 knitr::include_graphics("./images/projectObjectives.png")
 ```
+=======
+
+```{r}
+
+```
+
+## OUR SOLUTION
+
+```{r}
+
+```
+>>>>>>> fa07c2e372b9fe67debd859181766e068cba9547
