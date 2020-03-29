@@ -1,0 +1,34 @@
+---
+title: "FarmPrES: Farmland Preservation for Ecosystem Services"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+    theme: sandstone
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
+
+Column {data-width = 600}
+-----------------------------------------------------------------------
+
+### WHAT'S AT STAKE WHEN THE TREASUE VALLEY LOSES FARMLAND TO GROWTH? 
+
+```{r}
+```
+
+Column {data-width = 400}
+-----------------------------------------------------------------------
+
+### OUR TEAM 
+
+```{r}
+
+```
+
+## OUR SOLUTION
+
+```{r}
+
+```
