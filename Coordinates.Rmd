@@ -1,0 +1,224 @@
+---
+title: "Coordinate plotting, buffers, and landscape metrics in R"
+author: "Brian Busby"
+date: "3/23/2020"
+output: html_document
+---
+
+## My Problem:  
+
+  One chapter of my Master's research will focus on how roads, land cover, and a wide variety of other landscape and habitat level factors are influencing Barn Owl populations, notably in their occupancy, reproduction, and survival. I plan on using nest boxes, of which there are hundreds of in my study area (Canyon County, Idaho), as the unit for which I will base these response variables of off. So, in order to incorporate some of these landscape level explanatory variables I need to create a buffer around individual nest boxes and quantify the habitat within these buffers. 
+  I hope to accomplish this habitat quantification specifically for National Land Cover Dataset (NLCD) information, which I will eventually apply down the road to my models in my thesis work. For this project, success will be determining proportions of land cover types calculated within a 1 km radius buffer for each of my Barn Owl nest boxes within Canyon County. 
+  
+## Pseudocode:  
+
+```{r}
+
+#Load the required packages
+
+#Import my box locations using their coordinates and remove boxes that are not in the county
+
+#Import the NLCD for Canyon County as a raster
+
+#Align the projections for my boxes and the NLCD so the two can be plotted on top of eachother correctly
+
+#Create a seperate 1 km radius buffer around each of my boxes
+
+#Clip or mask the NLCD to within the buffer area for each one of my boxes
+
+#Calculate landscape metrics (i.e. proportion of various land covers )on the NLCD within the buffer area for each one of my boxes
+
+```
+
+
+## Packages Used:  
+
+```{r}
+library(googledrive)
+#for accessing my data online 
+library(raster)
+#for downloading shapefiles, converting .tifs to rasters, masking, and creating buffers around coordinates
+library(sp)
+#for dealing with shape files and projections
+library(dplyr)
+#for the setDiff function
+library(landscapemetrics)
+#for calculating the various landscape metrics on the NLCD data
+```
+
+
+## Actual Code:  
+
+```{r}
+
+options(gargle_oauth_cache = ".BRIAN",
+        gargle_oauth_email = TRUE)
+#establish Google Drive authorization
+
+folder_url <- "https://drive.google.com/open?id=1pJJXbKOwfXIXPJAPhT7eEoFrk_iSWrCh"
+#the link to my google drive where the NLCD raster and box locations are found
+
+folder <- drive_get(as_id(folder_url))
+files <- drive_ls(folder)
+lapply(files$id, function(x) drive_download(as_id(x), path = "Desktop", overwrite = TRUE))
+
+filelist <- list.files(pattern = ".csv")
+Boxes1 <- lapply(filelist, read.csv)
+#read in my box data
+
+filelist2 <- list.files(pattern = ".tif")
+NLCD1 <- lapply(filelist2, raster)
+#read in the NLCD data
+
+Boxes2 <- (Boxes1[[1]])
+NLCD <- (NLCD1[[1]])
+#remove the data from the list to a more accessible format
+
+plot(NLCD)
+#looks like the raster data read in correctly
+
+head(Boxes2)
+#so did the box data, but I need to remove three boxes that are too far east to be in Canyon County
+
+Boxes2$BoxNumber[Boxes2$Long == max(Boxes2$Long)]
+#delete Box 306
+Boxes3 <- Boxes2[-279,]
+Boxes3$BoxNumber[Boxes3$Long == max(Boxes3$Long)]
+#also delete Box 106
+Boxes4 <- Boxes3[-99,]
+Boxes4$BoxNumber[Boxes4$Long == max(Boxes4$Long)]
+#anddd Box 105
+Boxes <- Boxes4[-98,]
+
+```
+
+
+
+```{r}
+xy <- Boxes[,c(3,2)]
+#create a dataframe for my coordinates, long must come first, then lat
+
+spdf <- SpatialPointsDataFrame(coords = xy, data = Boxes,
+                               proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+#create a spatial dataframe using the coordinates, my box data, and assigning a projection (this is the standard projection that our GPS and google maps uses, which is where I downloaded my points from)
+
+plot(spdf)
+#it appears to have worked. Lets try to create a nice visual showing all of our box locations within Canyon County, with the NLCD data as the background
+
+```
+
+
+
+```{r}
+#first we grab the county shape files of the US
+us<-getData('GADM', country='USA', level=2)
+
+#subset it to Idaho
+Idaho<-subset(us,NAME_1=="Idaho")
+
+#and subset it to Canyon County
+canco<-subset(Idaho,NAME_2=="Canyon")
+
+#voila, here is the outline of my study area
+plot(canco)
+
+#what projection are we in?
+proj4string(canco)
+
+#is this the same as our NLCD tif?
+proj4string(NLCD)
+
+#no...so we have to reproject it...
+canco.2<-spTransform(canco, CRS(projargs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0" ))
+
+#nice, but are they really the same?
+setdiff(as.character(crs(NLCD)), as.character(crs(canco.2)))
+
+#they are! now lets try an overlay to visually verify
+plot(NLCD) +
+plot(canco.2, add=TRUE)
+
+#amazing, now lets clip our NLCD data down to just the county size...
+NLCD.2<-mask(NLCD,canco.2)
+
+#Now lets transform our box data to the same projection
+spdf.2<-spTransform(spdf, CRS(projargs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0" ))
+
+#Now lets plot it all together
+plot(NLCD.2) +
+plot(spdf.2, pch = 21, col = 13, add = TRUE)
+#What a nice visualization. So we clearly have a few points still outside the county but I believe we have the raster data to calculate for these anyway, lets check:
+
+plot(NLCD) +
+  plot(spdf.2, pch = 21, col = 13, add = TRUE)
+#should be good
+
+```
+
+```{r}
+
+#now we create a buffer around each box. We want the radius to be 1000 meters and we want each buffer to be separate so we indicate FALSE for dissolve
+buff<-buffer(spdf.2, width = 1000, dissolve = FALSE)
+
+#lets visualize that
+plot(NLCD) +
+  plot(buff, add = TRUE)
+
+#Now we can use extract to pull out a list of all the individual raster values for each buffer
+buffmask <- raster::extract(NLCD,buff)
+
+totalcount <- lapply(buffmask, length)
+Boxes$total<-as.numeric(totalcount[])
+#ok now I have the total number of raster cells in each buffer, can I then bring in the total amount for each type and then divide to get percentages?
+
+length(which(buffmask[[1]] == 82))
+#how do I get this for every single entry in my list!!!
+
+lst82 <- setNames(vector('list', 278), 1:278)
+for (i in 1:278){
+  lst82[[i]] <- (length(which(buffmask[[i]] == 82)))
+}
+Boxes$count82 <- as.numeric(lst82)
+#my first for loop! Now I've established for each box buffer the total number of cells that are classified as 82, which is "cultivated crops"
+
+Boxes$percent82 <- (Boxes$count82/Boxes$total)*100
+#and now we have the percent of cultivated crops as landcover within each box buffer! I've done it! 
+#This last bit feels like some real jenky code but I'm beyond proud. I'll ask Matt at office hours how to do this cleaner. One thing I've learned is that I hate working with lists....
+
+hist(Boxes$percent82)
+#most of these boxes have quite a bit of cropland in them...
+#I could do this for each and every cover type but I think it'd be a waste of space, its clear to see how the code works!
+
+
+```
+
+```{r}
+#Just a little bit of bonus work with some metrics
+
+
+
+#first lets look at the composition of the landscape. 
+landcomp<-lsm_c_pland(NLCD,directions = 8)
+
+print(landcomp)
+
+barplot(landcomp$value~landcomp$class,
+        xlab = "Class Type",
+        ylab = "Percent Composition")
+
+#this is tough to interpret when you don't know what the integer values translate to for the classes. I haven't figured out how to do that yet. Let me just say that 82 is cultivated crop and that makes a lot of sense.
+
+#this is a measure of the eveness of the landscape... seems like its not super even, indicating domination by a land class, which would be 82
+lsm_l_shei(NLCD.2)
+
+lsm_c_pd(NLCD.2, directions = 8)
+#this is telling us the average number of patches for each class per 100 ha... a good metric of connectivity
+
+lsm_l_contag(NLCD.2)
+#This is a pretty high value for contagion, which ranges from 0 to 100. It tells us that our landscape is very "clumpy" meaning that patch size is larger and there's more connectivity
+
+```
+
+
+
+```
