@@ -27,11 +27,16 @@ _**Treasure Valley**_
 
 The Treasure Valley (Boise Metropolitan Area) located in southerwestern Idaho. This region is experiencing rapid urban development, which is occuring primarily on agricultural areas. If growth is restricted to high density, we can limit the loss of agricultural land by **30%**. 
 
+### 
+```{r growth_graphic, echo = FALSE}
+knitr::include_graphics("./images/growth.png")
+```
+
+
 Column {data-width = 400}
 -----------------------------------------------------------------------
 
 ### OUR TEAM 
-<<<<<<< HEAD
 Researchers Dr. Jodi Brandt, Dr. Jen Schneider, and PhD student Sarah Halperin at Boise State University are working to develop novel approaches to accurately **measure** and effectively **communicate** the multiple ecosystem services provided by agriculture, so we can make **informed decisions** about when, where, and how to **preserve farmland** 
 ```{r team_graphic, echo = FALSE, out.height= "5%", out.width= "5%"}
 knitr::include_graphics("./images/Team.png")
@@ -45,7 +50,7 @@ _**Project Objectives**_
 
 2. **Determine the policy mechanisms** that Idaho decision makers can consider for farmland preservation
 
-3. **Create innovative materials** to disseminate information to local stakeholders and the public                                                                                                                                                                                                
+3. **Create innovative materials** to disseminate information to local stakeholders and the public                                                                                                                                                                                                 
 ```{r objectives_graphic, echo = FALSE, fig.align='center'}
 knitr::include_graphics("./images/projectObjectives.png")
 ```
