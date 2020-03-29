@@ -4,10 +4,14 @@ output:
   flexdashboard::flex_dashboard:
     vertical_layout: scroll
     theme: sandstone
+    runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
+library(dplyr)
+library(ggplot2)
+library(shiny)
 ```
 
 Project Description 
@@ -61,3 +65,44 @@ knitr::include_graphics("./images/projectObjectives.png")
 
 Treasure Valley Crops 
 ===================================== 
+
+
+Column {.sidebar}
+-------------------------------------------- 
+```{r BMAcrop_data, echo=FALSE}
+BMAcrop<-read.csv("./BMACrop2005_2018.csv")
+BMAcrop<-BMAcrop %>%
+  filter(value > 0, Crop_0_1>0) 
+Categories<-as.character(BMAcrop$Category)
+```
+
+Number of acres of the crops grown in the Treasure Valley, ID from 2005 to 2018. Data was downloaded from USDA NASS Cropscape.
+
+```{r}
+selectInput("county", label="County:", choices = c("Ada", "Canyon"), selected ="Ada")
+
+selectInput("Category", label="CropType:", choices = Categories, selected ="Corn")
+
+
+```
+
+Column
+---------------------------------------------------------------
+### Crops Grown in the Treasure Valley
+
+```{r}
+  
+selectedData<-reactive(
+  BMAcrop %>%
+  filter(county == input$county, Category == input$Category)
+)
+
+renderPlot({
+  ggplot(fortify(selectedData), aes(x=year,y=acres))+
+    geom_bar()
+})
+
+
+
+
+```
