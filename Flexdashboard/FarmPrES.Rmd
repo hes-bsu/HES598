@@ -69,4 +69,3 @@ knitr::include_graphics("./images/projectObjectives.png")
 ```{r}
 
 ```
->>>>>>> fa07c2e372b9fe67debd859181766e068cba9547
