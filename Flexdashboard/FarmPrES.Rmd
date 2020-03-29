@@ -13,8 +13,6 @@ library(flexdashboard)
 Column {data-width = 600}
 -----------------------------------------------------------------------
 
-<<<<<<< HEAD
-
 ### WHAT'S AT STAKE WHEN THE TREASUE VALLEY LOSES FARMLAND TO GROWTH? 
 
 _**The Problem**_
@@ -28,13 +26,6 @@ Idaho's is one of the fastest growing states. It's population increased y 2.1% i
 _**Treasure Valley**_
 
 The Treasure Valley (Boise Metropolitan Area) located in southerwestern Idaho. This region is experiencing rapid urban development, which is occuring primarily on agricultural areas. If growth is restricted to high density, we can limit the loss of agricultural land by **30%**. 
-
-=======
-### WHAT'S AT STAKE WHEN THE TREASUE VALLEY LOSES FARMLAND TO GROWTH? 
-
-```{r}
-```
->>>>>>> fa07c2e372b9fe67debd859181766e068cba9547
 
 Column {data-width = 400}
 -----------------------------------------------------------------------
@@ -57,15 +48,4 @@ _**Project Objectives**_
 3. **Create innovative materials** to disseminate information to local stakeholders and the public                                                                                                                                                                                                
 ```{r objectives_graphic, echo = FALSE, fig.align='center'}
 knitr::include_graphics("./images/projectObjectives.png")
-```
-=======
-
-```{r}
-
-```
-
-## OUR SOLUTION
-
-```{r}
-
 ```
