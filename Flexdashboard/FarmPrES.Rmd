@@ -1,0 +1,52 @@
+---
+title: "FarmPrES: Farmland Preservation for Ecosystem Services"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+    theme: sandstone
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
+
+Column {data-width = 600}
+-----------------------------------------------------------------------
+
+
+### WHAT'S AT STAKE WHEN THE TREASUE VALLEY LOSES FARMLAND TO GROWTH? 
+
+_**The Problem**_
+```{r farmland_graphic, echo = FALSE,out.height= "50%", out.width= "50%", out.extra='style="float:right; padding:10px"'}
+knitr::include_graphics("./images/farmland.jpg")
+```
+American has some of the most productive, versatile, and resilient agricultural lands. However, farmland is being lost at **175 acres every hour**, **1.5 million acres a year**. By 2012, the most productive lands to support food production dropped below 17% of the total land area in the U.S. Given the limited arable land and the need to feed an increasing population, it is imperative to protect farmland. 
+
+Idaho's is one of the fastest growing states. It's population increased y 2.1% in 2019, tying for the highest percentage growth state in the U.S. With this increase in population, farmland is under threat. 
+
+_**Treasure Valley**_
+
+The Treasure Valley (Boise Metropolitan Area) located in southerwestern Idaho. This region is experiencing rapid urban development, which is occuring primarily on agricultural areas. If growth is restricted to high density, we can limit the loss of agricultural land by **30%**. 
+
+
+Column {data-width = 400}
+-----------------------------------------------------------------------
+
+### OUR TEAM 
+Researchers Dr. Jodi Brandt, Dr. Jen Schneider, and PhD student Sarah Halperin at Boise State University are working to develop novel approaches to accurately **measure** and effectively **communicate** the multiple ecosystem services provided by agriculture, so we can make **informed decisions** about when, where, and how to **preserve farmland** 
+```{r team_graphic, echo = FALSE, out.height= "5%", out.width= "5%"}
+knitr::include_graphics("./images/Team.png")
+```
+
+
+### OUR SOLUTION
+_**Project Objectives**_
+
+1. **Identify the most important agricultural lands to protect**, based on the ecosystem services that people have identified as important
+
+2. **Determine the policy mechanisms** that Idaho decision makers can consider for farmland preservation
+
+3. **Create innovative materials** to disseminate information to local stakeholders and the public                                                                                                                                                                                                
+```{r objectives_graphic, echo = FALSE, fig.align='center'}
+knitr::include_graphics("./images/projectObjectives.png")
+```
