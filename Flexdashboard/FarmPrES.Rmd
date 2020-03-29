@@ -31,6 +31,7 @@ _**Treasure Valley**_
 The Treasure Valley (Boise Metropolitan Area) located in southerwestern Idaho. This region is experiencing rapid urban development, which is occuring primarily on agricultural areas. If growth is restricted to high density, we can limit the loss of agricultural land by **30%**. 
 
 ### 
+**The Treasure Valley will look very different depending on how the area continues to grow.**
 ```{r growth_graphic, echo = FALSE}
 knitr::include_graphics("./images/growth.png")
 ```
