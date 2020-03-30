@@ -97,12 +97,11 @@ selectedData<-reactive(
   filter(county == input$county & Category == input$Category)
 )
 
+
+
 renderPlot({
-  ggplot(selectedData, aes(x=year,y=acres))+
-    geom_bar(stat="identity")
+  ggplot(selectedData(), aes(x=year,y=acres))+
+   geom_bar(stat="identity")
 })
-
-
-
 
 ```
