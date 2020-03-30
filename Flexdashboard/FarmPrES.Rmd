@@ -94,12 +94,12 @@ Column
   
 selectedData<-reactive(
   BMAcrop %>%
-  filter(county == input$county, Category == input$Category)
+  filter(county == input$county & Category == input$Category)
 )
 
 renderPlot({
   ggplot(selectedData, aes(x=year,y=acres))+
-    geom_bar()
+    geom_bar(stat="identity")
 })
 
 
