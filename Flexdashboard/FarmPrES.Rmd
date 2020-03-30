@@ -26,13 +26,13 @@ _**The Problem**_
 ```{r farmland_graphic, echo = FALSE,out.height= "50%", out.width= "50%", out.extra='style="float:right; padding:10px"'}
 knitr::include_graphics("./images/farmland.jpg")
 ```
-American has some of the most productive, versatile, and resilient agricultural lands. However, farmland is being lost at **175 acres every hour**, **1.5 million acres a year**. By 2012, the most productive lands to support food production dropped below 17% of the total land area in the U.S. Given the limited arable land and the need to feed an increasing population, it is imperative to protect farmland. 
+America has some of the most productive, versatile, and resilient agricultural lands. However, farmland is being lost at **175 acres every hour**, **1.5 million acres a year**. By 2012, the most productive lands to support food production dropped below 17% of the total land area in the U.S. Given the limited arable land and the need to feed an increasing population, it is imperative to protect farmland. 
 
-Idaho's is one of the fastest growing states. It's population increased y 2.1% in 2019, tying for the highest percentage growth state in the U.S. With this increase in population, farmland is under threat. 
+Idaho is one of the fastest growing states. It's population increased by 2.1% in 2019, tying for the highest percentage growth state in the U.S. With this increase in population, farmland is under **threat**. 
 
 _**Treasure Valley**_
 
-The Treasure Valley (Boise Metropolitan Area) located in southerwestern Idaho. This region is experiencing rapid urban development, which is occuring primarily on agricultural areas. If growth is restricted to high density, we can limit the loss of agricultural land by **30%**. 
+The Treasure Valley (Boise Metropolitan Area) is located in southerwestern Idaho. This region is experiencing rapid urban development, which is occuring primarily on agricultural areas. Hiwever if growth is restricted to high density, we can limit the loss of agricultural land by **30%**. 
 
 ### 
 **The Treasure Valley will look very different depending on how the area continues to grow.**
@@ -98,7 +98,7 @@ selectedData<-reactive(
 )
 
 renderPlot({
-  ggplot(fortify(selectedData), aes(x=year,y=acres))+
+  ggplot(selectedData, aes(x=year,y=acres))+
     geom_bar()
 })
 
