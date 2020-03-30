@@ -81,7 +81,7 @@ Number of acres of the crops grown in the Treasure Valley, ID from 2005 to 2018.
 ```{r}
 selectInput("county", label="County:", choices = c("Ada", "Canyon"), selected ="Ada")
 
-selectInput("Category", label="CropType:", choices = Categories, selected =" Corn")
+selectInput("Category", label="CropType:", choices = Categories, selected ="Corn")
 
 
 ```
