@@ -101,7 +101,15 @@ selectedData<-reactive(
 
 renderPlot({
   ggplot(selectedData(), aes(x=year,y=acres))+
-   geom_bar(stat="identity")
+   geom_bar(stat="identity")+
+    scale_x_continuous(name= "Year", breaks= c(2005,2007,2009,2011,2013,2015,2017))+
+  scale_y_continuous(name =expression('Total Area Harvested (Acres)'))+ 
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+  theme(axis.text=element_text(size=25, colour="black"),
+        axis.title.x=element_text(size=25), axis.title.y =element_text(size=25, face="bold"), legend.text=element_text(size=10))+
+  theme(plot.margin=unit(c(1,1,1,1), "in"))
 })
 
 ```
