@@ -22,5 +22,19 @@ Leaflet examples: https://cartographicperspectives.org/index.php/journal/article
 
 Packages 
 
-1. leaflet 
+1. leaflet <-- This is super cool- TP
 2. mapview 
+3. highcharter
+
+
+Goal of the project: 
+
+Create a map of COVID-19 cases in Idaho and the US and compare the rate of spread between the two levels?
+
+Ways to go about this: 
+We could do a flexdashboard with three chart spaces where each of us create ones space. 
+Chart 1: an example map with mapview for the US
+Chart 2: an example map with leaflet for Idaho
+Chart 3: an example graph with highcharter of # of cases over time: compare Idaho to the US
+
+Do you guys think this is too much work?
