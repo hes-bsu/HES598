@@ -1,0 +1,63 @@
+Column {data-width=150}
+-----------------------------------------------------------------------
+
+### New cases today
+
+```{r echo=FALSE}
+output_data %>%
+  mutate(Confirm_Lag = Confirms - lag(Confirms, 1)) %>%
+  arrange(desc(Date)) %>%
+  slice(1) %>%
+  pull(Confirm_Lag) %>%
+  valueBox(caption = "New confirms today",
+           icon = "fa-sort-up",
+           color = rgb2hex(227,200,0))
+```
+
+
+### Total Global Recovered
+
+```{r echo=FALSE}
+output_data %>%
+  summarise(Recovered = max(Recovered, na.rm = TRUE)) %>%
+  pull(Recovered) -> n_recovered
+
+n_recovered %>%
+  valueBox(caption = "Total Recovered",
+           icon = "fa-sort-up",
+           color = rgb2hex(11,71,6))
+```
+
+### Total Cases with Confirmed Outcomes
+
+```{r echo=FALSE}
+n_recovered %>%
+  c(n_deaths) %>%
+  sum() %>%
+  valueBox(caption = "Total Deaths + Recovered",
+           icon = "fa-sort-up",
+           color = rgb2hex(168,50,104))
+```
+
+
+### Net Fatality Rate
+
+<!-- Calculated as a % of deaths over _total deaths_ plus _total recovered_. -->
+
+```{r echo=FALSE}
+output_data %>%
+  arrange(desc(Date)) %>%
+  drop_na(FatalityRate) %>%
+  slice(1) %>%
+  pull(FatalityRate) -> n_fr
+
+n_fr %>%
+  surveytoolbox::as_percent() %>%
+  valueBox(caption = "Net Fatality rate",
+           icon = "fa-sort-up",
+           color = rgb2hex(227,166,0))
+```
+
+### Definitions
+
+_Net Fatality Rate_ is calculated as a % of deaths divided by _total deaths_ plus _total recovered_, which is a different measure to the CFR (case fatality rate).

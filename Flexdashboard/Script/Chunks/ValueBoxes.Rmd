@@ -1,0 +1,64 @@
+Column {data-width=150}
+-----------------------------------------------------------------------
+
+### Today
+
+```{r echo=FALSE}
+output_data %>%
+  pull(Date) %>%
+  # lubridate::mdy() %>%
+  max() -> today_date
+
+today_date %>%
+  format("%B %d") %>%
+  valueBox(caption = "Today's Date",
+           icon = "fa-sort-up",
+           color = rgb2hex(180,180,0))
+```
+
+### Total Global Confirms
+
+```{r echo=FALSE}
+output_data %>%
+  summarise(Confirms = max(Confirms, na.rm = TRUE)) %>%
+  pull(Confirms) -> n_confirms
+
+n_confirms %>%
+  valueBox(caption = "Total Global Confirms",
+           icon = "fa-sort-up",
+           color = rgb2hex(222,0,0))
+```
+
+### Total Global Deaths
+
+```{r echo=FALSE}
+output_data %>%
+  summarise(Deaths = max(Deaths, na.rm = TRUE)) %>%
+  pull(Deaths) -> n_deaths
+
+n_deaths %>%
+  valueBox(caption = "Total Deaths",
+           icon = "fa-sort-up",
+           color = rgb2hex(77,69,48))
+```
+
+### Gross Fatality Rate
+
+<!-- Calculated as a % of deaths over confirmed. -->
+
+```{r echo=FALSE}
+output_data %>%
+  arrange(desc(Date)) %>%
+  slice(1) %>%
+  pull(GrossFatalityRate) -> n_gfr
+
+n_gfr %>%
+  surveytoolbox::as_percent() %>%
+  valueBox(caption = "Gross Fatality rate",
+           icon = "fa-sort-up",
+           color = rgb2hex(230,82,2))
+```
+
+### Definitions
+
+_Gross Fatality Rate_ is calculated as a % of deaths over confirmed, which is equivalent to the CFR (case fatality rate).

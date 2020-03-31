@@ -1,0 +1,82 @@
+Fatality Rate {data-navmenu="Tables"}
+=====================================
+
+### Table - Fatality Rate
+
+```{r echo=FALSE}
+output_data %>%
+  arrange(Date) %>%
+  knitr::kable()
+  # create_dt() %>%
+  # DT::formatPercentage(c("FatalityRate"), 1)
+```
+
+Confirms {data-navmenu="Tables"}
+=====================================
+
+### Table - Confirms by Country
+
+```{r echo=FALSE}
+df_confirmed %>%
+  run_summary(varname = "Confirms", country = TRUE, today_date = today_date) %>%
+  arrange(desc(Confirms)) %>%
+  mutate(`ConfirmsProp` = Confirms / sum(Confirms)) -> tb_confirmed
+
+tb_confirmed %>%
+  mutate(`Confirms as Global %` = surveytoolbox::as_percent(Confirms / sum(Confirms), rounding = 1)) %>%
+  knitr::kable()
+```
+
+Recovered {data-navmenu="Tables"}
+=====================================
+
+### Table - Recovered by Country
+
+```{r echo=FALSE}
+df_recovered %>%
+  run_summary(varname = "Recovered", country = TRUE, today_date = today_date) %>%
+  arrange(desc(Recovered)) %>%
+  mutate(`RecoveredProp` = Recovered / sum(Recovered)) -> tb_recovered
+
+tb_recovered %>%
+  mutate(`Recovered as Global %` = surveytoolbox::as_percent(Recovered / sum(Recovered), rounding = 1)) %>%
+  knitr::kable()
+```
+
+Deaths {data-navmenu="Tables"}
+=====================================
+
+### Table - Deaths by Country
+
+```{r echo=FALSE}
+df_deaths %>%
+  run_summary(varname = "Deaths", country = TRUE, today_date = today_date) %>%
+  arrange(desc(Deaths)) %>%
+  mutate(`DeathsProp` = Deaths / sum(Deaths)) -> tb_deaths
+
+tb_deaths %>%
+  mutate(`Deaths as Global %` = surveytoolbox::as_percent(Deaths / sum(Deaths), rounding = 1)) %>%
+  knitr::kable()
+```
+
+Summary {data-navmenu="Tables"}
+=====================================
+
+### Table - Country Summary
+
+```{r echo=FALSE}
+list(tb_confirmed,
+     tb_recovered,
+     tb_deaths) %>%
+  map(function(x){
+    x %>%
+      select(Date, `Country/Region`, contains("Prop")) %>%
+      mutate(id = paste0(Date, `Country/Region`))
+  }) %>%
+  reduce(full_join, by = "id") %>%
+  select(Date, `Country/Region`, Confirms = "ConfirmsProp", Recovered = "RecoveredProp", Deaths = "DeathsProp") %>%
+  mutate(`Index - Recovered/Death` = `Recovered` / `Deaths`) %>%
+  mutate_at(vars(Confirms, Recovered, Deaths), ~surveytoolbox::as_percent(., rounding = 1)) %>%
+  knitr::kable()
+
+```

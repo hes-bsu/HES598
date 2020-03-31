@@ -1,0 +1,88 @@
+---
+title: "Interactive COVID-19 Chart for Idaho"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(flexdashboard)
+library(dygraphs)
+library(timetk)
+library(here)
+library(leaflet)
+library(highcharter)
+
+```
+
+# notes from matt
+
+- create maps with two different packages and compare and contrast them
+- it's okay to use someone else's code, just need to cite it
+
+Dashboard
+=====================================
+
+```{r load data, message=FALSE, warning=FALSE, include=FALSE}
+#### Load functions ####
+
+# this is calling up the script for two functions that will come in handy later 
+source(here("Flexdashboard", "Script", "Functions", "create_dt.R"))
+source(here("Flexdashboard","Script", "Functions", "rgb2hex.R"))
+
+#### Load datasets ####
+#these datasets are on github so you can just put the link in to call up the file location on github
+df_confirmed <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv")
+df_deaths <- read_csv("https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv")
+
+run_summary <- function(data, varname)
+
+df_confirmed %>% run_summary(varname = "Confirms") -> summary_confirmed
+df_deaths %>% run_summary(varname = "Deaths") -> summary_deaths
+
+list(summary_confirmed,
+     summary_deaths) %>%
+  reduce(full_join, by = "Date") %>%
+  mutate_at(vars(Date), ~lubridate::mdy(.)) %>%
+  arrange(Date) %>%
+  drop_na() -> output_data
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+**Introduction**
+
+This is an example of *interactive chart* to show the growth of COVID-19 cases in Idaho using a flex dashboard. This example explores the leaflet package 
+
+### Chart A
+
+```{r}
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+```
+
+### Chart C
+
+```{r}
+
+```
+
+Background
+=====================================
+
+This dashboard was created to help explore two different ways of displaying COVID-19 data. 
+
+The data used to build the analysis is taken from the data repository for the 2019 Novel Coronavirus Visual Dashboard, operated by the Johns Hopkins University Center for Systems Science and Engineering (JHU CCSE). Their GitHub repo is linked [here](https://github.com/CSSEGISandData/COVID-19).
+
+This dashboard was created by Tara Pozzi. 
