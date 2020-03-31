@@ -45,7 +45,7 @@ gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("datatemp/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
-Dummy_Survey <- read_excel("Documents/Boise State/Spring 2020/HES 598 R/Classwork/datatemp/original//Dummy_Survey.xlsx")
+Dummy_Survey <- read_excel("~/Documents/Boise State/Spring 2020/HES 598 R/Classwork/HES598/datatemp/original/Dummy_Survey.xlsx")
 View(Dummy_Survey) #note: this contains randomly simulated survey responses generatred through Qualtrics
 
 #create survey data set with no weights and assumed random sample
