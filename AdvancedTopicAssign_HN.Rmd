@@ -1,0 +1,304 @@
+---
+title: "Advanced Topic - Post-stratification and Simulation"
+author: "Haley Netherton"
+date: "3/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Research and Problem Introduction
+
+## My Research
+Sagebrush steppe represents an iconic landscape of the American West facing divergent public opinion that ranges from being valued ecologically, culturally, and economically to being torn up, paved over, and despised. As threats from land use change, invasive species, wildfire, and climate change heighten, understanding the barriers and opportunities to management is of the utmost importance. My research aims to address this need by mapping the social landscape as it pertains to sagebrush steppe in Idaho.
+
+## My Problem with Study Design
+My project is still taking shape, but will be using a mixed-methods approach that will combine surveys, participatory mapping, interviews, and a historical and cross-cultural review. Currently, a challenge that I will face with my survey will be in trying to interpolate survey responses across my study region, in order to create a map of values for sagebrush steppe in the state of Idaho. Given that I will inevitably undersample certain demographics and geographies, improving my understanding of how to develop a more balanced sample will be useful in addressing this challenge. I will be using this advanced topic to explore post-stratification and MRP to determine what regions may require additional sampling effort. To this end, "success" will be learning a few tools for post-stratification and simulation and determining which might be best suited for my situation.
+
+## What the heck is post-stratification?
+Post-stratification is used to adjust sampling weights to account for underrepresented groups in the sample population. Post-stratifican relies on data collected during the survey, and therefore occurs after sampling. Multilevel regression and post-stratification (MRP) can be used to "estimate public opinion across geographic units from individual-level survey data" (Buttice & Highton, 2013, p. 449). Typically, MRP uses large national samples to estimate public opinion in smaller areas. 
+
+# PSUEDOCODE!!
+Starting with the loading the libraries:
+```{r libraries, message = FALSE, warning=FALSE}
+##Load the libraries 
+library(googledrive) #where dummy data is stored
+library(curl) #called for Google Drive data access
+library(readxl) #reads Excel files (how the data is stored)
+library(survey) #robust survey analysis package
+library(rstanarm) #used for MRP
+library(tidyverse) #used for plotting
+library(ggplot2) #used for plotting
+library(dplyr) #used for MRP 
+library(tidyr) #used for MRP
+library(bayesplot) #used for MRP plotting
+```
+Then exploring post-stratification using survey::rake and survey::postStratify using a random sample:
+```{r Post-Stratification}
+##Load and Organize Data - Post-Stratification
+folder.url <- "https://drive.google.com/drive/folders/1w2Bu9vCjRoHD6f52nMIXCmmC723OOCR7"
+folder <- drive_get(as_id(folder.url))
+files <- drive_ls(folder)
+drive_download("Dummy_Survey.xlsx", path = "Documents/Boise State/Spring 2020/HES 598 R/Project/Data")
+
+Dummy_Survey <- read_excel("Documents/Boise State/Spring 2020/HES 598 R/Project/Dummy_Survey.xlsx")
+View(Dummy_Survey) #note: this contains randomly simulated survey responses generatred through Qualtrics
+
+#create survey data set with no weights and assumed random sample
+Dummy_Survey$Sex_Num <- factor(Dummy_Survey$Sex, levels = c("Female", "Male"),
+labels = c("1", "2"))
+Dummy_Survey$Sex_Num <- as.numeric(Dummy_Survey$Sex_Num)
+
+Dummy_Survey$Inc_Lev <- factor(Dummy_Survey$Income, levels = c("Less than $10,000", "$10,000 to $19,999", "$20,000 to $29,999", "$30,000 to $39,999", "$40,000 to $49,999", "$50,000 to $59,999", "$60,000 to $69,999", "$70,000 to $79,999", "$80,000 to $89,999", "$90,000 to $99,999", "$100,000 to $149,999", "$150,000 or more"),
+labels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"))
+Dummy_Survey$Inc_Lev <- as.numeric(Dummy_Survey$Inc_Lev)
+
+data.svy.unweighted <- svydesign(ids=~1, data=Dummy_Survey)
+
+##Analysis/processing step 1 - Here we are exploring survey weights using rake{survey} and postStratify{survey}
+#Using rake{survey}
+#start by assuming population values for female (1) and male (2) are .55 and .45.
+gender.dist <- data.frame(Sex_Num = c("1", "2"),
+                       Freq = nrow(Dummy_Survey) * c(0.55, 0.45)) 
+
+data.svy.rake.gen <- rake(design = data.svy.unweighted,
+                   sample.margins = list(~Sex_Num),
+                   population.margins = list(gender.dist)) 
+
+data.svy.rake.trim.gen <- trimWeights(data.svy.rake.gen, lower=0.3, upper=3,
+                                  strict=TRUE)
+
+#also assuming income level for population (based on mean income ~$52,000)
+income.dist <- data.frame(Inc_Lev = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"),
+                       Freq = nrow(Dummy_Survey) * c(.01, 0.05, .08, .10, .15, .20, .15, .10, .08, .05, .02, .01)) 
+
+data.svy.rake.inc <- rake(design = data.svy.unweighted,
+                   sample.margins = list(~Inc_Lev),
+                   population.margins = list(income.dist)) 
+
+data.svy.rake.trim.inc <- trimWeights(data.svy.rake.inc, lower=0.3, upper=3,
+                                  strict=TRUE)
+
+#comparison of weighted means for a few variables vs. unweighted means (e.g., checking outcomes)
+svymean(Dummy_Survey$C_Healthy, data.svy.rake.trim.gen)
+mean(Dummy_Survey$C_Healthy)
+
+svymean(Dummy_Survey$C_Ugly, data.svy.rake.trim.gen)
+mean(Dummy_Survey$C_Ugly)
+
+svymean(Dummy_Survey$C_Exciting, data.svy.rake.trim.gen)
+mean(Dummy_Survey$C_Exciting)
+
+svymean(Dummy_Survey$C_Healthy, data.svy.rake.trim.inc)
+mean(Dummy_Survey$C_Healthy)
+
+svymean(Dummy_Survey$C_Ugly, data.svy.rake.trim.inc)
+mean(Dummy_Survey$C_Ugly)
+
+svymean(Dummy_Survey$C_Exciting, data.svy.rake.trim.inc)
+mean(Dummy_Survey$C_Exciting)
+
+#Using postStratify{survey}
+svy.ps.weights.gen <-
+  data.frame(
+		Sex_Num = c( 1 , 2 ) ,
+		Freq = nrow(Dummy_Survey) * c( .55 , .45 ) )
+
+svy.design.ps.gen <- 
+  postStratify(
+  	data.svy.unweighted ,
+		strata = ~Sex_Num ,
+		population = svy.ps.weights.gen)
+
+svy.ps.weights.inc <-
+  data.frame(
+		Inc_Lev = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+		Freq = nrow(Dummy_Survey) * c(.01, 0.05, .08, .10, .15, .20, .15, .10, .08, .05, .02, .01))
+
+svy.design.ps.inc <- 
+  postStratify(
+  	data.svy.unweighted ,
+		strata = ~Inc_Lev ,
+		population = svy.ps.weights.inc)
+
+#comparison of weighted means for a few variables vs. unweighted means (e.g., checking outcomes)
+svymean(Dummy_Survey$C_Healthy, svy.design.ps.gen)
+mean(Dummy_Survey$C_Healthy)
+
+svymean(Dummy_Survey$C_Ugly, svy.design.ps.gen)
+mean(Dummy_Survey$C_Ugly)
+
+svymean(Dummy_Survey$C_Exciting, svy.design.ps.gen)
+mean(Dummy_Survey$C_Exciting)
+
+svymean(Dummy_Survey$C_Healthy, svy.design.ps.inc)
+mean(Dummy_Survey$C_Healthy)
+
+svymean(Dummy_Survey$C_Ugly, svy.design.ps.inc)
+mean(Dummy_Survey$C_Ugly)
+
+svymean(Dummy_Survey$C_Exciting, svy.design.ps.inc)
+mean(Dummy_Survey$C_Exciting)
+```
+Then attempting to simulate specific patterns in the data to explore MRP using 'rstanarm':
+```{r MRP}
+##Load and Organize Data - MRP
+#first, need to create simulated data with a known pattern
+# For respondent i, people[i] is that person's poststrat cell, some number between 1 and 32
+simulate_mrp_data <- function(n) {
+  J <- c(2, 3, 7, 3, 44) # male or not, env attitude, income, educ, county
+  poststrat <- as.data.frame(array(NA, c(prod(J), length(J)+1))) # Columns of post-strat matrix, plus one for size
+  colnames(poststrat) <- c("male", "env_att", "income","educ", "county",'N')
+  count <- 0
+  for (i1 in 1:J[1]){
+    for (i2 in 1:J[2]){
+      for (i3 in 1:J[3]){
+        for (i4 in 1:J[4]){
+          for (i5 in 1:J[5]){
+              count <- count + 1
+              # Fill them in so we know what category we are referring to
+              poststrat[count, 1:5] <- c(i1-1, i2, i3,i4,i5) 
+          }
+        }
+      }
+    }
+  }
+  # Proportion in each sample in the population
+  p_male <- c(0.52, 0.48)
+  p_env_att <- c(0.5, 0.2, 0.3)
+  p_income <- c(0.2,.1,0.2,0.2, 0.10, 0.1, 0.1)
+  p_educ <-c(.50,.35,.15)
+  p_county_tmp<-runif(50,10,20)
+  p_county<-p_county_tmp/sum(p_county_tmp)
+  poststrat$N<-0
+  for (j in 1:prod(J)){
+    poststrat$N[j] <- round(250e6 * p_male[poststrat[j,1]+1] * p_env_att[poststrat[j,2]] *
+      p_income[poststrat[j,3]]*p_educ[poststrat[j,4]]*p_county[poststrat[j,5]]) #Adjust the N to be the number observed in each category in each group
+  }
+  
+  # Now let's adjust for the probability of response
+  p_response_baseline <- 0.01
+  p_response_male <- c(2, 0.8) / 2.8
+  p_response_env_att <- c(1, 1.2, 2.5) / 3.7
+  p_response_inc <- c(1, 0.4, 1, 1.5,  3, 5, 7) / 18.9
+  p_response_educ <- c(1, 0.9, 0.8) / 2.7
+  p_response_county <- rbeta(44, 1, 1)
+  p_response_county <- p_response_county / sum(p_response_county)
+  p_response <- rep(NA, prod(J))
+  for (j in 1:prod(J)) {
+    p_response[j] <-
+      p_response_baseline * p_response_male[poststrat[j, 1] + 1] *
+      p_response_env_att[poststrat[j, 2]] * p_response_inc[poststrat[j, 3]] *
+      p_response_educ[poststrat[j, 4]] * p_response_county[poststrat[j, 5]]
+  }
+  people <- sample(prod(J), n, replace = TRUE, prob = poststrat$N * p_response)
+  
+  ## For respondent i, people[i] is that person's poststrat cell,
+  ## some number between 1 and 32
+  n_cell <- rep(NA, prod(J))
+  for (j in 1:prod(J)) {
+    n_cell[j] <- sum(people == j)
+  }
+  
+  coef_male <- c(0,-0.3)
+  coef_env_att <- c(0, 0.6, 0.9)
+  coef_income <- c(0,-0.2,-0.3, 0.4, 0.5, 0.7, 0.8, 0.9)
+  coef_educ <- c(0,-0.2, 0.6)
+  coef_county <- c(0, round(rnorm(49, 0, 1), 1))
+  coef_att_income <- t(cbind(c(0, .1, .23, .3, .43, .5, .6),
+                           c(0, -.1, -.23, -.5, -.43, -.5, -.6)))
+  true_popn <- data.frame(poststrat[, 1:5], sage_pref = rep(NA, prod(J)))
+  for (j in 1:prod(J)) {
+    true_popn$sage_pref[j] <- plogis(
+      coef_male[poststrat[j, 1] + 1] +
+        coef_env_att[poststrat[j, 2]] + coef_income[poststrat[j, 3]] +
+        coef_educ[poststrat[j, 4]] + coef_county[poststrat[j, 5]]
+      )
+  }
+  
+  #male or not, environmental attitude, income, education, county
+  y <- rbinom(n, 1, true_popn$sage_pref[people])
+  male <- poststrat[people, 1]
+  env_att <- poststrat[people, 2]
+  income <- poststrat[people, 3]
+  educ <- poststrat[people, 4]
+  county <- poststrat[people, 5]
+  
+  sample <- data.frame(sage_pref = y, 
+                       male, env_att, income, educ, county, 
+                       id = 1:length(people))
+  
+  #Make all numeric:
+  for (i in 1:ncol(poststrat)) {
+    poststrat[, i] <- as.numeric(poststrat[, i])
+  }
+  for (i in 1:ncol(true_popn)) {
+    true_popn[, i] <- as.numeric(true_popn[, i])
+  }
+  for (i in 1:ncol(sample)) {
+    sample[, i] <- as.numeric(sample[, i])
+  }
+  list(
+    sample = sample,
+    poststrat = poststrat,
+    true_popn = true_popn
+  )
+}
+  
+#creation of sample of 1200
+mrp_sim <- simulate_mrp_data(n=1200)
+str(mrp_sim)
+
+#creating table for sample and viewing head and tail of dataset
+sample <- mrp_sim[["sample"]]
+rbind(head(sample), tail(sample))
+```
+# Package Introduction
+The 'survey' package is essential to this process, as it houses many of the functions needed to analyze the survey and perform post-stratification. Part of why I chose this package is because of my familiarity with it from my MS thesis work. Within this package, the postStratify() and rake() functions are particularly important for calculation and application of weights to the survey data. These functions are well documented both in R user guides and in online help forums. 
+In order to perform multilevel regressin and post-stratification (MRP), I used the 'rstanarm' package. I was modeling this section off of the "MRP with rstanarm" vignette (Kennedy & Gabry 2019). Their code also had dependencies on 'dplyr' and 'tidyr', with plotting using 'ggplot2' and 'tidyverse'.
+
+# Evaluation of Choices
+```{r Benchmarking for Post-Stratification}
+rake.time <- system.time(rake(design = data.svy.unweighted,
+                   sample.margins = list(~Inc_Lev),
+                   population.margins = list(income.dist)))
+
+
+postStratify.time <- system.time(postStratify(
+  	data.svy.unweighted ,
+		strata = ~Inc_Lev ,
+		population = svy.ps.weights.inc))
+
+rake.time
+postStratify.time
+```
+Using rake{survey} and postStratify{survey} returned the same weighted means for the three variables. However, I found rake{survey} to be a lot clunkier and ran into a higher number of errors while I was using it. The postStratify{survey} function was easier to understand and required fewer lines of code. It therefore took less time for me to weigh the data by respondent sex.
+
+I had first attempted to use a different tutorial for MRP, which did not go well. I still had some trouble with the 'rstanarm' package and complexities of the code here. The for loops ended up sending my computer into a tailspin after awhile, leading to a C stack usage error (due to having to run the function several times due to code breaks). It would be interesting to explore other MRP code in the future to evaluate differences in speed, as this one required some overhaul to get R processing at its usual speed again. However, the documentation in the vignette and on Github were relatively useful in troubleshooting some of the issues I was having.
+
+# Final Product
+I attempted to create plots to compare sample to population and the effects of post-stratification on preference for sagebrush, but kept reaching an error in gzfile(file,wb). 
+
+# Reflection
+This exercise has helped me work through some of the basics of post-stratification and MRP. It has also helped me realize some additional functionality for these methods that I hope to explore further to better inform my survey sampling strategy. I need to explore the interaction effects in the MRP code more in the future, as this was a line of code that kept leading to errors ("subscript out of bounds") when I changed the variables that were interacting. This would allow me to better explore interactions between variables, such as income, education, and environmental attitude, which will help determine thresholds needed to detect the effects of some variables that may have complex interactions with others. I am looking forward to figuring out what is going wrong in that code so that I can investigate interaction effects further.
+
+# Additional Resources on This Topic
+- Buttice, M. K., and Highton, B. 2013. "How Does Multilevel Regression and Poststratification Perform with Conventional National Surveys?". Political Analysis 21:449–467. doi:10.1093/pan/mpt017
+- Hanretty, C. 2019. "An Introduction to Multilevel Regression and Post- Stratification for Estimating Constituency Opinion". Political Studies Review 00(0):1-16. doi: 10.1177/1478929919864733
+- Howe, P. D., Mildenberger, M., Marlon, J. R., Leiserowitz, A. 2015. "Geographic variation in opinions on climate change at state and local scales in the USA". Nature Climate Change 5:596-603. doi: 10.1038/NCLIMATE2583
+- Kennedy, L., and Gabry, J. 2019. "MRP with rstanarm". https://mc-stan.org/rstanarm/articles/mrp.html
+- Kolenikov, S. 2016. “Post-Stratification or Non-Response Adjustment?”. Survey Practice 9 (3). https://doi.org/10.29115/SP-2016-0014.
+- Penn State's STAT 506 course website: "Poststratification and further topics on stratification" (https://online.stat.psu.edu/stat506/node/29/)
+- Survey Weights in R (https://rpubs.com/mhanauer/268281)
+- UCLA Statitistical Consulting: "How Do I Analyze Survey Data with Stratification After Sampling (Poststratification)?" (https://stats.idre.ucla.edu/r/faq/how-do-i-analyze-survey-data-with-stratification-after-sampling-poststratification/)
+
+# Documentation and Information for Packages and Functions
+- dplyr (https://timmastny.rbind.io/blog/poststratification-with-dplyr/)
+- ggplot2 (https://ggplot2.tidyverse.org)
+- postStratify (http://r-survey.r-forge.r-project.org/survey/html/postStratify.html)
+- rstanarm (https://cran.r-project.org/web/packages/rstanarm/index.html)
+- Survey (https://www.r-bloggers.com/survey-computing-your-own-post-stratification-weights-in-r/)
+- tidyr (https://tidyr.tidyverse.org)
+- tidyverse (https://www.tidyverse.org)
