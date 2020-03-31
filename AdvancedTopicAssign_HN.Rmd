@@ -1,7 +1,7 @@
 ---
 title: "Advanced Topic - Post-stratification and Simulation"
 author: "Haley Netherton"
-date: "3/10/2020"
+date: "3/31/2020"
 output: html_document
 ---
 
@@ -26,6 +26,7 @@ Starting with the loading the libraries:
 ##Load the libraries 
 library(googledrive) #where dummy data is stored
 library(curl) #called for Google Drive data access
+library(here) #called for Google Drive data access
 library(readxl) #reads Excel files (how the data is stored)
 library(survey) #robust survey analysis package
 library(rstanarm) #used for MRP
@@ -38,12 +39,13 @@ library(bayesplot) #used for MRP plotting
 Then exploring post-stratification using survey::rake and survey::postStratify using a random sample:
 ```{r Post-Stratification}
 ##Load and Organize Data - Post-Stratification
-folder.url <- "https://drive.google.com/drive/folders/1w2Bu9vCjRoHD6f52nMIXCmmC723OOCR7"
-folder <- drive_get(as_id(folder.url))
-files <- drive_ls(folder)
-drive_download("Dummy_Survey.xlsx", path = "Documents/Boise State/Spring 2020/HES 598 R/Project/Data")
+folder_url <- "https://drive.google.com/drive/folders/1w2Bu9vCjRoHD6f52nMIXCmmC723OOCR7"
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("datatemp/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
-Dummy_Survey <- read_excel("Documents/Boise State/Spring 2020/HES 598 R/Project/Dummy_Survey.xlsx")
+Dummy_Survey <- read_excel("Documents/Boise State/Spring 2020/HES 598 R/Classwork/datatemp/original//Dummy_Survey.xlsx")
 View(Dummy_Survey) #note: this contains randomly simulated survey responses generatred through Qualtrics
 
 #create survey data set with no weights and assumed random sample
