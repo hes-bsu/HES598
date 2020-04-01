@@ -1,7 +1,7 @@
 ---
-title: "Advanced Topic Instructions"
-author: "Matt Williamson"
-date: "3/5/2020"
+title: "Advanced Topic Assignment"
+author: "Clara Buchholtz"
+date: "3/29/2020"
 output: html_document
 ---
 
@@ -14,6 +14,7 @@ SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
 
 ## Introduce your problem
 
+Advanced topics focus: Spatial Stats, Point Patterns, Nearest Neighbors
 Give a brief introduction to your research and identify how your "Advanced Topic" plays into what you are hoping to do. For example, if you are just starting out on your project and your topic is "Study Design" you might be interested in developing a spatially informed sampling/stratification scheme.Or maybe your work is going to have a big public outreach component that you'd like to support with some nice interactive maps. Give us a sense for what "success" would look like - what is your ideal end product for the analysis/approach you're testing out. This will help us figure out if the tools you tried were successful.
 
 ## PSUEDOCODE!!
