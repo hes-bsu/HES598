@@ -17,6 +17,10 @@ SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
 Advanced topics focus: Spatial Stats, Point Patterns, Nearest Neighbors
 Give a brief introduction to your research and identify how your "Advanced Topic" plays into what you are hoping to do. For example, if you are just starting out on your project and your topic is "Study Design" you might be interested in developing a spatially informed sampling/stratification scheme.Or maybe your work is going to have a big public outreach component that you'd like to support with some nice interactive maps. Give us a sense for what "success" would look like - what is your ideal end product for the analysis/approach you're testing out. This will help us figure out if the tools you tried were successful.
 
+-Mapping recreation disturbance patterns on the landscape. This is the starting place for identifying cumulative impacts hotspots and thresholds in sensitive habitat areas of the Owyhees and Boise Foothills. 
+
+-I will explore some code for basic spatial stats and point patterns that will be useful as I move forward with this work. 
+
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
