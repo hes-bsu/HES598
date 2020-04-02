@@ -165,7 +165,7 @@ plot(NLCD) +
   plot(buff, add = TRUE)
 
 #Now we can use extract to pull out a list of all the individual raster values for each buffer
-buffmask <- raster::extract(NLCD,buff)
+buffmask <- raster::extract(NLCD, buff)
 
 totalcount <- lapply(buffmask, length)
 Boxes$total<-as.numeric(totalcount[])
@@ -173,6 +173,8 @@ Boxes$total<-as.numeric(totalcount[])
 
 length(which(buffmask[[1]] == 82))
 #how do I get this for every single entry in my list!!!
+
+lapply(buffmask, function(x) length(which(x == 82)))
 
 lst82 <- setNames(vector('list', 278), 1:278)
 for (i in 1:278){
@@ -189,6 +191,31 @@ hist(Boxes$percent82)
 #most of these boxes have quite a bit of cropland in them...
 #I could do this for each and every cover type but I think it'd be a waste of space, its clear to see how the code works!
 
+#or lets make a function
+
+
+
+prophab <- function(inputlist, covertype) {
+  return((as.numeric(lapply(inputlist, function(x) length(which(x == covertype)))))/(as.numeric(lapply(inputlist, length))))
+}
+#this function will be a faster way for me to calculation the proportion of different habitat types in each buffer
+
+prophab(buffmask, 21) + prophab(buffmask, 82)
+#combining is an option
+
+Boxes$prop82 <- prophab(buffmask, 82)
+#store it right in the dataframe
+
+
+#listmask <- function(inputrast, inputspdf) {
+  #new.ext <- extent(inputspdf)
+  #temp.rst <- crop(inputrast, new.ext)
+  #temp.mask <- mask(temp.rst, inputspdf)
+  #return(temp.mask)
+#}
+#this function doesn't work, need to talk to Matt at office hours
+
+#lapply(buff, function(x) listmask(NLCD, x))
 
 ```
 
