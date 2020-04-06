@@ -1,7 +1,7 @@
 ---
-title: "Advanced Topic Instructions"
-author: "Matt Williamson"
-date: "3/5/2020"
+title: "Advanced Topics: Networks"
+author: "Molly Levy"
+date: "4/3/2020"
 output: html_document
 ---
 
@@ -14,12 +14,16 @@ SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
 
 ## Introduce your problem
 
-Give a brief introduction to your research and identify how your "Advanced Topic" plays into what you are hoping to do. For example, if you are just starting out on your project and your topic is "Study Design" you might be interested in developing a spatially informed sampling/stratification scheme.Or maybe your work is going to have a big public outreach component that you'd like to support with some nice interactive maps. Give us a sense for what "success" would look like - what is your ideal end product for the analysis/approach you're testing out. This will help us figure out if the tools you tried were successful.
+My research aims to address conflicts on multiple use landscapes. Within my study area, the Thunder Basin ecoregion (TBER), there are multiple different types of stakeholder groups and actors with a variety of vested interest in different land uses supported by TBER. Given the diversity of actors involved, conflict often arises when the goals of different groups do not align. I am interested in examining the network relationships and degrees of interconnectedness between different groups and individuals involved in the management of TBER. As such, I will be testing and evaluating different packages frequently used in the preparation of network diagrams in order to determine how to efficiently build and visualize a network diagram. 
+
 
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
 #load the libraries - tell us which packages you're using and why
+library(igraph)
+library(ggraph)
+library(networkD3)
 
 #load your data - which datasets do you need?
 
