@@ -83,27 +83,27 @@ usamap1 + usamap2
 idaho <- rgdal::readOGR("./data/idaho_cty.shp")
 sp::proj4string(idaho)
 
-idaho.sf <- sf::st_read("./data/idaho_cty.shp")
-sf::st_crs(idaho.sf)
+idaho.sf <- sf::st_read("./data/idaho_cty.shp") # double colon allows to use the library you've already installed
+sf::st_crs(idaho.sf) #unprojected data set (no units)
 
 ```
 
 ## Re-projections in `sp`
 ```{r reprojsp, eval=FALSE}
 #choose a few projections
-nad83 <- "+init=epsg:4269"
-idaho.cent <- "+proj=tmerc +lat_0=41.66666666666666 +lon_0=-114 +k=0.9999473679999999 +x_0=500000.0001016001 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs " 
+nad83 <- "+init=epsg:4269" #only area changes here
+idaho.cent <- "+proj=tmerc +lat_0=41.66666666666666 +lon_0=-114 +k=0.9999473679999999 +x_0=500000.0001016001 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs " #area and direction change for this one
 
-idaho.83 <- spTransform(idaho, CRS(nad83))
+idaho.83 <- spTransform(idaho, CRS(nad83)) #spTransform(idaho, CRS(nad83)) <- idaho.83 => this will only add information but won't reproject it (won't change geometry)
 idaho.c <- spTransform(idaho, CRS(idaho.cent))
 
-#are they different?
+#are they different? YES
 identicalCRS(idaho.83, idaho.c)
 
-#reproject idaho.cent
+#reproject idaho.cent => reprojecting idaho.83 to match idaho.c (instead of CRS use proj4 - cleaner way to do this)
 idaho.reproj <- spTransform(idaho.83, proj4string(idaho.c))
 
-#are they different?
+#are they different? NO => should because it's reprojected
 identicalCRS(idaho.c, idaho.reproj)
 ```
 ## Re-projections in `sf`
@@ -114,13 +114,13 @@ idaho.cent <- "+proj=tmerc +lat_0=41.66666666666666 +lon_0=-114 +k=0.99994736799
 
 idaho.sf.83 <- sf::st_transform(idaho.sf, nad83)
 idaho.sf.c <- sf::st_transform(idaho.sf, idaho.cent)
-## are they the same?
-st_crs(idaho.sf.83) == st_crs(idaho.sf.c)
+## are they the same? NO
+st_crs(idaho.sf.83) == st_crs(idaho.sf.c) #checking to see that both are equal (==)
 
 ##reproject using sf syntax
-idaho.sf.reproj <- st_transform(idaho.sf.83, st_crs(idaho.sf.c))
+idaho.sf.reproj <- st_transform(idaho.sf.83, st_crs(idaho.sf.c)) #using crs instead of proj4
 
-## are they the same?
+## are they the same? YES
 st_crs(idaho.sf.reproj) == st_crs(idaho.sf.c)
 
 ```
@@ -154,7 +154,7 @@ idaho.nonprof <- read.csv("./data/bmfcount.csv", stringsAsFactors = FALSE, colCl
 head(idaho.nonprof)
 
 #join based on the columns that match
-idaho.join <- tigris::geo_join(idaho.83, data_frame = idaho.nonprof, by_sp = "GEOID", by_df="FIPS", how="left")
+idaho.join <- tigris::geo_join(idaho.83, data_frame = idaho.nonprof, by_sp = "GEOID", by_df="FIPS", how="left") #spatial data, tabular data, key => telling what columns to match LJoin
 head(idaho.join@data)
 str(idaho.join@data)
 ```
@@ -165,8 +165,8 @@ str(idaho.join@data)
 head(idaho.sf.83)
 str(idaho.sf.83)
 
-idaho.join.sf <- idaho.sf.83 %>% 
-  left_join(., idaho.nonprof, by = c("GEOID" = "FIPS"))
+idaho.join.sf <- idaho.sf.83 %>% #take data set and move it down the line without saving it 
+  left_join(., idaho.nonprof, by = c("GEOID" = "FIPS")) #thing I want from the first is equivalant to the second - Joining is more specific than 'tigris' & 'sp'
 head(idaho.join.sf)
 str(idaho.join.sf)
 
@@ -233,13 +233,13 @@ idaho.proj <- spTransform(idaho.83, proj4string(elev))
 
 #using extract from raster package
 idaho.ext <- raster::extract(elev, idaho.proj)
-idaho.ext.mn <- raster::extract(elev, idaho.proj, fun=mean)
+idaho.ext.mn <- raster::extract(elev, idaho.proj, fun=mean) #list with the same length of polygon within list all pixels with all info
 ```
 ## Extracting Data from Rasters (cont'd)
 ```{r ext2, eval=FALSE}
 #using velox
 elev.vx <- velox(elev)
-elev.ext.vx <- elev.vx$extract(sp = idaho.proj)
+elev.ext.vx <- elev.vx$extract(sp = idaho.proj) #takes everything in memory at once and processes it in c++
 #with sf
 idaho.proj.sf <- st_transform(idaho.sf.83, st_crs(elev))
 elev.ext.vx.sf <- elev.vx$extract(sp = idaho.proj.sf)

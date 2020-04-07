@@ -1,0 +1,130 @@
+---
+title: "Raster Operations"
+author: "Matt Williamson"
+date: "2/17/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(raster)
+
+```
+
+## Learning Objectives
+
+- Explore basic raster operations (raster math, moving window analysis)
+
+- Learn workflow for raster reclassification
+
+- Learn basic approach for merging neighboring rasters
+
+## A bit of remote sensing
+
+- Deriving vegetation indices largely a function of calculating the right ratios.
+
+- `R` treats `rasters` as large matrices making math pretty easy
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+if(!file.exists('data/rs/samples.rds')) {
+  download.file('https://biogeo.ucdavis.edu/data/rspatial/rsdata.zip', dest = 'data/rsdata.zip')
+  unzip('data/rsdata.zip', exdir='data')}
+```
+
+## Load an image
+
+```{r pressure}
+raslist <-paste0('data/rs/LC08_044034_20170614_B', 1:11, ".tif")
+landsat <- stack(raslist)
+landsatRGB <- landsat[[c(4,3,2)]]
+landsatFCC <- landsat[[c(5,4,3)]]
+identical(crs(landsat), crs(landsatRGB))
+identical(crs(landsatRGB), crs(landsatFCC))
+```
+
+## Plot the image
+```{r}
+par(mfrow =c(1,2))
+plotRGB(landsatRGB, axes=TRUE, stretch="lin", main="Landsat True Color Composite")
+plotRGB(landsatFCC, axes=TRUE, stretch="lin", main="Landsat False Color Composite") #used to distinguish between features
+par(mfrow =c(1,1))
+```
+
+## Calculate Normalized Difference Vegetation Index
+
+- NDVI is a commonly used expression of "greenness" used to characterize productivity
+
+- Operationally just a series of cell-wise arithmetic
+
+```{r}
+NDVI.numerator <- landsat[[5]] - landsat[[4]] #Landsat NIR = band 5, red = 4
+NDVI.denominator <- landsat[[5]] + landsat[[4]]
+NDVI <- NDVI.numerator/NDVI.denominator
+
+plot(NDVI, col=rev(terrain.colors(20)), main = "NDVI")
+```
+
+## Raster math continued
+
+- More complex operations possible
+
+- rescaling data
+
+```{r}
+NDVI.centered <- NDVI - cellStats(NDVI, "mean")
+plot(NDVI.centered, col=rev(terrain.colors(20)), main = "NDVI (centered)")
+#Center data => make sure that units is brought to a common scale
+#Center data => distance from the mean
+```
+
+## Manual Scaling
+```{r}
+NDVI.scaled <- (NDVI - cellStats(NDVI, "mean"))/cellStats(NDVI,"sd")
+plot(NDVI.scaled, col=rev(terrain.colors(20)), main = "NDVI (scaled)")
+```
+
+## Using `scale` in `raster`
+
+- `raster` package recreates a number of generic functions for `Raster` objects
+```{r}
+NDVI.scaled2 <- scale(NDVI)
+plot(NDVI.scaled2, col=rev(terrain.colors(20)), main = "NDVI (scaled)")
+```
+
+## Reclassifying rasters
+
+- Useful for converting continuous rasters into categorical (or ordinal) data
+
+- Thresholding based on a minimum value
+
+```{r}
+veg <- reclassify(NDVI,cbind(-Inf, 0.4,NA))#(from, to, becomes)
+plot(veg, col=rev(terrain.colors(20)), main = "Vegetation")
+```
+
+## Reclassifying (cont'd)
+
+- Based on percentiles in the data
+```{r}
+ndvi.percentile <- quantile(NDVI, probs = seq(0, 1.0, 0.1), names=FALSE)
+
+#build a reclassification matrix
+perc.rcl.df <- NULL
+for (i in 1:length(ndvi.percentile)){
+  perc.rcl.v <- c(ndvi.percentile[i], ndvi.percentile[i+1], i)
+  perc.rcl.df <- rbind(perc.rcl.df, perc.rcl.v)
+  rownames(perc.rcl.df) <- NULL
+}
+perc.rcl.df[11,2] <- Inf #set the upper limit
+
+ndvi.perc.recl <- reclassify(NDVI, perc.rcl.df) 
+```
+
+## Reclassified 
+```{r reclplot, echo= TRUE}
+plot(ndvi.perc.recl, col=rev(terrain.colors(20)), main = "Percentiles")
+```
+
+## Reclassifying categorical maps
