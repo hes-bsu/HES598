@@ -16,18 +16,50 @@ SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
 
 Give a brief introduction to your research and identify how your "Advanced Topic" plays into what you are hoping to do. For example, if you are just starting out on your project and your topic is "Study Design" you might be interested in developing a spatially informed sampling/stratification scheme.Or maybe your work is going to have a big public outreach component that you'd like to support with some nice interactive maps. Give us a sense for what "success" would look like - what is your ideal end product for the analysis/approach you're testing out. This will help us figure out if the tools you tried were successful.
 
-This chapter of my dissertation involves detecting and predicting the spread (or really, the distribution) of a newly invading macrophyte (Hydrocharis morsus-ranae L; EFB) in Great Lakes wetlands. Because EFB is not yet fully established in all Great Lakes, I am investigating whether we can accurately predict vulnerable wetlands based on EFB's environmental/anthropogenic drivers. The importance of these hypothesized drivers (eg. distance to public boat launch, the presence of an emergent macrophyte, etc.) can be assessed through various species distribution models. A species distribution model can have varying definitions, but I interpret it as a representation of the influence of ecological, climatic, and anthropogenic variables on whether or not a species' presence/abundance is observed across time and space. Overall, these questions are important to address so that managers can properly control/mitigate EFB's spread and priortize protection of vulnerable wetlands to future invasions. Spatio-temporal data play a huge role in answering my questions because predicting EFB's current and potential distribution in its invasive range requires spatial data ideally over decadal timescales.
+This chapter of my dissertation involves detecting and predicting the spread (or really, the range/distribution) of a newly invading macrophyte (Hydrocharis morsus-ranae L; EFB) in Great Lakes wetlands. Because EFB is not yet fully established in all Great Lakes, I am investigating whether we can accurately predict vulnerable wetlands based on EFB's environmental/anthropogenic drivers. The importance of these hypothesized drivers (eg. distance to public boat launch, the presence of an emergent macrophyte, etc.) can be assessed through various species distribution models. A species distribution model can have varying definitions, but I interpret it as a representation of the influence of ecological, climatic, and anthropogenic variables on whether or not a species' presence/abundance is observed across time and space. In other words, understanding which variables are important for EFB occurence at its known locations can help us predict the full potential range or habitat of EFB (based on the similarity of uninvaded wetlands variables to sites of known occurence) if it were to invade the entire GL basin. Overall, these questions are important to address so that managers can properly control/mitigate EFB's spread and priortize protection of vulnerable wetlands to future invasions. Spatio-temporal data play a huge role in answering my questions because predicting EFB's current and potential distribution in its invasive range requires spatial data ideally over decadal timescales.
 
-Specifically for my research, I have a obtained access to a relatively long time-series field dataset, consisting of 8 years of transect vegetaion survey data in Michigan coast wetlands. It includes plant species occurence/abundance, environmental data (water depth, distance to wave action, water quality, etc.), GPS coordinates of quadrats, and time at which the data was collected. I will also include a distance to boat launch as a proxy for human activity in these wetlands. Becuase there is a spatio-temporal component in these data, I hope to use the integrated nested laplace approximation (INLA) to account for the inherent spatio-temporal autocorellation in this data as a term in the model and assess its relative important compared to the othe potential drivers on EFB's distribution. 
+Specifically for my research, I have a obtained access to a relatively long time-series field dataset, consisting of 8 years of transect vegetaion survey data in Michigan coastal wetlands (2011-2018). It includes plant species occurence/abundance, environmental data (water depth, distance to wave action, water quality, etc.), GPS coordinates of quadrats, and date at which the data was collected. I will also include a distance to boat launch as a proxy for human activity in these wetlands (and perhaps others?). Becuase there is a spatio-temporal component in these data, I hope to use the integrated nested laplace approximation (INLA) to account for inherent spatio-temporal autocorellation in this dataset as an error term (in the model (to account for non-independence of model residuals) and assess its relative importance compared to the othe potential drivers on EFB's distribution. 
 
-For this advanced topic, I'll consider this exercise a success by exploring these data in various ways to determine whether or not an INLA framework will be appropriate for modeling EFB's distribution in Michigan wetlands. For example, I will first plot the presence/abundance data against the various predictors to examine which ones may influence EFB in some way (postive, negative, or quadratic). Second, I could then plot some geogrpahic attribute of each of these points to understand if there are autocorrelated points in these raw data (I could also do the same, but temporally). Once I explore all of my variables of interest, I plan to map the most intresting ones (determined qualitatively) to get an ultimate sense of visualizing EFB distribution with the enviromnmental variables. As an aspiration, I lastly plan to run a preliminary model on some of these predictors on EFB's presence (and/or abundance), at least with a spatial autocorellation term from the INLA package. 
-
-
+For this advanced topic, I'll consider this exercise a success by cleaning/wrangling the dataset as it was given to me, and then exploring these data in various ways to determine whether or not an INLA framework will be appropriate for modeling EFB's distribution in Michigan wetlands. For example, I will first plot the presence/abundance data against the various predictors to examine which ones may influence EFB in some way (postive, negative, or quadratic). Second, I could then include some geographic attribute of each of these points to understand if there are autocorrelated points in these raw data (I could also do the same he data over time). Once I explore all of my variables of interest, I plan to map the most intresting ones (determined qualitatively) to get an ultimate sense of visualizing EFB distribution in relation to these variables. As an aspiration, I plan to run a preliminary model on some of these predictors on EFB's presence (and/or abundance), at least with a spatial autocorellation term from the INLA package. 
 
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
 #load the libraries - tell us which packages you're using and why
+knitr::opts_chunk$set(echo = TRUE)
+library(googledrive)
+# To connect to folder with field data. 
+library(tidyverse)
+library(reshape2)
+#I need tidyverse and reshape2 so that I can rearrange (via the melt function) my dataset into a format that is analyzable. Specifically, the field data that was given to me consisted of individual species observations, each as their own row (so like, >70k rows!). Instead, I would like each row to be a given quadrat plot with all spp observed and recorded variables. tidyr's spread() function will help get the dataframe into the desired format. 
+
+library(sf)
+library(sp)
+library(rgdal)
+#These libraries help me eventually turn my dataframe with lat/lons into a .shp file that I'll eventually plot all over the state of MI. Each point is a surveyed quadrat in a given wetland. 
+
+library(maps)
+library(mapproj)
+library(tmap)
+#These packages have functions to ensure my various shapefiles have the same projection, and can make my maps look pretty! 
+
+library(ggplot2)
+library(patchwork)
+#ggplot2 gives me the flexibility to make my plots more informative (see above about including multiple attributes), and patchwork will potentially allow me to plot multiple panel plots to compare and contrast patterns across different variables. 
+
+library(RColorBrewer)
+library(latticeExtra)
+library(RColorBrewer)
+library(viridis)
+#For making my plots looks look pretty with nice color palletes. Might be useful for some of my variables that are on different scales. 
+
+library(INLA)
+library(inlabru)
+#Finally, INLA allows me to create a species distribuion model (in a Bayesian framework) with a spatial/temporal autocorrelation terms relative to the effects of the hypothesized predictor variables. I can also plot the spatio-temporal effects of the variables across MI coastlines (ie. where/when EFB occurence exhibits the highest spatio-temporal autocorrelation). Eventually (though probably not in the scope of this exercise), I would like to plot the risk of uninvaded wetlands to potential EFB establishment. This would be based on the model estimates of the predictor's posterior distributions. 
+
+library(microbenchmark) 
+library(parallel)
+#Lastly, although the INLA framework allows for high computation of variables with complex structure through stochastic partial differential equations, I still likely need to assess how long these models will take to run given this relatively long time-series of field data. 
 
 #load your data - which datasets do you need?
 
@@ -39,7 +71,6 @@ Before you get started programming all of the potential things you could do duri
 
 #Check the outcomes? How will you know if your steps worked?
 
-# 
 ```
 
 ## Introduce the packages
