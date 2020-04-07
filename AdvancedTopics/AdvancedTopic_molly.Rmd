@@ -22,7 +22,6 @@ Before you get started programming all of the potential things you could do duri
 ```{r}
 #load the libraries - tell us which packages you're using and why
 library(igraph)
-library(ggraph)
 library(networkD3)
 
 #load your data - which datasets do you need?
@@ -39,6 +38,16 @@ library(networkD3)
 ```
 
 ## Introduce the packages
+library(igraph)
+
+igraph is a library and R package for network analysis. One online resource described igraph as "the  most important R package when it comess to build network diagrams." This package will be useful for building a network diagram from adjacency matrix, edge list, literal list of connections, and more. igraph also provides three different functions for visualizations. This package emphasizes efficiency and portability, so will be able  to try different combinations of network building and visualization. 
+
+
+library(networkD3)
+
+The networkD3 package allows to build interactive network diagrams with R, including zoom, hover nodes, reorganize the layout. This package will provide features for dynamic data manipulation and visualization and allows users to become active participants in data visualization process by allowing users to explore data points, hierarchies among the data, filter data by groups, and similar. It also provides pseudo-data to use to play around with. This package can plot many different types of networks and is also supposed to interact well with the igraph package.  
+
+
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
 
 ## Evaluate your choices
