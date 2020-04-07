@@ -37,17 +37,32 @@ source(here("Flexdashboard","Script", "Functions", "rgb2hex.R"))
 df_confirmed <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv")
 df_deaths <- read_csv("https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv")
 
-run_summary <- function(data, varname)
+#### subset data to get just information for Idaho ####
+id_df_confirmed <- subset(df_confirmed, Province_State=="Idaho" & FIPS < 17000)
+id_df_deaths <- subset(df_deaths, Province_State=="Idaho" & FIPS < 17000)
 
-df_confirmed %>% run_summary(varname = "Confirms") -> summary_confirmed
-df_deaths %>% run_summary(varname = "Deaths") -> summary_deaths
+#rename some of the columns to make it easier to analyze the data
+id_df_confirmed <- rename(id_df_confirmed, County = Admin2, Lat = Lat, Long= Long_)
+id_df_deaths <- rename(id_df_deaths, County = Admin2, Lat = Lat, Long= Long_)
 
-list(summary_confirmed,
-     summary_deaths) %>%
-  reduce(full_join, by = "Date") %>%
-  mutate_at(vars(Date), ~lubridate::mdy(.)) %>%
-  arrange(Date) %>%
-  drop_na() -> output_data
+run_summary <- function(data, varname, today_date = NULL){
+    data %>%
+      select(-Lat, -Long) %>%
+      gather(Date, !!sym(varname))%>%
+      mutate_at(vars(Date), ~lubridate::mdy(.)) %>%
+      group_by(Date) %>%
+      summarise(!!sym(varname) := sum(!!sym(varname), na.rm = TRUE)) 
+}
+
+id_df_confirmed %>% run_summary(varname = "Confirms") -> summary_confirmed
+id_df_deaths %>% run_summary(varname = "Deaths") -> summary_deaths
+
+#list(summary_confirmed,
+    # summary_deaths) %>%
+ # reduce(full_join, by = "Date") %>%
+ # mutate_at(vars(Date), ~lubridate::mdy(.)) %>%
+  #arrange(Date) %>%
+ # drop_na() -> output_data
 ```
 
 Column {data-width=650}
@@ -69,7 +84,23 @@ Column {data-width=350}
 ### Chart B
 
 ```{r}
+# we are going to use the highcharter package to display information
+# let's pull up a map of idaho, at the county level
+hcmap("countries/us/us-id-all") %>%
+  hc_title(text = "Idaho")
 
+# now we are going to add data to this map
+
+
+glimpse(id_df_confirmed)
+
+hcmap("countries/us/us-id-all", name = "Idaho") %>% 
+  hc_add_series(data = id_df_confirmed, type = "mappoint",
+                name = "Confirmed COVID-19 Cases", maxSize = "10",
+                tooltip_chart(accesor = NULL, hc_opts = NULL, width = 250,
+                height = 150)
+                 tooltip = list(pointFormat = "{point.name}: {id_df_confirmed$Admin2 + County}")) %>% 
+  hc_chart(zoomType = "panKey")
 ```
 
 ### Chart C
