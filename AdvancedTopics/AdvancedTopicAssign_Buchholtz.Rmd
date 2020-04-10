@@ -27,6 +27,40 @@ Before you get started programming all of the potential things you could do duri
 #load the libraries - tell us which packages you're using and why
 
 #load your data - which datasets do you need?
+#I'll be working with simulated point data to demonstrate some point pattern analyses. In order
+#to do this, I'll create a plot with points within it using rnorm. 
+
+#Making uniform density patterns:
+
+#Starting with doing it in a rectangle.
+# The number of points to create
+n <- 200
+
+# Set the range
+xmin <- 0
+xmax <- 1
+ymin <- 0
+ymax <- 2
+
+# Sample from a Uniform distribution
+x <- runif(n, xmin, xmax)
+y <- runif(n, ymin, ymax )
+
+
+# Plot points and a rectangle
+# The aspect ratio of the boundary rectangle is 2 
+# (it is twice as tall as wide), but the aspect ratio of the
+# coordinates needs to be 1 so the rectangle appears that way.
+
+
+# Plot points and a rectangle
+
+mapxy <- function(a = NA){
+  plot(x, y, asp = a)
+  rect(xmin, ymin, xmax, ymax)
+}
+
+mapxy(1)
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
 
