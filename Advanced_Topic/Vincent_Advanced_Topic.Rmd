@@ -1,7 +1,7 @@
 ---
-title: "Advanced Topic Instructions"
-author: "Matt Williamson"
-date: "3/5/2020"
+title: "Advanced Topic - Landscape Metrics and Raster Data"
+author: "Allison Vincent"
+date: "4/3/2020"
 output: html_document
 ---
 
@@ -10,11 +10,36 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
+## Introducing the problem
 
-## Introduce your problem
+My thesis research involves using a remote sensing data fusion model to monitor snow covered area in a mountain watershed. The questions we are trying to answer include:
 
-Give a brief introduction to your research and identify how your "Advanced Topic" plays into what you are hoping to do. For example, if you are just starting out on your project and your topic is "Study Design" you might be interested in developing a spatially informed sampling/stratification scheme.Or maybe your work is going to have a big public outreach component that you'd like to support with some nice interactive maps. Give us a sense for what "success" would look like - what is your ideal end product for the analysis/approach you're testing out. This will help us figure out if the tools you tried were successful.
+1. Can we constrain the spatiotemporal distribution of snow cover in mountain watersheds over a large area and long period of time to better understand water delivery to the Critical Zone (or shallow subsurface)?
+
+2. Can we create a high spatiotemporal resolution dataset to monitor snow covered area in a mountain watershed over a ~20 year period?
+
+To do this, we are using the Spatial and Temporal Adaptive Reflectance Fusion Model (STARFM) to downscale MODIS (low spatial, high temporal resoultion) data to fill in the gaps of Landsat (high spatial, low temporal resolution) data to monitor historical snow-covered area in detail on a daily basis. Landsat data with its 30 meter spatial resolution is useful for detailed monitoring of landscape features. Because it is only available every 7-16 days (depending on location), however, rapidly changing conditions, such as spring snowcover, can be missed. On the other hand, MODIS data is captured on a daily basis, but is too coarse at 250-500 meter spatial resolution to be used to discerne landscape changes at the scale necessary. Downscaling MODIS data is one way to resolve this issue. By using MODIS data to "fll-in" the gaps between days of Landsat acquisition, a dataset can be produced that contains synthetic imagery at a Landsat-like spatial resolution on a daily basis. This is important because snowcover is a landscape characteristic that can change rapidly from day-to-day, especially during times such as the spring snowmelt season.    
+
+Before being used as model input, MODIS and Landsat images are first processed by applying a cloud mask to remove any pixels that are classified as cloud or cloud shadow. The normalized difference snow index (NDSI) is then calculated for the remaining pixels covering the area of interest. Once an NDSI value for each pixel is obtained, both images are converted to the same projection and the MODIS imagery is rescaled to 30x30 meter pixels.
+
+To validate the results of the model, a single Landsat image is excluded from the model input data, and then later is used to compare the synthetic image produced from the model from that same date to see how accurate the model's prediction was. One way in which we quantify the performance of the model is by binary classification. We use the common NDSI threshold of 0.4 to decide whether a pixel is classified as snow or no snow. Any value at 0.4 or above is given the label of "snow" (the positive classification), and any value below is given the label of "no snow" (the negative classification). 
+
+Once each pixel is placed into one of these categories, a confusion matrix of true positives, true negatives, false positives, and false negatives is generated. From these values we then calculate metrics such as accuracy, precision, recall, and F-score for each date. These last 3 metrics are used because, as our dates of analysis move further into the spring, snow becomes more scarce in the landscape and the negative, "no-snow", class becomes the majority classifier, which can inflate the accuracy values for even an unskilled model. (add more details and equations for these metrics if necessary)
+
+In addition to the calculation of the F-score for the model output, it is also important to quantify how well the model is performing against a random distribution of snowcover. This project proposes to do just that. Below is a draft outline of the steps I hope to accomplish in this analysis:
+
+1. Choose a date for analysis that is less than 30% cloud covered. 
+
+2. Calculate the fractional snow-covered area (fSCA) of the Landsat image (the validation image) for that date as the fraction of pixels classified as "snow" (the positive class). 
+
+3. Generate a map of the modeled data from that same date with the same fSCA, but with the snowcover randomly distributed throughout the landscape. 
+
+4. Repeat step 3 multiple times (100-1,000? depending on computing power available and time-burden), producing an ensemble of random binary snow-covered area maps.
+
+5. Calculate the accuracy, precision, recall, and F-score of all above random simulations.
+
+6. Produce a figure that shows how the values from step 5 are different from the true values of the original real/synthetic image pair. This step can include measures of the variance in the values calculated from the random trials from the expected values calculated from the model output.  
+
 
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
