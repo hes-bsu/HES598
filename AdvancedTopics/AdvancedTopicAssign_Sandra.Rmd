@@ -1,0 +1,49 @@
+---
+title: "Advanced Topic Instructions"
+author: "Sandra Velazco"
+date: "4/13/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
+
+## Introduce your problem
+
+Give a brief introduction to your research and identify how your "Advanced Topic" plays into what you are hoping to do. For example, if you are just starting out on your project and your topic is "Study Design" you might be interested in developing a spatially informed sampling/stratification scheme.Or maybe your work is going to have a big public outreach component that you'd like to support with some nice interactive maps. Give us a sense for what "success" would look like - what is your ideal end product for the analysis/approach you're testing out. This will help us figure out if the tools you tried were successful.
+
+## PSUEDOCODE!!
+Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
+```{r}
+#load the libraries - tell us which packages you're using and why
+
+#load your data - which datasets do you need?
+
+#Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
+
+#Analysis/processing step 1 - what are you hoping to do here, why? 
+
+#Analysis/processing step 2 - what are you hoping to do here, why? 
+
+#Check the outcomes? How will you know if your steps worked?
+
+# 
+```
+
+## Introduce the packages
+Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
+
+## Evaluate your choices
+Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
+
+## Show us your final product
+Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
+
+## Reflect
+Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
+
+Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
