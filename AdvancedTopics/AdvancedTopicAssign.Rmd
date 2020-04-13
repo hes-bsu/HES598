@@ -1,0 +1,62 @@
+---
+title: "Advanced Topics: Networks"
+author: "Molly Levy"
+date: "4/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
+
+## Introduce your problem
+
+My research aims to address conflicts on multiple use landscapes. Within my study area, the Thunder Basin ecoregion (TBER), there are multiple different types of stakeholder groups and actors with a variety of vested interest in different land uses supported by TBER. Given the diversity of actors involved, conflict often arises when the goals of different groups do not align. I am interested in examining the network relationships and degrees of interconnectedness between different groups and individuals involved in the management of TBER. As such, I will be testing and evaluating different packages frequently used in the preparation of network diagrams in order to determine how to efficiently build and visualize a network diagram. 
+
+
+## PSUEDOCODE!!
+Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
+```{r}
+#load the libraries - tell us which packages you're using and why
+library(igraph)
+library(networkD3)
+
+#load your data - which datasets do you need?
+
+#Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
+
+#Analysis/processing step 1 - what are you hoping to do here, why? 
+
+#Analysis/processing step 2 - what are you hoping to do here, why? 
+
+#Check the outcomes? How will you know if your steps worked?
+
+# 
+```
+
+## Introduce the packages
+library(igraph)
+
+igraph is a library and R package for network analysis. One online resource described igraph as "the  most important R package when it comess to build network diagrams." This package will be useful for building a network diagram from adjacency matrix, edge list, literal list of connections, and more. igraph also provides three different functions for visualizations. This package emphasizes efficiency and portability, so will be able  to try different combinations of network building and visualization. 
+
+
+library(networkD3)
+
+The networkD3 package allows to build interactive network diagrams with R, including zoom, hover nodes, reorganize the layout. This package will provide features for dynamic data manipulation and visualization and allows users to become active participants in data visualization process by allowing users to explore data points, hierarchies among the data, filter data by groups, and similar. It also provides pseudo-data to use to play around with. This package can plot many different types of networks and is also supposed to interact well with the igraph package.  
+
+
+Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
+
+## Evaluate your choices
+Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
+
+## Show us your final product
+Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
+
+## Reflect
+Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
+
+Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
