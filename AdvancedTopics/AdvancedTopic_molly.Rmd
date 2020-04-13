@@ -16,17 +16,239 @@ SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
 
 My research aims to address conflicts on multiple use landscapes. Within my study area, the Thunder Basin ecoregion (TBER), there are multiple different types of stakeholder groups and actors with a variety of vested interest in different land uses supported by TBER. Given the diversity of actors involved, conflict often arises when the goals of different groups do not align. I am interested in examining the network relationships and degrees of interconnectedness between different groups and individuals involved in the management of TBER. As such, I will be testing and evaluating different packages frequently used in the preparation of network diagrams in order to determine how to efficiently build and visualize a network diagram. 
 
+## pseudocode
 
-## PSUEDOCODE!!
-Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
 #load the libraries - tell us which packages you're using and why
+
+#load your data
+
+#Analysis/processing step 1 - what are you hoping to do here, why? 
+
+#Analysis/processing step 2 - what are you hoping to do here, why? 
+
+#Check the outcomes? How will you know if your steps worked?
+
+```
+
+## Introduce the packages
+library(igraph)
+
+igraph is a library and R package for network analysis. One online resource described igraph as "the  most important R package when it comess to build network diagrams." This package will be useful for building a network diagram from adjacency matrix, edge list, literal list of connections, and more. igraph also provides three different functions for visualizations. This package emphasizes efficiency and portability, so will be able  to try different combinations of network building and visualization. 
+
+```{r}
+#step-by-step with igraph: 
+
+#Using an adjacency matrix
+
+#library
+library(igraph)
+
+# Create data
+set.seed(10)
+data <- matrix(sample(0:2, 25, replace=TRUE), nrow=5)
+colnames(data) = rownames(data) = LETTERS[1:5]
+ 
+# build the graph object
+network <- graph_from_adjacency_matrix(data)
+ 
+# plot it
+plot(network)
+```
+
+```{r}
+#Using an incidence matrix
+
+# data
+set.seed(1)
+data <- matrix(sample(0:2, 15, replace=TRUE), nrow=3)
+colnames(data) <- letters[1:5]
+rownames(data) <- LETTERS[1:3]
+ 
+# create the network object
+network <- graph_from_incidence_matrix(data)
+ 
+# plot it
+plot(network)
+```
+
+```{r}
+#Using an Edge list
+
+links <- data.frame(
+    source=c("A","A", "A", "A", "A","F", "B"),
+    target=c("B","B", "C", "D", "F","A","E")
+    )
+
+# create the network object
+network <- graph_from_data_frame(d=links, directed=F) 
+
+# plot it
+plot(network)
+```
+
+```{r}
+# using a literal list of connections
+# create data:
+network <- graph_from_literal( A-B-C-D, E-A-E-A, D-C-A, D-A-D-C )
+
+# plot it
+plot(network)
+```
+
+
+```{r}
+#exploring chart parameters in igraph
+
+#creating a default network chart
+# Library
+library(igraph)
+
+# Create data
+set.seed(1)
+data <- matrix(sample(0:1, 100, replace=TRUE, prob=c(0.8,0.2)), nc=10)
+network <- graph_from_adjacency_matrix(data , mode='undirected', diag=F )
+
+# Default network
+par(mar=c(0,0,0,0))
+plot(network)
+```
+```{r}
+# customizing node features
+plot(network,
+    vertex.color = rgb(0.8,0.2,0.2,0.9),           # Node color
+    vertex.frame.color = "Forestgreen",            # Node border color
+    vertex.shape=c("circle","square"),             # One of “none”, “circle”, “square”, “csquare”, “rectangle” “crectangle”, “vrectangle”, “pie”, “raster”, or “sphere”
+    vertex.size=c(15:24),                          # Size of the node (default is 15)
+    vertex.size2=NA,                               # The second size of the node (e.g. for a rectangle)
+    )
+```
+```{r}
+#customizing label features
+plot(network,
+    vertex.label=LETTERS[1:10],                    # Character vector used to label the nodes
+    vertex.label.color=c("red","blue"),
+    vertex.label.family="Times",                   # Font family of the label (e.g.“Times”, “Helvetica”)
+    vertex.label.font=c(1,2,3,4),                  # Font: 1 plain, 2 bold, 3, italic, 4 bold italic, 5 symbol
+    vertex.label.cex=c(0.5,1,1.5),                 # Font size (multiplication factor, device-dependent)
+    vertex.label.dist=0,                           # Distance between the label and the vertex
+    vertex.label.degree=0 ,                        # The position of the label in relation to the vertex (use pi)
+    )
+```
+
+```{r}
+#customizing link features
+plot(network,
+    edge.color=rep(c("red","pink"),5),           # Edge color
+    edge.width=seq(1,10),                        # Edge width, defaults to 1
+    edge.arrow.size=1,                           # Arrow size, defaults to 1
+    edge.arrow.width=1,                          # Arrow width, defaults to 1
+    edge.lty=c("solid")                           # Line type, could be 0 or “blank”, 1 or “solid”, 2 or “dashed”, 3 or “dotted”, 4 or “dotdash”, 5 or “longdash”, 6 or “twodash”
+    #edge.curved=c(rep(0,5), rep(1,5))            # Edge curvature, range 0-1 (FALSE sets it to 0, TRUE to 0.5)
+    )
+```
+```{r}
+#combining customizations in one chart
+par(bg="black")
+
+plot(network, 
+    
+    # === vertex
+    vertex.color = rgb(0.8,0.4,0.3,0.8),          # Node color
+    vertex.frame.color = "white",                 # Node border color
+    vertex.shape="circle",                        # One of “none”, “circle”, “square”, “csquare”, “rectangle” “crectangle”, “vrectangle”, “pie”, “raster”, or “sphere”
+    vertex.size=14,                               # Size of the node (default is 15)
+    vertex.size2=NA,                              # The second size of the node (e.g. for a rectangle)
+    
+    # === vertex label
+    vertex.label=LETTERS[1:10],                   # Character vector used to label the nodes
+    vertex.label.color="white",
+    vertex.label.family="Times",                  # Font family of the label (e.g.“Times”, “Helvetica”)
+    vertex.label.font=2,                          # Font: 1 plain, 2 bold, 3, italic, 4 bold italic, 5 symbol
+    vertex.label.cex=1,                           # Font size (multiplication factor, device-dependent)
+    vertex.label.dist=0,                          # Distance between the label and the vertex
+    vertex.label.degree=0 ,                       # The position of the label in relation to the vertex (use pi)
+    
+    # === Edge
+    edge.color="white",                           # Edge color
+    edge.width=4,                                 # Edge width, defaults to 1
+    edge.arrow.size=1,                            # Arrow size, defaults to 1
+    edge.arrow.width=1,                           # Arrow width, defaults to 1
+    edge.lty="solid",                             # Line type, could be 0 or “blank”, 1 or “solid”, 2 or “dashed”, 3 or “dotted”, 4 or “dotdash”, 5 or “longdash”, 6 or “twodash”
+    edge.curved=0.3    ,                          # Edge curvature, range 0-1 (FALSE sets it to 0, TRUE to 0.5)
+    )
+```
+
+```{r}
+#applying different layouts using igraph
+
+# library
+library(igraph)
+ 
+# Create data
+data <- matrix(sample(0:1, 400, replace=TRUE, prob=c(0.8,0.2)), nrow=20)
+network <- graph_from_adjacency_matrix(data , mode='undirected', diag=F )
+ 
+# When ploting, we can use different layouts:
+par(mfrow=c(2,2), mar=c(1,1,1,1))
+plot(network, layout=layout.sphere, main="sphere")
+plot(network, layout=layout.circle, main="circle")
+plot(network, layout=layout.random, main="random")
+plot(network, layout=layout.fruchterman.reingold, main="fruchterman.reingold")
+ 
+# See the complete list with
+# help(layout)
+```
+library(networkD3)
+
+The networkD3 package allows to build interactive network diagrams with R, including zoom, hover nodes, reorganize the layout. This package will provide features for dynamic data manipulation and visualization and allows users to become active participants in data visualization process by allowing users to explore data points, hierarchies among the data, filter data by groups, and similar. It also provides pseudo-data to use to play around with. This package can plot many different types of networks and is also supposed to interact well with the igraph package.  
+
+```{r}
+# using network D3 to create interactive graph
+
+#load the libraries - tell us which packages you're using and why
+library(tidyverse)
+library(viridis)
+library(patchwork)
+library(hrbrthemes)
+library(ggraph)
 library(igraph)
 library(networkD3)
 
-#load your data - which datasets do you need?
+#load your data - Dataset represents the co-authors network of Vincent Ranwez. Peoople having published at least one research paper with him are represented by a node. If two people have been listed on the same publication at least once, they are connected by a link.
+dataUU <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/13_AdjacencyUndirectedUnweighted.csv", header=TRUE)
 
-#Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
+
+## Transform the adjacency matrix in a long format
+connect <- dataUU %>% 
+  gather(key="to", value="value", -1) %>%
+  na.omit()
+
+# Number of connection per person
+c( as.character(connect$from), as.character(connect$to)) %>%
+  as.tibble() %>%
+  group_by(value) %>%
+  summarize(n=n()) -> coauth
+colnames(coauth) <- c("name", "n")
+
+# NetworkD3 format
+graph=simpleNetwork(connect)
+
+# Plot
+simpleNetwork(connect,     
+        Source = 1,                 # column number of source
+        Target = 2,                 # column number of target
+        height = 880,               # height of frame area in pixels
+        width = 1980,
+        linkDistance = 10,         # distance between node. Increase this value to have more space between nodes
+        charge = -4,              # numeric value indicating either the strength of the node repulsion (negative value) or attraction (positive value)
+        fontSize = 5,              # size of the node names
+        fontFamily = "serif",       # font og node names
+        linkColour = "#666",        # colour of edges, MUST be a common colour for the whole graph
+        nodeColour = "#69b3a2",     # colour of nodes, MUST be a common colour for the whole graph
+        opacity = 0.9,              # opacity of nodes. 0=transparent. 1=no transparency
+        zoom = T                    # Can you zoom on the figure?
+        )
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
 
@@ -37,15 +259,7 @@ library(networkD3)
 # 
 ```
 
-## Introduce the packages
-library(igraph)
-
-igraph is a library and R package for network analysis. One online resource described igraph as "the  most important R package when it comess to build network diagrams." This package will be useful for building a network diagram from adjacency matrix, edge list, literal list of connections, and more. igraph also provides three different functions for visualizations. This package emphasizes efficiency and portability, so will be able  to try different combinations of network building and visualization. 
-
-
-library(networkD3)
-
-The networkD3 package allows to build interactive network diagrams with R, including zoom, hover nodes, reorganize the layout. This package will provide features for dynamic data manipulation and visualization and allows users to become active participants in data visualization process by allowing users to explore data points, hierarchies among the data, filter data by groups, and similar. It also provides pseudo-data to use to play around with. This package can plot many different types of networks and is also supposed to interact well with the igraph package.  
+```
 
 
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
@@ -60,3 +274,64 @@ Did you make a map? Let's see it. Did you plot some data that you extracted with
 Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
 
 Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
+
+```{r}
+ # Transform the adjacency matrix in a long format
+connect <- dataUU %>% 
+  gather(key="to", value="value", -1) %>%
+  mutate(to = gsub("\\.", " ",to)) %>%
+  na.omit() 
+
+# Number of connection per person
+c( as.character(connect$from), as.character(connect$to)) %>%
+  as.tibble() %>%
+  group_by(value) %>%
+  summarize(n=n()) -> coauth
+colnames(coauth) <- c("name", "n")
+
+# Create a graph object with igraph
+mygraph <- graph_from_data_frame( connect, vertices = coauth, directed = FALSE )
+
+# Find community
+com <- walktrap.community(mygraph)
+
+#Reorder dataset and make the graph
+coauth <- coauth %>% 
+  mutate(grp = com$membership) %>%
+  arrange(grp) %>%
+  mutate(name=factor(names, names))
+
+# keep only 10 first communities
+coauth <- coauth %>% 
+  filter(grp<16)
+
+# keep only this people in edges
+connect <- connect %>%
+  filter(from %in% coauth$name) %>%
+  filter(to %in% coauth$name)
+
+# Create a graph object with igraph
+mygraph <- graph_from_data_frame( connect, vertices = coauth, directed = FALSE )
+
+# prepare a vector of n color in the viridis scale
+mycolor <- colormap(colormap=colormaps$viridis, nshades=max(coauth$grp))
+mycolor <- sample(mycolor, length(mycolor))
+
+# Make the graph
+ggraph(mygraph) + 
+  geom_edge_link(edge_colour="black", edge_alpha=0.2, edge_width=0.3, fold=TRUE) +
+  geom_node_point(aes(size=n, color=as.factor(grp), fill=grp), alpha=0.9) +
+  scale_size_continuous(range=c(0.5,8)) +
+  scale_color_manual(values=mycolor) +
+  geom_node_text(aes(label=ifelse(n>6, as.character(name), "")), angle=65, hjust=rep(c(0,1),58), nudge_y = rep(c(0.5,-0.5),58), size=2.3, color="grey") +
+  theme_void() +
+  theme(
+    legend.position="none",
+    plot.margin=unit(c(0,0,0,0), "null"),
+    panel.spacing=unit(c(0,0,0,0), "null")
+  ) +
+  expand_limits(x = c(-1.2, 1.2), y = c(-1.2, 1.2)) 
+
+```
+
+
