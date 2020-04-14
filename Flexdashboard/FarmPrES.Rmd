@@ -9,15 +9,31 @@ output:
 
 ```{r setup, include=FALSE}
 #needed packages
-library(flexdashboard)
-library(dplyr)
-library(ggplot2)
-library(shiny)
+library(flexdashboard) #neccesary for making dashboard 
+library(dplyr) #Useful for data wrangling
+library(ggplot2) #In order to make a figure (I think ggplot make the prettiest ones)
+library(shiny) #neccesary for an interactive plot
+library(googledrive) #needed to download data from google drive 
+library(here) #specify location of data 
+
+#You may need to set the working directory to your local copy of the respository and create a folder called HES598/Flexdashboard 
 
 #Useful Link to learn how to format a flexdashboard 
 #https://rmarkdown.rstudio.com/flexdashboard/
 # ==== means a new tab 
 # ----- means new section on same tab 
+# *"Word"* is for bold words 
+#_"Word_ is for italics 
+
+#Set up google drive 
+folder_url <- "https://drive.google.com/drive/folders/14FGz2TehM1XwuDPt6hNJk_RoZsrRKcjg" 
+
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("Flexdashboard/images/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE)) #This downloads the images needed for the flexdashboard from the google drive folder. It downloads to a folder in the repository called images. You may need to make sure you have this folder on your computer for the code to successfully run. 
+
+
 ```
 
 Project Description 
@@ -40,7 +56,7 @@ Idaho is one of the fastest growing states. It's population increased by 2.1% in
 
 _**Treasure Valley**_
 
-The Treasure Valley (Boise Metropolitan Area) is located in southerwestern Idaho. This region is experiencing rapid urban development, which is occuring primarily on agricultural areas. Hiwever if growth is restricted to high density, we can limit the loss of agricultural land by **30%**. 
+The Treasure Valley (Boise Metropolitan Area) is located in southerwestern Idaho. This region is experiencing rapid urban development, which is occuring primarily on agricultural areas. However if growth is restricted to high density, we can limit the loss of agricultural land by **30%**. 
 
 ### 
 **The Treasure Valley will look very different depending on how the area continues to grow.**
