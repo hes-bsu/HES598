@@ -19,9 +19,48 @@ Give a brief introduction to your research and identify how your "Advanced Topic
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
+
+
 #load the libraries - tell us which packages you're using and why
 
+Packages:
+  
+library(sp)
+library(maptools)
+library(googledrive)
+options(
+  gargle_oauth_cache = ".secrets",
+  gargle_oauth_email = TRUE
+)
+
+library(here)
+
+vignette(package="spdep")
+vignette(package="here")
+
+
 #load your data - which datasets do you need?
+
+
+folder_url <- "https://drive.google.com/drive/folders/1r8XsNTTKWCiWHSxR_ldISpLHzZJbla3o"
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("datatemp/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+getwd()
+
+
+str(gdrive_files)
+
+pixels=originaldata_sample
+
+pixels
+
+
+
+
+
+
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
 
