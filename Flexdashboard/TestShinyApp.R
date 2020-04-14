@@ -9,23 +9,27 @@ Categories<-as.character(BMAcrop$Category)
 
 ui<-fluidPage(
 
-titlePanel("downloaded from USDA NASS Cropscape."),
+titlePanel("Number of acres of the crops grown in the Treasure Valley, ID from 2005 to 2018. Data was downloaded from USDA NASS Cropscape."),
 sidebarLayout(
 sidebarPanel(
   selectInput("county", label="County:", choices = c("Ada", "Canyon"), selected ="Ada"),
   
   selectInput("Category", label="CropType:", choices = Categories, selected ="Corn")
-  
-), 
+),
+
 mainPanel(plotOutput("myplot"))
-)
+  )
 )
 
 server<-function(input,ouput)
   {
-  output$myplot<-renderPlot(ggplot(BMAcrop, aes(x=year,y=acres))+
-                            geom_bar(data=BMAcrop[,c(BMAcrop$county==input$county, BMAcrop$Category==input$Category)])
-  )                           
+  
+  dataInput<-reactive(BMAcrop %>%
+                        filter(county == input$county & Category == input$Category))
+  output$myplot<-renderPlot({ggplot(dataInput, aes(x=year,y=acres))+
+                            #geom_bar(data=BMAcrop[,c(BMAcrop$county==input$county, BMAcrop$Category==input$Category)], stat = "identity")
+                              geom_bar( stat = "identity")
+  })                           
 }
 
 shinyApp(ui=ui, server=server)

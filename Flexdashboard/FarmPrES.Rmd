@@ -8,10 +8,16 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+#needed packages
 library(flexdashboard)
 library(dplyr)
 library(ggplot2)
 library(shiny)
+
+#Useful Link to learn how to format a flexdashboard 
+#https://rmarkdown.rstudio.com/flexdashboard/
+# ==== means a new tab 
+# ----- means new section on same tab 
 ```
 
 Project Description 
@@ -23,8 +29,10 @@ Column {data-width = 600}
 ### WHAT'S AT STAKE WHEN THE TREASUE VALLEY LOSES FARMLAND TO GROWTH? 
 
 _**The Problem**_
-```{r farmland_graphic, echo = FALSE,out.height= "50%", out.width= "50%", out.extra='style="float:right; padding:10px"'}
+```{r farmland_graphic, echo = FALSE,out.height= "50%", out.width= "50%", out.extra='style="float:right; padding:10px"'} 
 knitr::include_graphics("./images/farmland.jpg")
+
+#code to include an image and the location of the image. This was surprisingly tempermental and I am not sure how to get it to work consistently. 
 ```
 America has some of the most productive, versatile, and resilient agricultural lands. However, farmland is being lost at **175 acres every hour**, **1.5 million acres a year**. By 2012, the most productive lands to support food production dropped below 17% of the total land area in the U.S. Given the limited arable land and the need to feed an increasing population, it is imperative to protect farmland. 
 
@@ -74,6 +82,8 @@ BMAcrop<-read.csv("./BMACrop2005_2018.csv")
 BMAcrop<-BMAcrop %>%
   filter(value > 0, Crop_0_1>0) 
 Categories<-as.character(BMAcrop$Category)
+
+#filter data and create a list of crop types named categories 
 ```
 
 Number of acres of the crops grown in the Treasure Valley, ID from 2005 to 2018. Data was downloaded from USDA NASS Cropscape.
@@ -83,7 +93,7 @@ selectInput("county", label="County:", choices = c("Ada", "Canyon"), selected ="
 
 selectInput("Category", label="CropType:", choices = Categories, selected ="Corn")
 
-
+# Here I am designing the tabs that a viewer can select and subset the data based on. The end product you will be able to chose a county and the crop you want to seen shown on a bar graph. 
 ```
 
 Column
@@ -96,7 +106,7 @@ selectedData<-reactive(
   BMAcrop %>%
   filter(county == input$county & Category == input$Category)
 )
-
+#selected data is reactive based on the chosen inputs above. 
 
 
 renderPlot({
@@ -111,4 +121,7 @@ renderPlot({
         axis.title.x=element_text(size=25), axis.title.y =element_text(size=25, face="bold"), legend.text=element_text(size=10))
 })
 
+#create a plot based on the reactive data. Note needs to be selectedData() not selectedData because the reactive data is a function. 
+#The project has been published to this website: https://shalp.shinyapps.io/farmpres/ 
+#often it does not load immediately, FYI
 ```
