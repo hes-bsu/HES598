@@ -1,7 +1,7 @@
 ---
-title: "Advanced Topic Instructions"
+title: "Advanced Topic Instructions: Connectivity"
 author: "Brent Clark"
-date: "3/5/2020"
+date: "4/7/2020"
 output: html_document
 ---
 
@@ -15,6 +15,21 @@ SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
 ## Introduce your problem
 
 Give a brief introduction to your research and identify how your "Advanced Topic" plays into what you are hoping to do. For example, if you are just starting out on your project and your topic is "Study Design" you might be interested in developing a spatially informed sampling/stratification scheme.Or maybe your work is going to have a big public outreach component that you'd like to support with some nice interactive maps. Give us a sense for what "success" would look like - what is your ideal end product for the analysis/approach you're testing out. This will help us figure out if the tools you tried were successful.
+
+# Research introduction and areas of interest
+My research will use a variety of pedigree analyses to help understand population dynamics in a burrowing owl population that has been monitored for approximately 20 years. Thus, my research will combine field work during the next couple of breeding seasons with analysis of a long-term dataset to understand aspects of kin structuring and reproductive success in the population.  
+
+I am interested in how kin relationships are structured spatially and temporally in a populationm quantifying lifetime reproductve success and examining if and how production of offspring and recruitement may differ by landcover type, and what are the patterns in burrow occupancy as it relates to nestlings produced and recruitement.  
+
+# Problem to be solved
+How is recruitement in a semi-colonial raptor species impacted by demographic connectivity?  Understanding the immigration and emmigration within a burrowing owl population can help determine low/high recruitment rates.  It can also help us understand how demographic connectivity of a population increases/decreases colonization of previously occupied/unoccupied burrows. 
+
+# R packages to try
+"sf" - map creation
+"raster" - map creation
+"rgdal" - 
+"samc" - provides long and short-term predictions of landscape connectivity measurements
+"popbio" - would be used to determine population and demographic metrics
 
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
