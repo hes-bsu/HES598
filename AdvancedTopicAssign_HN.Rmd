@@ -37,7 +37,7 @@ library(tidyr) #used for MRP
 library(bayesplot) #used for MRP plotting
 ```
 Then exploring post-stratification using survey::rake and survey::postStratify using a random sample:
-```{r Post-Stratification}
+```{r Post-Stratification, message = FALSE, warning=FALSE}
 ##Load and Organize Data - Post-Stratification
 folder_url <- "https://drive.google.com/drive/folders/1w2Bu9vCjRoHD6f52nMIXCmmC723OOCR7"
 folder <- drive_get(as_id(folder_url))
@@ -145,7 +145,7 @@ svymean(Dummy_Survey$C_Exciting, svy.design.ps.inc)
 mean(Dummy_Survey$C_Exciting)
 ```
 Then attempting to simulate specific patterns in the data to explore MRP using 'rstanarm':
-```{r MRP}
+```{r MRP, message = FALSE, warning=FALSE}
 ##Load and Organize Data - MRP
 #first, need to create simulated data with a known pattern
 # For respondent i, people[i] is that person's poststrat cell, some number between 1 and 32
@@ -262,7 +262,7 @@ The 'survey' package is essential to this process, as it houses many of the func
 In order to perform multilevel regressin and post-stratification (MRP), I used the 'rstanarm' package. I was modeling this section off of the "MRP with rstanarm" vignette (Kennedy & Gabry 2019). Their code also had dependencies on 'dplyr' and 'tidyr', with plotting using 'ggplot2' and 'tidyverse'.
 
 # Evaluation of Choices
-```{r Benchmarking for Post-Stratification}
+```{r Benchmarking for Post-Stratification, message = FALSE, warning=FALSE}
 rake.time <- system.time(rake(design = data.svy.unweighted,
                    sample.margins = list(~Inc_Lev),
                    population.margins = list(income.dist)))
@@ -283,8 +283,11 @@ I had first attempted to use a different tutorial for MRP, which did not go well
 # Final Product
 I attempted to create plots to compare sample to population and the effects of post-stratification on preference for sagebrush, but kept reaching an error in gzfile(file,wb). 
 
-# Reflection
+# Original Reflection (March 10)
 This exercise has helped me work through some of the basics of post-stratification and MRP. It has also helped me realize some additional functionality for these methods that I hope to explore further to better inform my survey sampling strategy. I need to explore the interaction effects in the MRP code more in the future, as this was a line of code that kept leading to errors ("subscript out of bounds") when I changed the variables that were interacting. This would allow me to better explore interactions between variables, such as income, education, and environmental attitude, which will help determine thresholds needed to detect the effects of some variables that may have complex interactions with others. I am looking forward to figuring out what is going wrong in that code so that I can investigate interaction effects further.
+
+# Updates to Reflection ()
+After additional trial-and-error, in addition to running into issues from a software update breaking my RStudio and Github connection a few times, I was ...
 
 # Additional Resources on This Topic
 - Buttice, M. K., and Highton, B. 2013. "How Does Multilevel Regression and Poststratification Perform with Conventional National Surveys?". Political Analysis 21:449–467. doi:10.1093/pan/mpt017
