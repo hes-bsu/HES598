@@ -281,7 +281,113 @@ Using rake{survey} and postStratify{survey} returned the same weighted means for
 I had first attempted to use a different tutorial for MRP, which did not go well. I still had some trouble with the 'rstanarm' package and complexities of the code here. The for loops ended up sending my computer into a tailspin after awhile, leading to a C stack usage error (due to having to run the function several times due to code breaks). It would be interesting to explore other MRP code in the future to evaluate differences in speed, as this one required some overhaul to get R processing at its usual speed again. However, the documentation in the vignette and on Github were relatively useful in troubleshooting some of the issues I was having.
 
 # Final Product
-I attempted to create plots to compare sample to population and the effects of post-stratification on preference for sagebrush, but kept reaching an error in gzfile(file,wb). 
+Originally, I attempted to create plots to compare sample to population and the effects of post-stratification on preference for sagebrush, but kept reaching an error in gzfile(file,wb). 
+
+When I later attempted this after fixing some issues with package dependencies, I was able to produce the plots I was hoping to produce.
+```{r Final Product for MRP, warning=FALSE}
+##Analysis/processing step 2 - Producing plots to compare sample to population and the effects of post-stratification on preference for sagebrush
+
+#First, sample and population comparisons
+income_popn <- poststrat %>%
+  group_by(income) %>%
+  summarize(Num=sum(N)) %>%
+  mutate(PROP=Num/sum(Num),TYPE='Popn',VAR='Income',CAT=income) %>%
+  ungroup()
+income_data <- sample %>%
+  group_by(income) %>%
+  summarise(Num=n()) %>%
+  mutate(PROP=Num/sum(Num),TYPE='Sample',VAR='Income',CAT=income) %>%
+  ungroup()
+income<-rbind(income_data[,2:6],income_popn[,2:6])
+educ_popn <- poststrat%>%
+  group_by(educ)%>%
+  summarize(Num=sum(N))%>%
+  mutate(PROP=Num/sum(Num),TYPE='Popn',VAR='Eucation',CAT=educ)%>%
+  ungroup()
+educ_data <- sample%>%
+  group_by(educ)%>%
+  summarise(Num=n())%>%
+  mutate(PROP=Num/sum(Num),TYPE='Sample',VAR='Education',CAT=educ)%>%
+  ungroup()
+educ <- rbind(educ_data[,2:6],educ_popn[,2:6] )
+env_att_popn <- poststrat%>%
+  group_by(env_att)%>%
+  summarize(Num=sum(N))%>%
+  mutate(PROP=Num/sum(Num),TYPE='Popn',VAR='Environmental Attitude',CAT=env_att)%>%
+  ungroup()
+env_att_data <- sample%>%
+  group_by(env_att)%>%
+  summarise(Num=n())%>%
+  mutate(PROP=Num/sum(Num),TYPE='Sample',VAR='Environmental Attitude',CAT=env_att)%>%
+  ungroup()
+env_att<-rbind(env_att_data[,2:6],env_att_popn[,2:6])
+male_popn <- poststrat%>%
+  group_by(male)%>%
+  summarize(Num=sum(N))%>%
+  mutate(PROP=Num/sum(Num),TYPE='Popn',VAR='Male',CAT=male)%>%
+  ungroup()
+male_data <- sample%>%
+  group_by(male)%>%
+  summarise(Num=n())%>%
+  mutate(PROP=Num/sum(Num),TYPE='Sample',VAR='Male',CAT=male)%>%
+  ungroup()
+male <- rbind(male_data[,2:6],male_popn[,2:6])
+plot_data <- rbind(male,env_att,educ,income)
+plot_data$TYPE <- factor(plot_data$TYPE, levels = c("Sample","Popn"))
+save(plot_data, file = "mrp-files/plot_data.rda", version = 2)
+
+load("mrp-files/plot_data.rda") # created above
+ggplot(data=plot_data, aes(x=as.factor(CAT), y=PROP, group=as.factor(TYPE), linetype=as.factor(TYPE))) +
+  geom_point(stat="identity",colour='black')+
+  geom_line()+
+  facet_wrap( ~ VAR, scales = "free",nrow=1,ncol=5)+
+  theme_bw()+
+  scale_fill_manual(values=c('#1f78b4','#33a02c',
+                             '#e31a1c','#ff7f00','#8856a7'),guide=FALSE)+
+  scale_y_continuous(breaks=c(0,.25,.5,.75,1), labels=c('0%','25%',"50%","75%","100%"))+
+  scale_alpha_manual(values=c(1, .3))+
+  ylab('Proportion')+
+  labs(alpha='')+
+  theme(legend.position="bottom",
+        axis.title.y=element_blank(),
+        axis.title.x=element_blank(),
+        legend.title=element_blank(),
+        legend.text=element_text(size=10),
+        axis.text=element_text(size=10),
+        strip.text=element_text(size=10),
+        strip.background = element_rect(fill='grey92'))
+
+#Second, effect of post-stratification
+#Summarise
+summary_by_poststrat_var <- sample %>%
+  gather(variable,category,c("income","env_att","educ","male")) %>%
+  group_by(variable,category) %>%
+  #Wald confidence interval
+  summarise(y_mean=mean(sage_pref),y_sd=sqrt(mean(sage_pref)*(1-mean(sage_pref))/n())) %>%
+  ungroup()
+summary_by_poststrat_var$variable <- as.factor(summary_by_poststrat_var$variable)
+levels(summary_by_poststrat_var$variable) <- list('Education'='educ','Envrionmental Attitude'='env_att','Income'='income','Male'='male')
+save(summary_by_poststrat_var, file = "mrp-files/summary_by_poststrat_var.rda", 
+     version = 2)
+
+load("mrp-files/summary_by_poststrat_var.rda") # created in previous chunk
+ggplot(data=summary_by_poststrat_var, aes(x=as.factor(category), y=y_mean,group=1)) +
+  geom_errorbar(aes(ymin=y_mean-y_sd, ymax=y_mean+y_sd), width=0)+
+  geom_line()+
+  geom_point()+
+  scale_colour_manual(values=c('#1f78b4','#33a02c','#e31a1c','#ff7f00',
+                               '#8856a7'))+theme_bw()+
+  facet_wrap(~variable,scales = "free_x",nrow=1,ncol=5)+
+  scale_y_continuous(breaks=c(.5,.75,1), labels=c("50%","75%",
+                                                  "100%"), limits=c(0.4-.4*.05,.9),expand = c(0,0))+
+  labs(x="",y="Sagebrush preference")+
+  theme(legend.position="none",
+        axis.title.y=element_text(size=10),
+        axis.title.x=element_blank(),
+        axis.text=element_text(size=10),
+        strip.text=element_text(size=10),
+        strip.background = element_rect(fill='grey92'))
+```
 
 # Original Reflection (March 10)
 This exercise has helped me work through some of the basics of post-stratification and MRP. It has also helped me realize some additional functionality for these methods that I hope to explore further to better inform my survey sampling strategy. I need to explore the interaction effects in the MRP code more in the future, as this was a line of code that kept leading to errors ("subscript out of bounds") when I changed the variables that were interacting. This would allow me to better explore interactions between variables, such as income, education, and environmental attitude, which will help determine thresholds needed to detect the effects of some variables that may have complex interactions with others. I am looking forward to figuring out what is going wrong in that code so that I can investigate interaction effects further.
