@@ -61,9 +61,36 @@ library(microbenchmark)
 library(parallel)
 #Lastly, although the INLA framework allows for high computation of variables with complex structure through stochastic partial differential equations, I still likely need to assess how long these models will take to run given this relatively long time-series of field data. 
 
+
 #load your data - which datasets do you need?
+veg_raw <- read.csv("FullVegDataset2011-18.csv")
+
+
+m.raw <- melt(veg_raw, id=c("site_id","county","date","year","site_name","transect_num","meadow_width_m","emergent_width_m","submergent_width_m",
+                            "point_num","gps_lon","gps_lat","water_depth_cm","bottom_vis","substrate_type","org_depth_cm","unvegetated_pcnt",
+                            "total_cover_pcnt","standing_dead_pcnt","detritus_pcnt", "taxa_name"),
+              measure.vars = c("percent_cover"))
+
+
+m.raw <- m.raw[m.raw$taxa_name %in% c("Hydrocharis morsus-ranae","Typha angustifolia","Typha glauca","Typha glauca (hybrid)","Typha latifolia","Typha sp.",
+                                   "Phragmites australis","Phragmites australis (invasive","Phragmites australis (native)"),]
+
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
+veg_data <- m.raw %>% spread(taxa_name, value)
+#replace NA's with o 
+veg_data[is.na(veg_data)]=0
+
+#confusion on typha glauca and hybrid, so could combine them for now? 
+veg_data$typha_combined <- veg_data$`Typha glauca` + veg_data$`Typha glauca (hybrid)` + veg_data$`Typha sp.`
+veg_data <- data.frame(veg_data)
+
+#create binomial presence/absence data (needed for hurdle model down the road)
+veg_data$hyd_bin <- ifelse(veg_data$Hydrocharis.morsus.ranae>0,1,0)
+veg_data$typh_bin <- ifelse(veg_data$typha_combined>0,1,0)
+
+dim(veg_data)
+#[1] 2255   30
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
 
