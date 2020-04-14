@@ -256,6 +256,9 @@ str(mrp_sim)
 #creating table for sample and viewing head and tail of dataset
 sample <- mrp_sim[["sample"]]
 rbind(head(sample), tail(sample))
+
+#creating object being called in plots (Final Product code chunk)
+poststrat <- mrp_sim[["poststrat"]]
 ```
 # Package Introduction
 The 'survey' package is essential to this process, as it houses many of the functions needed to analyze the survey and perform post-stratification. Part of why I chose this package is because of my familiarity with it from my MS thesis work. Within this package, the postStratify() and rake() functions are particularly important for calculation and application of weights to the survey data. These functions are well documented both in R user guides and in online help forums. 
@@ -302,7 +305,7 @@ income<-rbind(income_data[,2:6],income_popn[,2:6])
 educ_popn <- poststrat%>%
   group_by(educ)%>%
   summarize(Num=sum(N))%>%
-  mutate(PROP=Num/sum(Num),TYPE='Popn',VAR='Eucation',CAT=educ)%>%
+  mutate(PROP=Num/sum(Num),TYPE='Popn',VAR='Education',CAT=educ)%>%
   ungroup()
 educ_data <- sample%>%
   group_by(educ)%>%
@@ -334,9 +337,7 @@ male_data <- sample%>%
 male <- rbind(male_data[,2:6],male_popn[,2:6])
 plot_data <- rbind(male,env_att,educ,income)
 plot_data$TYPE <- factor(plot_data$TYPE, levels = c("Sample","Popn"))
-save(plot_data, file = "mrp-files/plot_data.rda", version = 2)
 
-load("mrp-files/plot_data.rda") # created above
 ggplot(data=plot_data, aes(x=as.factor(CAT), y=PROP, group=as.factor(TYPE), linetype=as.factor(TYPE))) +
   geom_point(stat="identity",colour='black')+
   geom_line()+
@@ -366,11 +367,8 @@ summary_by_poststrat_var <- sample %>%
   summarise(y_mean=mean(sage_pref),y_sd=sqrt(mean(sage_pref)*(1-mean(sage_pref))/n())) %>%
   ungroup()
 summary_by_poststrat_var$variable <- as.factor(summary_by_poststrat_var$variable)
-levels(summary_by_poststrat_var$variable) <- list('Education'='educ','Envrionmental Attitude'='env_att','Income'='income','Male'='male')
-save(summary_by_poststrat_var, file = "mrp-files/summary_by_poststrat_var.rda", 
-     version = 2)
+levels(summary_by_poststrat_var$variable) <- list('Education'='educ','Environmental Attitude'='env_att','Income'='income','Male'='male')
 
-load("mrp-files/summary_by_poststrat_var.rda") # created in previous chunk
 ggplot(data=summary_by_poststrat_var, aes(x=as.factor(category), y=y_mean,group=1)) +
   geom_errorbar(aes(ymin=y_mean-y_sd, ymax=y_mean+y_sd), width=0)+
   geom_line()+

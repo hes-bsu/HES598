@@ -1,118 +1,208 @@
 ---
-title: "RMarkdown Assignment"
+title: "Mapping social-ecological vulnerability to climate change and exploring drivers for climate adaptation"
 author: "Lauren Hunt"
-date: "2/6/2020"
-output: html_document
+date: "2/18/2020"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+bibliography: bib.bib
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
-library(tidycensus)
-library(sp)
-library(ggplot2)
-library(viridis)
-library(scales)
 ```
 
-## Introduction
+---
+# Overview
+## Chapters, themes and concepts in brief:
+### Climate change adaptation
+1.	How does social-ecological vulnerability to climate change vary across space?
+    +	mapping public data synthesis
+    +	reproducible product
+    +	policy implications
+2.	How do ranchers beliefs about climate change impact climate-smart behaviors?
+    +	mixed methods
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. R Markdown can do the majority of things a typical word processing program (e.g., Microsoft Word), but requires a bit of knowledge about how the syntax works. There's a lot of help online, but the things I tended to use most when I first started were the RMarkdown Cheat Sheet and Reference guide (got to Help > Cheatsheets inside RStudio) and the [Markdown syntax page](https://daringfireball.net/projects/markdown/syntax).
+### In development
+3.	Effects of collaborative behavior on resource use and environmental quality
+    + can collaboration improve rangeland health and resiliency?
+    +	soil and grazing management
+    +	rangeland ecologist collaboration
+4.	How does organization membership affect climate-smart behaviors?
+    +	social network analysis
+5.	How does public land fragmentation affect climate-smart behaviors?
 
-For this exercise, I want you to get comfortable using Rmarkdown to generate blogpost-style html pages that describe your project and help introduce some of the plotting techniques we learned in class. As a bonus, you'll get to see some of the benefits of being able to write and code in one place. We'll play with some additional approaches for producing publication-quality documents later in the semester. 
 
-**Important: Please save your file into the "MarkdownAssignment" folder in our git project using: MarkdownAssignment_YOURNAME.Rmd as the filename. If you don't you risk overwriting other people's work.**
+```{r big_picture, echo=FALSE, out.width='50%', fig.align='center'}
+#knitr::include_graphics("reports/figures/big_picture.png")
+```
 
-## Introduce your dissertation or thesis
 
-Write a few sentences about your dissertation or thesis project. What questions are you trying to address? Why is it important? What role does spatial data play in helping you answer your question?
+# Introduction
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;America’s rangelands represent almost half of all land mass in the West and are progressively threatened with drought, invasive species and wildfire. Climate change impacts the livelihoods of ranching communities and wildlife, both of which are integral to rangeland health. In response, land managers must balance ecosystem functioning with community livelihoods to prioritize prevention and mitigation. In the High Divide region of the West, state and federal agencies use vulnerability assessments to inform and guide conservation and adaptation plans on rangelands. The US Department of Agricultural and US Department of the Interior require agencies to address future impacts of climate change on both ecological systems and human communities that rely on them. Despite this, most existing vulnerability assessments focus on ecological vulnerabilities. This analysis aims to spatially visualize future climate hazards, social variables and estimates of uncertainty in the form of a social-ecological vulnerability map. Given the value of vulnerability assessments and agency management responsibilities map can guide priorities and allocation of resources for climate adaptation that protects both community and ecosystem health. 
 
-Rmarkdown will allow you to cite pulished works using `BibTex` style citations. You can learn more about how to do that [here](https://www.earthdatascience.org/courses/earth-analytics/document-your-science/add-citations-to-rmarkdown-report/). You can export the BibTex formatted citations from Zotero, Mendeley, or directly from Google Scholar. Use the Rmarkdown cheatsheet to get the syntax for linking to other webpages.
+# Background
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Perhaps once considered dry, unproductive and unremarkable landscapes, America’s rangelands are increasingly recognized as invaluable cultural and ecological systems as they become progressively threatened by climate change. Water scarcity and wildfire across the western United States is expected to increase in severity and frequency due to climate change (Schoennagel et al., 2017). Climate change impacts the livelihoods of ranching communities and wildlife, both of which are integral to rangeland health. The economies of rural rangeland communities rely on agriculture and recreation, and the semi-arid landscapes are home to dynamic agroecological systems. With careful stewardship, rangelands maintain soils, watersheds and carbon storage, but poor management can degrade wildlife habitat and destroy biodiversity [@McNeeley2017]. Representing almost half of all land mass in the West, these rangelands are mostly under federal management [@Gorte2012]. The USDA and US DOI require BLM and FS agencies to consider potential climate change impacts on both ecological systems and the human communities that depend on them (Fischer et al. 2013; Salazar 2009), yet no known assessments of US rangelands measure social-ecological vulnerability. Most assessments focus on ecological vulnerabilities, though human and natural system vulnerabilities are inextricably linked [@Fischer2018]. 
 
-## Study Area
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Vulnerability assessments are valuable tools for federal, state and local agencies and managers to use to prioritize management action and develop adaptation responses to climate impacts [@Glick2011]. Mapping social-ecological vulnerability in particular can provide visual aid to prioritize areas particularly vulnerable to climate impacts and in need of increased policy attention. While it is a dynamic measurement, vulnerability is generally defined as a function of exposure, sensitivity and adaptive capacity [@Adger2006]. In the context of climate change, exposure describes how likely a species or system will experience change, sensitivity describes the likelihood and magnitude of how a species or system will be affected by a change, and adaptive capacity is the ability of a species or ecosystem to cope with climate impacts [@Glick2011]. However, a consistent definition and framework of social-ecological vulnerability across this burgeoning field is still developing. 
 
-Tell me a little bit about your study area. Where is it located (state, country). Why is it a good place for your study? Use a code chunk like the one below to generate a map of your study area. You can insert new code chunks by pushing the green "Insert" button at the top of the text editor in RStudio.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A survey of all US Department of the Interior vulnerability assessments revealed that few studies assessed wildfire risk or snowpack, both critical for Western landscapes [@Thompson2015]. The economic and cultural foundation of thousands of rural communities in the West are land-based, relying on ecosystem services provided by public land [@McNeeley2017]. Furthermore, adaptive capacity was the least frequently assessed component of vulnerability [@Thompson2015]. Adaptive capacity is a critical element of vulnerability in the West because rangeland managers often are limited in financial and infrastructural resources and are isolated from urban centers and governing agencies [@Briske2015].
 
-You'll notice that you can include code chunks from several different languages (R, python, stan) this can be useful if you're programming across platforms, but I've found the implementation for languages outside of R to be pretty difficult.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rural communities whose livelihoods rely on drought- and wildfire-sensitive lands are vulnerable not only because of the environmental effects of climate change, but also due to their beliefs and perceptions about climate change. An assessment of vulnerability of rangeland systems can generate climate adaptation strategies and focus resources to improve adaptive capacity in this region. Adaptive capacity has never been measured using climate beliefs, but beliefs impact peoples’ ability to adapt (@Arbuckle2013]. Beliefs and perceptions affect adaptive capacity because personal perceptions of risks determine adaptation [@Adger2012]. For example, in studies of heatwaves affecting cities in the UK, US and Canada, the vulnerability of the elderly population intensified for those who did not perceive any risk to themselves, because their inflated perception of security diminished their adaptive capacity [@Sheridan2007; @Wolf2010]. Policy-makers should therefore consider beliefs and perceptions in order to measure climate change adaptation capacity [@Briske2015], yet how beliefs and perceptions about climate change compound social-ecological vulnerability requires further investigation. 
 
-**IMPORTANT: You'll need to make sure that any necessary packages are loaded in the first code chunk (called `setup` in this document) or explicitly reference them using `::` as each time you press the `knit` button initiaties a fresh R session outside of your current environment.**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rangeland resilience hinges on our understanding of the factors that promote and constrain adaptation, and our ability to work collaboratively with the community to develop programs that support adaptation. Policy can constrain or incentivize individual actions and should reduce vulnerability in susceptible human-environment systems. Most current policies consider environmental vulnerability, and not social implications. If policies were developed with those vulnerabilities in mind, we should be better equipped to adapt to a changing climate. In order to identify critical social and ecological vulnerability factors, we will interview ranchers and government agency land managers. We will synthesize and map USGS and other public data products that measure water, vegetation quantity and quality, fire risk and social factors. Working closely with the Climate Adaptation Science Centers, we will identify subject matter experts to review and provide feedback on prototypes. With this work we plan to evaluate rural and agricultural vulnerability to rangeland ecological drought in the West. By using the IPCC AR5, AR4, AR3, Extended frameworks we propose to use the findings for strategic planning and adaptation targeting.
 
-```{r studyarea}
-#Using the example from our class
-census_api_key("90b94953d2f24e81e890229e0128174f5ba80d3f")
-#download censu data
-id.income <- get_acs(geography = "county", 
-              variables = c("B19013_001", "B01002_001"),
-              state = "ID", 
-              year = 2018, geometry = TRUE) %>% 
-  mutate(rename = 
-           str_replace_all(.$variable,
-                           (c("B19013_001"="income",
-                                         "B01002_001"="age" )))) %>%
-  #select the columns to keep
-  dplyr::select(c(GEOID, rename, estimate)) %>% 
-  #have to use spread because pivot_wider 
-  #not currently working for sf objects
-  spread(., key = rename, value = estimate) 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The Climate Registry for the Assessment of Vulnerability (CRAVe) and the U.S. Climate Resilience Toolkit exist as open source community resources for managers and stakeholders to improve decision-making. The Resilience Toolkit contains an extensive set of tools and case studies that can be used to guide preventative actions and adaptation in different regions in the US. However, the Western US region is notably missing in the geographic coverage of the toolkit. This project will be complementary to additional USGS vulnerability ventures undertaken in the West. ‘Building Tribal Capacity to Assess Vulnerability to Climate Change’ addressed individual tribal social, cultural and economic needs and resulted in a vulnerability guide and solutions and improved access to relevant climate information. ‘Understanding Climate Change Vulnerability in the Pacific Northwest: A Comparison of Three Approaches’ analysis evaluates different assessment techniques for prioritizing climate change responses. These projects demonstrate the value of climate change vulnerability assessments to build capacity and awareness, as well as draw attention to knowledge gaps about such assessments and the complexity of climate change vulnerability. The deliverables of this project have the potential to inform program and policy design because they provide an understanding of social-ecological vulnerability to climate in communities where these assessments have not yet been conducted. With the growth in popularity of tools and maps, additional research is required to examine how effective such indices and assessments are at directing or informing policy or mitigation action.
 
-id.census.sp <- as(id.census.sf, "Spatial")
+# Materials and Methods
 
-plot(id.census.sp, main = "Idaho Counties", 
-     sub="2018 Census Data", 
-     col="blue", 
-     border="white")
+## Data Selection 
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Indicators will be selected through literature review and informational interviews with agencies and informed by ethnographic field work conducted in the region. 
+For exposure, I will focus on wildfire and drought, using the USGS EROS Landsat Level 3 Burned Area Science Product [@Hawbaker2017] and USGS WaterWatch, Probability of Streamflow Permanence (PROSPER) [@Sando2018] or similar [@Watson2013].
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;For sensitivity, I will use socioeconomic data from the American Community Survey and US Census Bureau. Data will include indicators for dependence on ranching, concentration of ranching employment and proportion of area used as grazeland.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;For adaptive capacity, I will use traditional metrics such as formal education, social capital, physical ability and land-tenure security [@Robinson2019], as well as climate belief data from the Yale Program on Climate Change Communication (YPCCC) [@Howe2015]. This data comprises the proposed working group of products and is subject to change as I develop the vulnerability index.
+
+## Data Collection + Organization
+
+```{r structure, echo=FALSE, out.width = '50%', fig.align='center'}
+#knitr::include_graphics("reports/figures/data_str.png")
+```
+
+### Observational
+   + US Census Bureau
+   + American Community Survey (ACS) 5-yr census tract estimates
+   + Yale Program on Climate Change Communication (YPCCC)
+   
+### Derived
+   + Vulnerability index
+
+### Simulation
+  + Climate models
+  + Predicted climate hazard occurrence
+
+### Metadata
+  + Data Dictionary per data layer
+
+## Data Processing
+
+```{r workflow, echo=FALSE, out.width = '100%'}
+#knitr::include_graphics("reports/figures/workflow.png")
+```
+
+
+##	Spatializing 
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All datasets were projected to the World Geodetic System (WGS) 1984 global coordinate system. Vector/polygon data was converted to raster data at the same spatial resolution as gridded datasets. Ten arc minute vector grid squares were created in R across the entire study area, as the maximum spatial resolution of datasets used in the analyses. Spatial unit outputs should be mapped as counties and/or ecoregions. 
+
+## Map an Attribute - Climate Beliefs
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The proposed deliverable of this project is an interactive online map of climate change vulnerability in the West. To reveal data which underlies the vulnerability index, the map will contain interactive layers of sensitivity, exposure and adaptive capacity. The county-level data associated with these layers, including climate beliefs, socio-economic factors, and biophysical characteristics will also be included. 
+
+```{r maps-beliefs, echo=FALSE, results='hide', fig.keep='all', message = FALSE}
+require(leaflet)
+require(tidyr)
+require(tigris) 
+require(rgdal)
+require(raster)
+require(RColorBrewer)
+require(sf)
+require(maps)
+require(gdalUtils)
+require(stringr)
+require(tmap)
+require(ggplot2)
+require(dplyr)
+require(devtools)
+require(tmaptools)
+require(sp)
+require(RColorBrewer)
+require(ggthemes)
+require(viridis)
+require(ggalt)
+require(reshape2)
+require(acs)
+
+# creating a cropping layer of ID to downsize all other layers to, to start
+# source for crop exent: https://www.earthdatascience.org/courses/earth-analytics/lidar-raster-data-r/crop-raster-data-in-r/
+# ID boundary shapefile read in here:
+
+###################################################
+## Load administrative area polygons from tigris ##
+###################################################
+
+# Create polygons.  The first is showing counties for a subset of states, at 500-km resolution, from 2012
+counties<-counties(c("WA", "OR", "CA", "ID", "NV", "AZ", "UT", "MT","WY","CO","NM"), resolution = "500k", year=2018)
+#View(counties@data$NAMELSAD) # to view specific columns from tigris
+
+# Create polygons for all states at 500-km resolution
+#states_all <- states(resolution = "500k")
+
+#YCOM CC BELIEFS
+beliefs <- read.csv("~/Desktop/Spatial Data in R/HES598/data/YCOM_2018_Data.csv")
+beliefs <- as.data.frame(beliefs)
+
+#counties.df <- as.data.frame(counties)
+beliefs <- subset(beliefs, GeoType == "County")
+beliefs_new <- separate(beliefs, c("GeoName"), into= c("county_NAMELSAD", "state"), sep =",")
+
+# left join beliefs dataframe to county spatial polygon dataframe
+beliefs_merge <- geo_join(counties, beliefs_new, by_sp = "NAMELSAD",  by_df = "county_NAMELSAD", how= "left" )
+#######################################
+## Prep data for mapping with ggplot ##
+#######################################
+
+# fortify states for ggplot mapping (= convert spatial file to dataframe while maintaining spatial information)
+#states.df <- fortify(states_all, region = "STUSPS")
+
+# fortify counties with appended csv data - might be unnecessary ----
+beliefs_merge@data$id <- rownames(beliefs_merge@data) # use rownames as unique identifier
+beliefs.f <- fortify(beliefs_merge, region = "id") # convert spatial information to dataframe; where'id' is state eg 'AR'
+beliefs.df <- left_join(beliefs.f, beliefs_merge@data, by = "id") # append data from spatial file/csv file to new dataframe
+
 
 ```
 
-## Map an attribute of your data
 
-After you've made your study area map, trying plotting some attributes of your data. Remember, there's a lot of functionality that we haven't explored yet so be sure to checkout the package documentation and reference webpages if you're having trouble figuring out how to render the data you'd like to display.
+```{r maps-oppose, echo=FALSE, fig.keep='all', message = FALSE}
+popup2 <- paste0("County: ", beliefs_merge$county_NAMELSAD, "<br>", "Percent who do not believe in CC: ", round(beliefs_merge$happeningOppose, 2))
+pal2 <- colorNumeric(
+  palette = "YlGnBu",
+  domain = beliefs_merge$happeningOppose
+)
+map4<-leaflet() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(data = beliefs_merge, 
+              fillColor = ~pal2(happeningOppose), 
+              color = "#b2aeae", # you need to use hex colors
+              fillOpacity = 0.7, 
+              weight = 1, 
+              smoothFactor = 0.2,
+              popup=popup2) %>%
+  addLegend(pal = pal2, 
+            values = beliefs_merge$happeningOppose, 
+            position = "bottomright", 
+            title = "Percent who do not <br> believe in CC",
+            labFormat = labelFormat(suffix = "%")) 
+map4
+```
+Figure 1. Map of % people who do not believe that climate change is happening, by county in Western states.
 
-```{r attributeplot}
-tv.income.tct <- get_acs(geography = "tract", 
-              variables = "B19013_001",
-              state = "ID", 
-              year = 2018, geometry = TRUE) %>% 
-  filter(str_detect(NAME, "Ada | Boise | Canyon | Gem | Owyhee") )
 
 
-cty.map <- ggplot() +
-  geom_sf(data = id.census.sf, fill = "gray") +
-  geom_sf(data = tv.income.tct, aes(fill = estimate)) +
-  scale_fill_viridis()
-cty.map
+```{r prettymap, echo=FALSE, out.width = '120%'}
+#knitr::include_graphics("reports/figures/shinyapp.png")
 ```
 
-## Plot your data a differnt way
-
-Throughout this course I will be encouraging you to plot your data in ways that don't require you to generate a map. This might help you see patterns that a map might make hard to detect. It might also help you recognize that your _is_ specifically tied to the spatial arrangement of your data (making maps and spatial analysis a critical component of your project). I use `ggplot2` as the primary means for generating these plots. There's a cheatsheet available for `ggplot2` as well (got to Help > Cheatsheets inside RStudio). I also recommend [Data Visualization: A Practical Introduction by Kieran Healy](https://socviz.co). His website has the code for building the plots in his book.
-
-```{r}
-med.inc <- median(id.census.sf$income)
-#fips_codes comes with tidycensus; using it here to get county names
-fips_codes$GEOID <- paste0(fips_codes$state_code, fips_codes$county_code)
-
-id.census.plot <- id.census.sf %>% 
-  left_join(fips_codes)
-
-np <- as.integer(id.census.plot$nonprof)
-np <- np[np != max(np)]
-bks <- log(quantile(np, probs = seq(0,1,0.25), names=FALSE), 10)
-bks <- c(bks, log(max(as.integer(id.census.plot$nonprof))))
-
-ggplot() +
-  geom_point(data=id.census.plot, 
-             aes(x=income, 
-                 y = reorder(county, income), color = log(as.integer(nonprof),10))) +
-  scale_color_gradient(breaks= bks ,guide="colourbar", name="Num of Nonprofits (log)")+
-  geom_vline(xintercept = med.inc)
-```
 
 ## What did you learn?
 
-Tell me a little bit about how plotting your data spatially versus as a more traditional plot affects your thinking. Did you notice anything interesting about the spatial arrangment of the data? Are there trends in the data that the map makes hard to see? What about interactions. This doesn't have to be exhaustive, I just want you to reflect a little bit on how data visualtizaiton can help clarify your research questions.
+I learned that it is very difficult for Rmarkdown to follow filepaths. I had several images that would not knit with the document. I didn't see other trends with income data for example, because I got sidetracked... However, I'm very interested in viewing the trends using methods other than chloropleth maps.
 
-**Remember, you can use ? to at the prompt to learn more about a command (e.g., ?plot will tell you about the usage of the plot command). Send me questions if you need help!! Good luck.**
+# References
 
-**Once you've gotten everything in the Rmakrdown document, press the `knit` button and you'll see your work rendered as a webpage**
+

@@ -1,0 +1,129 @@
+---
+title: "RMarkdown Assignment"
+author: "Haley Netherton"
+date: "2/18/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidycensus)
+library(sp)
+library(ggplot2)
+library(viridis)
+library(scales)
+library(gridExtra)
+```
+
+## Introduction
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. R Markdown can do the majority of things a typical word processing program (e.g., Microsoft Word), but requires a bit of knowledge about how the syntax works. There's a lot of help online, but the things I tended to use most when I first started were the RMarkdown Cheat Sheet and Reference guide (got to Help > Cheatsheets inside RStudio) and the [Markdown syntax page](https://daringfireball.net/projects/markdown/syntax).
+
+For this exercise, I want you to get comfortable using Rmarkdown to generate blogpost-style html pages that describe your project and help introduce some of the plotting techniques we learned in class. As a bonus, you'll get to see some of the benefits of being able to write and code in one place. We'll play with some additional approaches for producing publication-quality documents later in the semester. 
+
+## Introduce your dissertation or thesis
+
+In the scope of the GEM3 project, a need has been identified in the mapping objective to better understand the social landscape as it pertains to sagebrush steppe and its management. The Teton Valley Stakeholder Advisory Group (SAG) has echoed this need by expressing their desire to map values across the landscape and to use values to bridge ecological and economic data, providing social context for changes being experienced in their region. Values mapping can be used to determine who holds what values and where they live on the landscape, thereby allowing us to identify preferences for regionally-specific management actions for sagebrush steppe, especially when integrated with ecological data.
+
+
+
+## Study Area
+
+My dissertation will focus on two spatial scales for mapping values: local communities and statewide. This will allow for characterization of values broadly across the state, as well as specifically for communities involved with GEM3. Two primary areas of focus are Owyhee County, ID, and Teton County, ID, where Stakeholder Advisory Groups (SAGs) have been developed. These two counties are experiencing different pressures as they relate to the sagebrush steppe, making them very good case studies for understanding the diversity of the social landscape in Idaho.
+
+```{r studyarea}
+census_api_key("6a6286fb88ed798393faaab6967e99f9382f2ab8") #Inserted my key here
+
+id.census.sf <- get_acs(geography = "county", 
+              variables = c("B19013_001", "B01002_001"),
+              state = "ID", 
+              year = 2018, geometry = TRUE)%>%
+  mutate(rename = 
+           str_replace_all(.$variable,
+                           (c("B19013_001"="income",
+                                         "B01002_001"="age" )))) %>%
+  #select the columns to keep
+  dplyr::select(c(GEOID, rename, estimate)) %>% 
+  #have to use spread because pivot_wider 
+  #not currently working for sf objects
+  spread(., key = rename, value = estimate) 
+
+id.census.sp <- as(id.census.sf, "Spatial")
+
+plot(id.census.sp, main = "Study Area", 
+     sub="Owyhee and Teton Counties", 
+     col= ifelse(id.census.sp$GEOID == 16081,'light blue',ifelse(id.census.sp$GEOID == 16073,'light blue','white')), 
+     border="gray") 
+
+```
+
+## Map an attribute of your data
+
+Because I do not have spatial data collected yet, I recreated a map I made previously in arcGIS of the CDC Social Vulnerability Index by Idaho county, used here as a proxy for what county-level spatialization of social data could look like. 
+
+Data Source: 
+Social Vulnerability Index - CDC GRASP (Available at https://svi.cdc.gov/data-and-tools-download.html)
+
+```{r attributeplot}
+#importing and plotting SVI data
+Idaho.SVI <- read.csv("~/Documents/Boise State/Spring 2020/HES 598 R/Classwork/HES598/MarkdownAssignment/RmarkdownAssignment_HaleyNetherton/Idaho_COUNTY.csv", stringsAsFactors = FALSE)
+View(Idaho.SVI)
+
+Idaho.SVI$FIPS_char <- as.character(Idaho.SVI$FIPS)
+
+id.SVI.sf <- id.census.sf %>% 
+  left_join(., Idaho.SVI, by = c("GEOID" = "FIPS_char"))
+
+id.SVI.sp <- as(id.SVI.sf, "Spatial")
+
+gbPal <- colorRampPalette(c('gray', 'blue'))
+
+Idaho.SVI$Col <- gbPal(20)[as.numeric(cut(Idaho.SVI$RPL_THEMES,breaks = 20))]
+
+plot(id.SVI.sp, main = "Social Vulnerability Index by Idaho County", col= Idaho.SVI$Col, border="gray") 
+```
+
+## Plot your data a different way
+
+Again, because I don't have data, I will be using the CDC Social Vulnerability Index as a proxy for social data in Idaho. The following plot shows the number of flags by theme for the Social Vulnerability Index (SVI). Each flag indicates high vulnerability for a county for the given theme. 
+
+```{r}
+#Flag plots
+SVIpov.flag1 <- ggplot (data = Idaho.SVI, mapping = aes(x= Idaho.SVI$F_THEME1, y= Idaho.SVI$RPL_THEMES, color = Idaho.SVI$RPL_THEMES))
+
+flag1.plot <- SVIpov.flag1 + geom_point() + labs(x = "Socioeconomic Flags", y = "Social Vulnerability Index", color = "SVI") 
+
+SVIpov.flag2 <- ggplot (data = Idaho.SVI, mapping = aes(x= Idaho.SVI$F_THEME2, y= Idaho.SVI$RPL_THEMES, color = Idaho.SVI$RPL_THEMES))
+
+flag2.plot <- SVIpov.flag2 + geom_point() + labs(x = "Housing Composition and Disability Flags", y = "Social Vulnerability Index", color = "SVI") + theme(legend.position = "none")
+
+SVIpov.flag3 <- ggplot (data = Idaho.SVI, mapping = aes(x= Idaho.SVI$F_THEME3, y= Idaho.SVI$RPL_THEMES, color = Idaho.SVI$RPL_THEMES))
+
+flag3.plot <- SVIpov.flag3 + geom_point() + labs(x = "Minority Status and Language Flags", y = "Social Vulnerability Index", color = "SVI") + theme(legend.position = "none")
+
+SVIpov.flag4 <- ggplot (data = Idaho.SVI, mapping = aes(x= Idaho.SVI$F_THEME4, y= Idaho.SVI$RPL_THEMES, color = Idaho.SVI$RPL_THEMES))
+
+flag4.plot <- SVIpov.flag4 + geom_point() + labs(x = "Housing and Transportation Flags", y = "Social Vulnerability Index", color = "SVI") + theme(legend.position = "none")
+
+#extracting a common legend for plots
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+flag.legend <- get_legend(flag1.plot)
+
+flag1.plot.nolegend <- SVIpov.flag1 + geom_point() + labs(x = "Socioeconomic Flags", y = "Social Vulnerability Index", color = "SVI") + theme(legend.position = "none")
+
+#combining plots
+grid.arrange(flag1.plot.nolegend, flag2.plot, flag.legend, flag3.plot, flag4.plot,
+             ncol = 3, nrow = 2, top = "Flags Influencing SVI by Idaho County")
+```
+
+## What did you learn?
+
+The way I mapped the Social Vulnerability Index was useful for comparing counties more broadly. It provided an easy to interpret visual for the spatial variation in vulnerability in Idaho. However, the more traditional plots allowed me to investigate which themes more commonly contributed to vulnerability across the different counties. This would have been a bit more difficult to assess spatially. The traditional plots were helpful for teasing apart more nuanced trends in the vulnerability index. Overall, both visualizations were useful for thinking about social vulnerability by county. I am looking forward to having my own data to work with in the future, as my lack of familiarity with this data made plotting more difficult. Based on how the knit went, I could use some more practice with formatting in Rmarkdown.
