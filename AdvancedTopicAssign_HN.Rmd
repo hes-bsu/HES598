@@ -284,9 +284,11 @@ Using rake{survey} and postStratify{survey} returned the same weighted means for
 I had first attempted to use a different tutorial for MRP, which did not go well. I still had some trouble with the 'rstanarm' package and complexities of the code here. The for loops ended up sending my computer into a tailspin after awhile, leading to a C stack usage error (due to having to run the function several times due to code breaks). It would be interesting to explore other MRP code in the future to evaluate differences in speed, as this one required some overhaul to get R processing at its usual speed again. However, the documentation in the vignette and on Github were relatively useful in troubleshooting some of the issues I was having.
 
 # Final Product
-Originally, I attempted to create plots to compare sample to population and the effects of post-stratification on preference for sagebrush, but kept reaching an error in gzfile(file,wb). 
+Originally, I attempted to create plots to compare sample to population and the effects of post-stratification on preference for sagebrush, but kept reaching an error in gzfile(file,wb). When I later attempted this after fixing some issues with package dependencies and object calls, I was able to produce the plots I was hoping to produce. 
 
-When I later attempted this after fixing some issues with package dependencies, I was able to produce the plots I was hoping to produce.
+Conclusions from Plots:
+- Using the sample I created to estimate sagebrush preference may not give accurate estimates of sagebrush preference in the population.
+- There are different levels of preference for the different levels of post-stratification variables.
 ```{r Final Product for MRP, warning=FALSE}
 ##Analysis/processing step 2 - Producing plots to compare sample to population and the effects of post-stratification on preference for sagebrush
 
@@ -390,8 +392,8 @@ ggplot(data=summary_by_poststrat_var, aes(x=as.factor(category), y=y_mean,group=
 # Original Reflection (March 10)
 This exercise has helped me work through some of the basics of post-stratification and MRP. It has also helped me realize some additional functionality for these methods that I hope to explore further to better inform my survey sampling strategy. I need to explore the interaction effects in the MRP code more in the future, as this was a line of code that kept leading to errors ("subscript out of bounds") when I changed the variables that were interacting. This would allow me to better explore interactions between variables, such as income, education, and environmental attitude, which will help determine thresholds needed to detect the effects of some variables that may have complex interactions with others. I am looking forward to figuring out what is going wrong in that code so that I can investigate interaction effects further.
 
-# Updates to Reflection ()
-After additional trial-and-error, in addition to running into issues from a software update breaking my RStudio and Github connection a few times, I was ...
+# Updates to Reflection (April 14)
+After additional trial-and-error, in addition to running into issues from a software update breaking my RStudio and Github connection a few times, I was able to develop the plots to examine the relationship between the post-stratified sample and the population, indicating that the sample may not accurately estimate preference in the population. I plan to continue to work on exploring interactions between these variables in the future.
 
 # Additional Resources on This Topic
 - Buttice, M. K., and Highton, B. 2013. "How Does Multilevel Regression and Poststratification Perform with Conventional National Surveys?". Political Analysis 21:449–467. doi:10.1093/pan/mpt017
