@@ -26,9 +26,9 @@ Before you get started programming all of the potential things you could do duri
 
 
 #load the libraries - tell us which packages you're using and why
-
 Packages:
-  
+
+library(data.table)  
 library(sp)
 library(maptools)
 library(googledrive)
@@ -38,6 +38,8 @@ options(
 )
 
 library(here)
+library(raster)
+library(rgdal)
 
 vignette(package="spdep")
 vignette(package="here")
@@ -47,21 +49,42 @@ vignette(package="here")
 
 
 folder_url <- "https://drive.google.com/drive/folders/1r8XsNTTKWCiWHSxR_ldISpLHzZJbla3o"
+
 folder <- drive_get(as_id(folder_url))
 gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("datatemp/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
-getwd()
+
+
+elev=raster::raster("C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/original/S06W080.hgt")
+
 
 
 str(gdrive_files)
 
-pixels=originaldata_sample
 
-pixels
 
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
+
+
+originaldata_sample
+
+data=originaldata_sample
+
+class(data)
+
+data=na.exclude(data)
+
+head(data)
+names(data)
+colnames(data)
+dim(data)
+
+
+
+
+
 
 
 
