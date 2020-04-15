@@ -33,6 +33,7 @@ gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("Flexdashboard/images/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE)) #This downloads the images needed for the flexdashboard from the google drive folder. It downloads to a folder in the repository called images. You may need to make sure you have this folder on your computer for the code to successfully run. 
 
+
 ```
 
 Project Description 
