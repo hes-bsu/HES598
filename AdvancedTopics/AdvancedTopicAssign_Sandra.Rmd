@@ -55,18 +55,25 @@ gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("datatemp/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
-
-elev=raster::raster("C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/original/S06W080.hgt")
-
-
-
-str(gdrive_files)
+getwd()
+paste0(here::here("datatemp/original/"),words)
 
 
+originaldata_sample
 
+path="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/"
+list.files(path)
+
+
+### I renamed the originalS06W080.hgt to S06W080.hgt
+elev=raster::raster("C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/S06W080.hgt")
+elev
+
+
+elev
+proj4string(elev)
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
-
 
 originaldata_sample
 
@@ -83,19 +90,22 @@ dim(data)
 
 
 
-
-
-
-
-
-
-
 #Analysis/processing step 1 - what are you hoping to do here, why? 
 
+# I used sp to projecting my csv originaldata_sample:
 
+elev=raster::raster("C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/S06W080.hgt")
+elev
 
+proj4string(elev)
+proj4string(data_sample)
 
+elevp <- crs(elev)
 
+elevp="+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+datap=SpatialPointsDataFrame(originaldata_sample[,c(1,2)],data=originaldata_sample, proj4string=CRS(elevp))
+
+datap
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
 
