@@ -27,6 +27,9 @@ Before you get started programming all of the potential things you could do duri
 
 #load the libraries - tell us which packages you're using and why
 Packages:
+  sp
+  gdal
+  
 
 library(data.table)  
 library(sp)
@@ -39,7 +42,18 @@ options(
 
 library(here)
 library(raster)
+library(rasterVis)
 library(rgdal)
+library(viridis)
+library(scales)
+library(maptools)
+library(rgeos)
+library(dplyr)
+library(RColorBrewer)
+library(ggplot2)
+
+
+
 
 vignette(package="spdep")
 vignette(package="here")
@@ -55,59 +69,81 @@ gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("datatemp/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
-getwd()
-paste0(here::here("datatemp/original/"),words)
+#getwd()
+#paste0(here::here("datatemp/original/"),words)
 
+#getwd()
+#wd<-"C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/"
 
-originaldata_sample
 
 path="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/"
 list.files(path)
 
+originaldata_sample
 
-### I renamed the originalS06W080.hgt to S06W080.hgt
-elev=raster::raster("C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/S06W080.hgt")
+### After donwloaded the raster image from Google drive, I renamed the originalS06W080.hgt to S06W080.hgt.
+
+getwd()
+wd<-"C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/"
+
+
+options(stringsAsFactors=FALSE)
+pixels <- read.csv(paste0(wd,"originaldata_sample.csv"))
+str(pixels)
+
+elev=raster::raster(paste0(wd,"S06W080.hgt"))
 elev
 
-
-elev
-proj4string(elev)
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
 
 originaldata_sample
 
-data=originaldata_sample
-
-class(data)
-
-data=na.exclude(data)
-
-head(data)
-names(data)
-colnames(data)
-dim(data)
-
-
+class(originaldata_sample)
+head(originaldata_sample)
+names(originaldata_sample)
+colnames(originaldata_sample)
+dim(originaldata_sample)
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
 
-# I used sp to projecting my csv originaldata_sample:
+###Step1: I use crs function from sp package to project the originaldata_sample.
 
-elev=raster::raster("C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/S06W080.hgt")
-elev
-
-proj4string(elev)
-proj4string(data_sample)
-
-elevp <- crs(elev)
-
-elevp="+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-datap=SpatialPointsDataFrame(originaldata_sample[,c(1,2)],data=originaldata_sample, proj4string=CRS(elevp))
-
-datap
+crs
+elev@crs
+pixels_spdf <- SpatialPointsDataFrame(
+  pixels[,1:2],proj4string=elev@crs, pixels)
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
+##Step2: I use extract funtion to get elevation data from the raster image.
+
+pixel_elev <- raster::extract(elev, # raster layer
+    pixels_spdf,   # SPDF with pixels
+    df=TRUE)         # return a dataframe
+pixel_elev
+str(pixel_elev)
+
+### grab the name of the ID_pixel from the pixels_spdf
+
+pixel_elev$pix_id<- pixels_spdf$ID_pixel
+pixel_elev$pix_id
+
+#fix the column names
+names(pixel_elev) <- c('ID','elev','pix_id')
+pixel_elev
+
+
+# The pixels and pixel_elev data were merged, using merge function from package base.
+
+pixelelev <- merge(pixels, pixel_elev, by.x = 'ID_pixel', by.y = 'pix_id')
+getAnywhere(merge)
+stats:::.makeNamesTs
+
+head(pixelelev)
+
+
+#Analysis/processing step 2 - what are you hoping to do here, why? 
+##Step3: 
 
 
 
