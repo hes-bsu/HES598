@@ -37,7 +37,7 @@ library(tidyr) #used for MRP
 library(bayesplot) #used for MRP plotting
 ```
 Then exploring post-stratification using survey::rake and survey::postStratify using a random sample:
-```{r Post-Stratification, cache=TRUE}
+```{r Post-Stratification}
 ##Load and Organize Data - Post-Stratification
 folder_url <- "https://drive.google.com/drive/folders/1w2Bu9vCjRoHD6f52nMIXCmmC723OOCR7"
 folder <- drive_get(as_id(folder_url))
@@ -145,7 +145,7 @@ svymean(Dummy_Survey$C_Exciting, svy.design.ps.inc)
 mean(Dummy_Survey$C_Exciting)
 ```
 Then attempting to simulate specific patterns in the data to explore MRP using 'rstanarm':
-```{r MRP, cache=TRUE}
+```{r MRP}
 ##Load and Organize Data - MRP
 #first, need to create simulated data with a known pattern
 # For respondent i, people[i] is that person's poststrat cell, some number between 1 and 32
@@ -289,7 +289,7 @@ Originally, I attempted to create plots to compare sample to population and the 
 Conclusions from Plots:
 - Using the sample I created to estimate sagebrush preference may not give accurate estimates of sagebrush preference in the population.
 - There are different levels of preference for the different levels of post-stratification variables.
-```{r Final Product for MRP, cache=TRUE}
+```{r Final Product for MRP}
 ##Analysis/processing step 2 - Producing plots to compare sample to population and the effects of post-stratification on preference for sagebrush
 
 #First, sample and population comparisons
