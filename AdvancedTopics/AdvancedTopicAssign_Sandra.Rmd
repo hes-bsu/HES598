@@ -26,9 +26,9 @@ Before you get started programming all of the potential things you could do duri
 
 
 #load the libraries - tell us which packages you're using and why
-Packages:
-  sp
-  gdal
+#Packages:
+#  sp
+#  gdal
   
 
 library(data.table)  
@@ -55,8 +55,8 @@ library(ggplot2)
 
 
 
-vignette(package="spdep")
-vignette(package="here")
+#vignette(package="spdep")
+#vignette(package="here")
 
 
 #load your data - which datasets do you need?
@@ -75,24 +75,28 @@ lapply(gdrive_files$id, function(x) drive_download(as_id(x),
 #getwd()
 #wd<-"C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/"
 
+## I don't think this helps you and definitelty doesn't work if I try to runit here. Suggest deleting
+#path="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/"
+#list.files(path)
 
-path="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/"
-list.files(path)
-
-originaldata_sample
+#originaldata_sample
 
 ### After donwloaded the raster image from Google drive, I renamed the originalS06W080.hgt to S06W080.hgt.
 
-getwd()
-wd<-"C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/"
+##This shouldn't be necessary
+#getwd()
+#wd<-"C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/"
 
 
-options(stringsAsFactors=FALSE)
-pixels <- read.csv(paste0(wd,"originaldata_sample.csv"))
+#options(stringsAsFactors=FALSE)
+#pixels <- read.csv(paste0(wd,"originaldata_sample.csv"))
+pixels <- read.csv(here::here("datatemp/original/data_sample.csv"), stringsAsFactors = FALSE)
 str(pixels)
 
-elev=raster::raster(paste0(wd,"S06W080.hgt"))
+elev=raster::raster(here::here("datatemp/original/S06W080.hgt"))
 elev
+
+####This is where I stopped
 
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
