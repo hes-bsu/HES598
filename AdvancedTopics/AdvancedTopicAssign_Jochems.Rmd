@@ -116,6 +116,20 @@ crs(veg_data) <- "+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs
 plot(veg_data)
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
+#for INLA purposes, let's subset data to just 2018 (most recent year of data)
+#will load in subsetted data from class's google drive 
+folder.url <- "https://drive.google.com/open?id=1cjqJMM2JyQWDtVorNEyO6HLprB_s7XOF" #replace this link with the link to your specific folder which you can get by clicking the "get shareable link option"
+
+folder <- drive_get(as_id(folder_url))
+
+files <- drive_ls(folder)
+
+lapply(files$id, function(x) drive_download(as_id(x), path = "~/Rspatial/", overwrite = TRUE)) #replace the path with a folder on your computer outside of the repo directory
+
+file.list <- list.files((pattern = "*.csv")) #replace the pattern with the appropriate extensions for the files you want to load (e.g., .shp, .csv)
+
+rstrs <- lapply(file.list, read.csv) #Then read in the file using the appropriate read command (e.g., raster, read_sf, read.csv)
+
 
 #Check the outcomes? How will you know if your steps worked?
 
