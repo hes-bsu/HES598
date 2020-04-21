@@ -1,7 +1,7 @@
 ---
 title: "Advanced Topic Instructions: Connectivity"
 author: "Brent Clark"
-date: "4/7/2020"
+date: "4/20/2020"
 output: html_document
 ---
 
@@ -24,25 +24,45 @@ I am interested in how kin relationships are structured spatially and temporally
 # Problem to be solved
 How is recruitement in a semi-colonial raptor species impacted by demographic connectivity?  Understanding the immigration and emmigration within a burrowing owl population can help determine low/high recruitment rates.  It can also help us understand how demographic connectivity of a population increases/decreases colonization of previously occupied/unoccupied burrows. 
 
-# R packages to try
-"sf" - map creation
-"raster" - map creation
-"rgdal" - 
-"samc" - provides long and short-term predictions of landscape connectivity measurements
-"popbio" - would be used to determine population and demographic metrics
-
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
 #load the libraries - tell us which packages you're using and why
 
+#Tidyverse
+#Tidycensus
+#sp
+#ggplot2
+#viridis
+#scales
+#sf
+#rgdal
+#maps
+#mapproj
+#readxl
+
 #load your data - which datasets do you need?
+#Load Idaho Shape file (Still need to complete this)
+#Load burrow (artificial and natural) locations dataset (UTMs) (Still need to complete this)
+
+#Create Map of Idaho with the counties of interest outlined
+#Create the state of idaho (including county polygons)
+#creates seperate map of just "Ada" and "Elmore" counties
+#highlights counties where artificial and natural burrowing owl burrows are known for research purposes
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
 
+#create spatial table of burrow locations
+#create burrow locations based on spatial table
+#Include total number of nestlings produced at each nest site for all years
+
 #Analysis/processing step 1 - what are you hoping to do here, why? 
 
+#attempting to create a heat map of nestingls per nest site to help understand what nest sites have produced the most nestlings for the last 20+ years
+
 #Analysis/processing step 2 - what are you hoping to do here, why? 
+
+#Connectivity (still working out how best to do this step)
 
 #Check the outcomes? How will you know if your steps worked?
 
@@ -51,6 +71,13 @@ Before you get started programming all of the potential things you could do duri
 
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
+
+# R packages to try
+"sf" - map creation
+"raster" - map creation
+"rgdal" - 
+"samc" - provides long and short-term predictions of landscape connectivity measurements
+"popbio" - would be used to determine population and demographic metrics
 
 ## Evaluate your choices
 Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
