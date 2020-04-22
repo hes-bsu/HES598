@@ -25,6 +25,14 @@ Starting with the loading the libraries:
 ```{r libraries, message = FALSE, warning=FALSE}
 ##Load the libraries 
 library(googledrive) #where dummy data is stored
+# designate project-specific cache
+options(gargle_oauth_cache = ".haleyn")
+# check the value of the option, if you like
+gargle::gargle_oauth_cache()
+# trigger auth on purpose --> store a token in the specified cache
+drive_auth()
+# see your token file in the cache, if you like
+list.files(".haleyn/")
 #authenticating google drive
 options(
   gargle_oauth_cache = ".haleyn",
