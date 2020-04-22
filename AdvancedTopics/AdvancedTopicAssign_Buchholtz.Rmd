@@ -62,9 +62,53 @@ mapxy <- function(a = NA){
 
 mapxy(1)
 
+#-----generating x number of random points in a circle-------#
+#plot circle with random points in it
+# Load the spatstat package
+library(spatstat)
+
+# Create this many points, in a circle of this radius
+n_points <- 300
+radius <- 10
+
+# Generate uniform random numbers up to radius-squared
+r_squared <- runif(n_points, 0, radius^2)
+angle <- runif(n_points, 0, 2*pi)
+
+# Take the square root of the values to get a uniform spatial distribution
+xx <- sqrt(r_squared)* cos(angle)
+yy <- sqrt(r_squared) * sin(angle)
+
+plot(disc(radius)); points(xx, yy)
+
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
 
+#I'll list simulated data in different forms here:
+#uniform in a circle
+#uniform in a rectangle
+#clustered in a circle
+#clustered in a rectangle
+
 #Analysis/processing step 1 - what are you hoping to do here, why? 
+
+#I'm going to do a basic test for uniformity of points. This is a simple point pattern analysis to try, and a good thing to screen point data for. 
+
+#Testing for uniformity of points in a circle
+# Define variables
+#variables here are sourced from the sphere above, but needed for this analysis are:
+#x - the, x coordinate
+#y, the y coordinate
+#window, the planar extent
+
+# Set coordinates and window
+ppxy <- ppp(x = xx, y = yy, window = disc(radius))
+
+# Test the point pattern
+qt <- quadrat.test(ppxy)
+
+# Inspect the results
+plot(qt)
+print(qt)
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
 
