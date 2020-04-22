@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Sagebrush steppe represents an iconic landscape of the American West facing divergent public opinion that ranges from being valued ecologically, culturally, and economically to being torn up, paved over, and despised. As threats from land use change, invasive species, wildfire, and climate change heighten, understanding the barriers and opportunities to management is of the utmost importance. My research aims to address this need by mapping the social landscape as it pertains to sagebrush steppe in Idaho.
 
 ## My Problem with Study Design
-My project is still taking shape, but will be using a mixed-methods approach that will combine surveys, participatory mapping, interviews, and a historical and cross-cultural review. Currently, a challenge that I will face with my survey will be in trying to interpolate survey responses across my study region, in order to create a map of values for sagebrush steppe in the state of Idaho. Given that I will inevitably undersample certain demographics and geographies, improving my understanding of how to develop a more balanced sample will be useful in addressing this challenge. I will be using this advanced topic to explore post-stratification and MRP to determine what regions may require additional sampling effort. To this end, "success" will be learning a few tools for post-stratification and simulation and determining which might be best suited for my situation.
+My project is still taking shape, but will be using a mixed-methods approach that will combine surveys, participatory mapping, interviews, and a historical and cross-cultural review. Currently, a challenge that I will face with my survey will be in trying to interpolate survey responses across my study region, in order to create a map of values for sagebrush steppe in the state of Idaho. Given that I will inevitably undersample certain demographics and geographies, improving my understanding of how to develop a more balanced sample will be useful in addressing this challenge. I will be using this advanced topic to explore post-stratification and MRP. To this end, "success" will be learning a few tools for post-stratification and simulation and determining which might be best suited for my situation.
 
 ## What the heck is post-stratification?
 Post-stratification is used to adjust sampling weights to account for underrepresented groups in the sample population. Post-stratifican relies on data collected during the survey, and therefore occurs after sampling. Multilevel regression and post-stratification (MRP) can be used to "estimate public opinion across geographic units from individual-level survey data" (Buttice & Highton, 2013, p. 449). Typically, MRP uses large national samples to estimate public opinion in smaller areas. 
@@ -31,8 +31,6 @@ options(gargle_oauth_cache = ".haleyn")
 gargle::gargle_oauth_cache()
 # trigger auth on purpose --> store a token in the specified cache
 drive_auth()
-# see your token file in the cache, if you like
-list.files(".haleyn/")
 #authenticating google drive
 options(
   gargle_oauth_cache = ".haleyn",
@@ -300,7 +298,9 @@ I had first attempted to use a different tutorial for MRP, which did not go well
 Originally, I attempted to create plots to compare sample to population and the effects of post-stratification on preference for sagebrush, but kept reaching an error in gzfile(file,wb). When I later attempted this after fixing some issues with package dependencies and object calls, I was able to produce the plots I was hoping to produce. 
 
 Conclusions from Plots:
+
 * Using the sample I created to estimate sagebrush preference may not give accurate estimates of sagebrush preference in the population.
+
 * There are different levels of preference for the different levels of post-stratification variables.
 ```{r Final Product for MRP, message = FALSE, warning=FALSE}
 ##Analysis/processing step 2 - Producing plots to compare sample to population and the effects of post-stratification on preference for sagebrush
@@ -403,7 +403,7 @@ ggplot(data=summary_by_poststrat_var, aes(x=as.factor(category), y=y_mean,group=
 ```
 
 # Original Reflection (March 10)
-This exercise has helped me work through some of the basics of post-stratification and MRP. It has also helped me realize some additional functionality for these methods that I hope to explore further to better inform my survey sampling strategy. I need to explore the interaction effects in the MRP code more in the future, as this was a line of code that kept leading to errors ("subscript out of bounds") when I changed the variables that were interacting. This would allow me to better explore interactions between variables, such as income, education, and environmental attitude, which will help determine thresholds needed to detect the effects of some variables that may have complex interactions with others. I am looking forward to figuring out what is going wrong in that code so that I can investigate interaction effects further.
+This exercise has helped me work through some of the basics of post-stratification and MRP. It has also helped me realize some additional functionality for these methods that I hope to explore further to better inform my survey sampling strategy. I need to explore the interaction effects in the MRP code more in the future, as this was a line of code that kept leading to errors ("subscript out of bounds") when I changed the variables that were interacting. This would allow me to better explore interactions between variables, such as income, education, and environmental attitude, which will help determine thresholds needed to detect the effects of some variables that may have complex interactions with others. I am looking forward to figuring out what is going wrong in that code so that I can investigate interaction effects further. Originally, I was unable to get the code for the plotting to work as well.
 
 # Updates to Reflection (April 14)
 After additional trial-and-error, in addition to running into issues from a software update breaking my RStudio and Github connection a few times, I was able to develop the plots to examine the relationship between the post-stratified sample and the population, indicating that the sample may not accurately estimate preference in the population. I plan to continue to work on exploring interactions between these variables in the future.
