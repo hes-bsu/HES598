@@ -1,7 +1,7 @@
 ---
 title: "Advanced Topic - Post-stratification and Simulation"
 author: "Haley Netherton"
-date: "4/14/2020"
+date: "4/22/2020"
 output: html_document
 ---
 
@@ -42,7 +42,7 @@ library(tidyr) #used for MRP
 library(bayesplot) #used for MRP plotting
 ```
 Then exploring post-stratification using survey::rake and survey::postStratify using a random sample:
-```{r Post-Stratification}
+```{r Post-Stratification, message = FALSE, warning=FALSE}
 ##Load and Organize Data - Post-Stratification
 folder_url <- "https://drive.google.com/drive/folders/1w2Bu9vCjRoHD6f52nMIXCmmC723OOCR7"
 folder <- drive_get(as_id(folder_url))
@@ -150,7 +150,7 @@ svymean(Dummy_Survey$C_Exciting, svy.design.ps.inc)
 mean(Dummy_Survey$C_Exciting)
 ```
 Then attempting to simulate specific patterns in the data to explore MRP using 'rstanarm':
-```{r MRP}
+```{r MRP, message = FALSE, warning=FALSE}
 ##Load and Organize Data - MRP
 #first, need to create simulated data with a known pattern
 # For respondent i, people[i] is that person's poststrat cell, some number between 1 and 32
@@ -270,7 +270,7 @@ The 'survey' package is essential to this process, as it houses many of the func
 In order to perform multilevel regressin and post-stratification (MRP), I used the 'rstanarm' package. I was modeling this section off of the "MRP with rstanarm" vignette (Kennedy & Gabry 2019). Their code also had dependencies on 'dplyr' and 'tidyr', with plotting using 'ggplot2' and 'tidyverse'.
 
 # Evaluation of Choices
-```{r Benchmarking for Post-Stratification}
+```{r Benchmarking for Post-Stratification, message = FALSE, warning=FALSE}
 rake.time <- system.time(rake(design = data.svy.unweighted,
                    sample.margins = list(~Inc_Lev),
                    population.margins = list(income.dist)))
@@ -292,9 +292,9 @@ I had first attempted to use a different tutorial for MRP, which did not go well
 Originally, I attempted to create plots to compare sample to population and the effects of post-stratification on preference for sagebrush, but kept reaching an error in gzfile(file,wb). When I later attempted this after fixing some issues with package dependencies and object calls, I was able to produce the plots I was hoping to produce. 
 
 Conclusions from Plots:
-- Using the sample I created to estimate sagebrush preference may not give accurate estimates of sagebrush preference in the population.
-- There are different levels of preference for the different levels of post-stratification variables.
-```{r Final Product for MRP}
+* Using the sample I created to estimate sagebrush preference may not give accurate estimates of sagebrush preference in the population.
+* There are different levels of preference for the different levels of post-stratification variables.
+```{r Final Product for MRP, message = FALSE, warning=FALSE}
 ##Analysis/processing step 2 - Producing plots to compare sample to population and the effects of post-stratification on preference for sagebrush
 
 #First, sample and population comparisons
@@ -401,20 +401,20 @@ This exercise has helped me work through some of the basics of post-stratificati
 After additional trial-and-error, in addition to running into issues from a software update breaking my RStudio and Github connection a few times, I was able to develop the plots to examine the relationship between the post-stratified sample and the population, indicating that the sample may not accurately estimate preference in the population. I plan to continue to work on exploring interactions between these variables in the future.
 
 # Additional Resources on This Topic
-- Buttice, M. K., and Highton, B. 2013. "How Does Multilevel Regression and Poststratification Perform with Conventional National Surveys?". Political Analysis 21:449–467. doi:10.1093/pan/mpt017
-- Hanretty, C. 2019. "An Introduction to Multilevel Regression and Post- Stratification for Estimating Constituency Opinion". Political Studies Review 00(0):1-16. doi: 10.1177/1478929919864733
-- Howe, P. D., Mildenberger, M., Marlon, J. R., Leiserowitz, A. 2015. "Geographic variation in opinions on climate change at state and local scales in the USA". Nature Climate Change 5:596-603. doi: 10.1038/NCLIMATE2583
-- Kennedy, L., and Gabry, J. 2019. "MRP with rstanarm". https://mc-stan.org/rstanarm/articles/mrp.html
-- Kolenikov, S. 2016. “Post-Stratification or Non-Response Adjustment?”. Survey Practice 9 (3). https://doi.org/10.29115/SP-2016-0014.
-- Penn State's STAT 506 course website: "Poststratification and further topics on stratification" (https://online.stat.psu.edu/stat506/node/29/)
-- Survey Weights in R (https://rpubs.com/mhanauer/268281)
-- UCLA Statitistical Consulting: "How Do I Analyze Survey Data with Stratification After Sampling (Poststratification)?" (https://stats.idre.ucla.edu/r/faq/how-do-i-analyze-survey-data-with-stratification-after-sampling-poststratification/)
+* Buttice, M. K., and Highton, B. 2013. "How Does Multilevel Regression and Poststratification Perform with Conventional National Surveys?". Political Analysis 21:449–467. doi:10.1093/pan/mpt017
+* Hanretty, C. 2019. "An Introduction to Multilevel Regression and Post- Stratification for Estimating Constituency Opinion". Political Studies Review 00(0):1-16. doi: 10.1177/1478929919864733
+* Howe, P. D., Mildenberger, M., Marlon, J. R., Leiserowitz, A. 2015. "Geographic variation in opinions on climate change at state and local scales in the USA". Nature Climate Change 5:596-603. doi: 10.1038/NCLIMATE2583
+* Kennedy, L., and Gabry, J. 2019. "MRP with rstanarm". https://mc-stan.org/rstanarm/articles/mrp.html
+* Kolenikov, S. 2016. “Post-Stratification or Non-Response Adjustment?”. Survey Practice 9 (3). https://doi.org/10.29115/SP-2016-0014.
+* Penn State's STAT 506 course website: "Poststratification and further topics on stratification" (https://online.stat.psu.edu/stat506/node/29/)
+* Survey Weights in R (https://rpubs.com/mhanauer/268281)
+* UCLA Statitistical Consulting: "How Do I Analyze Survey Data with Stratification After Sampling (Poststratification)?" (https://stats.idre.ucla.edu/r/faq/how-do-i-analyze-survey-data-with-stratification-after-sampling-poststratification/)
 
 # Documentation and Information for Packages and Functions
-- dplyr (https://timmastny.rbind.io/blog/poststratification-with-dplyr/)
-- ggplot2 (https://ggplot2.tidyverse.org)
-- postStratify (http://r-survey.r-forge.r-project.org/survey/html/postStratify.html)
-- rstanarm (https://cran.r-project.org/web/packages/rstanarm/index.html)
-- Survey (https://www.r-bloggers.com/survey-computing-your-own-post-stratification-weights-in-r/)
-- tidyr (https://tidyr.tidyverse.org)
-- tidyverse (https://www.tidyverse.org)
+* dplyr (https://timmastny.rbind.io/blog/poststratification-with-dplyr/)
+* ggplot2 (https://ggplot2.tidyverse.org)
+* postStratify (http://r-survey.r-forge.r-project.org/survey/html/postStratify.html)
+* rstanarm (https://cran.r-project.org/web/packages/rstanarm/index.html)
+* Survey (https://www.r-bloggers.com/survey-computing-your-own-post-stratification-weights-in-r/)
+* tidyr (https://tidyr.tidyverse.org)
+* tidyverse (https://www.tidyverse.org)
