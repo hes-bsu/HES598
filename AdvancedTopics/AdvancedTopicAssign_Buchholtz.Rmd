@@ -34,7 +34,7 @@ Before you get started programming all of the potential things you could do duri
 
 #Starting with doing it in a rectangle.
 # The number of points to create
-n <- 200
+n <- 300
 
 # Set the range
 xmin <- 0
