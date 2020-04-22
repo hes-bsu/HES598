@@ -1,0 +1,104 @@
+---
+title: "Telemetry: Home Range Analysis"
+author: "Brian Busby"
+date: "4/21/2020"
+output: html_document
+---
+
+## The Objective:  
+ 
+  One objective of my research is to understand how Barn Owl behavioral patterns change in the presence of roads. While this will ultimately be a daunting and complex analysis, a good first step is to understand how Barn Owls are using the space around them and to what degree. One of the simpler estimates for habitat use is a home range analysis, which attempts to quantify the amount and location of land used by an individual. With this project I would like to successfully map out the home range of a Barn Owl that I tracked this winter using a GPS datalogger, and to do so efficiently. A final end product will hopefully be two maps, one of the owl's home range using a minimum convex polygon approach, and one using a kernel density estimator. 
+  
+## Pseudocode:
+
+```{r}
+
+#Load the required packages
+
+#Import the Barn OWl GPS tracks as a .csv file
+
+#Import the National Land Cover Dataset for Canyon County as a raster
+
+#Align the projections for my tracks and the NLCD so the two can be plotted on top of eachother correctly
+
+#Create a home range estimate using the minimum convex polygon approach and calculate area
+
+#Determine the speed of the above process
+
+#Create a home range estimate using a kernel density estimator and calculate area
+
+#Determine the speed of the above process
+
+#Repeat the above steps but with an alternate package
+
+#Determine which package is more efficient 
+
+#Create a nice visual displaying my results
+
+```
+
+## Packages Used:  
+
+```{r}
+
+library(adehabitatHR)
+# A telemetry package with a focus on home range estimations
+library(amt)
+# Our alternative home range estimation package. amt does not specialize in HRE as adehabitatHR does however, it has a wide variety of uses for telemetry data
+library(sp)
+# to help me work with spatial objects
+library(raster)
+# to import and read our NLCD raster, which will serve as our background.
+
+```
+
+## Actual Code:
+
+```{r}
+
+#first import your track data. In this case we only have one individual animal, so I can just read in the lat and long coordinates for each point. Since I'm just creating home ranges there is no need to read in time. 
+#NOTE: a large step not pictured here is pre-processing your data as many telemetry units don't automatically compute this. See Joo et al. (2019) for more information.
+trax <- read.csv("trackingdata.csv")
+head(trax)
+
+#next we must convert the dataframe into spatial points so it can be read by the home range functions
+trax2 <- SpatialPoints(trax)
+
+#we also must assign it a coordinate reference system. This isn't necessary for the home range functions but it will make the area calculations simpler and will allow us to plot it with other background maps
+#NOTE:for this to work the data must be organized first by longitude, then by latitute!
+crs(trax2) <- "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0" 
+
+#read in an NLCD file fit to the shape of my study area. 
+nlcd<-raster("NLCD1.tif")
+
+#determine the projection
+proj4string(nlcd)
+
+#transform my tracks to match the projection of the NLCD
+trax3<-spTransform(trax2, CRS(projargs = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0" ))
+
+#visualize it
+plot(trax3, pch = 1)
+
+#create the home range estimation using minimal convex polygons. By electing 95 we have chosen to exclude our outermost 5% of points 
+hr1 <- mcp(trax3, percent = 95)
+
+#plot the two on top of eachother
+plot(trax3, pch = 1) +
+  plot(hr1, add = T)
+
+#determine the area of this owls home range
+as.data.frame(cp)
+#this value is in hectares, so 7.78 km2, sounds about right based on what I've read in the literature
+
+sizes <- mcp.area(trax3, percent=seq(50, 100, by = 1))
+#and a plot of how home range size would be effected based on what level I selected. Recall, I went with the pretty standard 95%
+
+```
+
+```{r}
+kud <- kernelUD(trax3, h="href")
+image(kud)
+homerange <- getverticeshr(kud)
+plot(homerange)
+```
