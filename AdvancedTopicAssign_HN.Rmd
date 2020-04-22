@@ -25,6 +25,11 @@ Starting with the loading the libraries:
 ```{r libraries, message = FALSE, warning=FALSE}
 ##Load the libraries 
 library(googledrive) #where dummy data is stored
+#authenticating google drive
+options(
+  gargle_oauth_cache = ".haleyn",
+  gargle_oauth_email = TRUE
+)
 library(curl) #called for Google Drive data access
 library(here) #called for Google Drive data access
 library(readxl) #reads Excel files (how the data is stored)

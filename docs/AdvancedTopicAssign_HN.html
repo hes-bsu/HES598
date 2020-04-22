@@ -448,7 +448,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Advanced Topic - Post-stratification and Simulation</h1>
 <h4 class="author">Haley Netherton</h4>
-<h4 class="date">3/10/2020</h4>
+<h4 class="date">4/14/2020</h4>
 
 </div>
 
@@ -472,6 +472,14 @@ div.tocify {
 <h1>PSUEDOCODE!!</h1>
 <p>Starting with the loading the libraries:</p>
 <pre class="r"><code>##Load the libraries 
+library(googledrive) #where dummy data is stored
+#authenticating google drive
+options(
+  gargle_oauth_cache = &quot;.haleyn&quot;,
+  gargle_oauth_email = TRUE
+)
+library(curl) #called for Google Drive data access
+library(here) #called for Google Drive data access
 library(readxl) #reads Excel files (how the data is stored)
 library(survey) #robust survey analysis package
 library(rstanarm) #used for MRP
@@ -482,12 +490,29 @@ library(tidyr) #used for MRP
 library(bayesplot) #used for MRP plotting</code></pre>
 <p>Then exploring post-stratification using survey::rake and survey::postStratify using a random sample:</p>
 <pre class="r"><code>##Load and Organize Data - Post-Stratification
-Dummy_Survey &lt;- read_excel(&quot;~/Documents/Boise State/Spring 2020/HES 598 R/Project/Dummy_Survey.xlsx&quot;)
-View(Dummy_Survey) #note: this contains randomly simulated survey responses generatred through Qualtrics</code></pre>
-<pre><code>## Warning in system2(&quot;/usr/bin/otool&quot;, c(&quot;-L&quot;, shQuote(DSO)), stdout = TRUE):
-## running command &#39;&#39;/usr/bin/otool&#39; -L &#39;/Library/Frameworks/R.framework/Resources/
-## modules/R_de.so&#39;&#39; had status 69</code></pre>
-<pre class="r"><code>#create survey data set with no weights and assumed random sample
+folder_url &lt;- &quot;https://drive.google.com/drive/folders/1w2Bu9vCjRoHD6f52nMIXCmmC723OOCR7&quot;
+folder &lt;- drive_get(as_id(folder_url))</code></pre>
+<pre><code>## Using an auto-discovered, cached token.
+## To suppress this message, modify your code or options to clearly consent to the use of a cached token.
+## See gargle&#39;s &quot;Non-interactive auth&quot; vignette for more details:
+## https://gargle.r-lib.org/articles/non-interactive-auth.html
+## The googledrive package is using a cached token for haleynetherton@u.boisestate.edu.</code></pre>
+<pre class="r"><code>gdrive_files &lt;- drive_ls(folder)
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here(&quot;datatemp/original/&quot;), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))</code></pre>
+<pre><code>## File downloaded:
+##   * Dummy_Survey.xlsx
+## Saved locally as:
+##   * /Users/haleynetherton/Documents/Boise State/Spring 2020/HES 598 R/Classwork/HES598/datatemp/original/Dummy_Survey.xlsx</code></pre>
+<pre><code>## [[1]]
+## # A tibble: 1 x 4
+##   name       local_path                          id              drive_resource 
+## * &lt;chr&gt;      &lt;chr&gt;                               &lt;chr&gt;           &lt;list&gt;         
+## 1 Dummy_Sur… /Users/haleynetherton/Documents/Bo… 1gyReifF_u221n… &lt;named list [4…</code></pre>
+<pre class="r"><code>Dummy_Survey &lt;- read_excel(&quot;~/Documents/Boise State/Spring 2020/HES 598 R/Classwork/HES598/datatemp/original/Dummy_Survey.xlsx&quot;)
+View(Dummy_Survey) #note: this contains randomly simulated survey responses generatred through Qualtrics
+
+#create survey data set with no weights and assumed random sample
 Dummy_Survey$Sex_Num &lt;- factor(Dummy_Survey$Sex, levels = c(&quot;Female&quot;, &quot;Male&quot;),
 labels = c(&quot;1&quot;, &quot;2&quot;))
 Dummy_Survey$Sex_Num &lt;- as.numeric(Dummy_Survey$Sex_Num)
@@ -717,12 +742,12 @@ mrp_sim &lt;- simulate_mrp_data(n=1200)
 str(mrp_sim)</code></pre>
 <pre><code>## List of 3
 ##  $ sample   :&#39;data.frame&#39;:   1200 obs. of  7 variables:
-##   ..$ sage_pref: num [1:1200] 1 1 1 0 0 1 1 1 1 0 ...
-##   ..$ male     : num [1:1200] 0 0 0 1 0 0 0 0 1 1 ...
-##   ..$ env_att  : num [1:1200] 3 2 3 1 1 2 3 1 1 1 ...
-##   ..$ income   : num [1:1200] 7 3 7 1 3 4 1 6 7 7 ...
-##   ..$ educ     : num [1:1200] 1 1 1 2 1 2 2 2 1 2 ...
-##   ..$ county   : num [1:1200] 22 35 18 27 14 3 8 40 6 9 ...
+##   ..$ sage_pref: num [1:1200] 0 0 0 1 1 1 0 0 1 1 ...
+##   ..$ male     : num [1:1200] 0 0 0 0 0 0 0 0 0 0 ...
+##   ..$ env_att  : num [1:1200] 2 1 1 1 1 1 1 1 3 3 ...
+##   ..$ income   : num [1:1200] 1 3 5 6 4 7 6 1 7 2 ...
+##   ..$ educ     : num [1:1200] 2 2 1 1 2 2 3 1 1 1 ...
+##   ..$ county   : num [1:1200] 37 16 27 29 16 12 34 28 44 12 ...
 ##   ..$ id       : num [1:1200] 1 2 3 4 5 6 7 8 9 10 ...
 ##  $ poststrat:&#39;data.frame&#39;:   5544 obs. of  6 variables:
 ##   ..$ male   : num [1:5544] 0 0 0 0 0 0 0 0 0 0 ...
@@ -730,30 +755,32 @@ str(mrp_sim)</code></pre>
 ##   ..$ income : num [1:5544] 1 1 1 1 1 1 1 1 1 1 ...
 ##   ..$ educ   : num [1:5544] 1 1 1 1 1 1 1 1 1 1 ...
 ##   ..$ county : num [1:5544] 1 2 3 4 5 6 7 8 9 10 ...
-##   ..$ N      : num [1:5544] 141612 144951 160734 163713 154087 ...
+##   ..$ N      : num [1:5544] 94627 149464 92021 156523 120746 ...
 ##  $ true_popn:&#39;data.frame&#39;:   5544 obs. of  6 variables:
 ##   ..$ male     : num [1:5544] 0 0 0 0 0 0 0 0 0 0 ...
 ##   ..$ env_att  : num [1:5544] 1 1 1 1 1 1 1 1 1 1 ...
 ##   ..$ income   : num [1:5544] 1 1 1 1 1 1 1 1 1 1 ...
 ##   ..$ educ     : num [1:5544] 1 1 1 1 1 1 1 1 1 1 ...
 ##   ..$ county   : num [1:5544] 1 2 3 4 5 6 7 8 9 10 ...
-##   ..$ sage_pref: num [1:5544] 0.5 0.574 0.332 0.378 0.13 ...</code></pre>
+##   ..$ sage_pref: num [1:5544] 0.5 0.622 0.168 0.154 0.401 ...</code></pre>
 <pre class="r"><code>#creating table for sample and viewing head and tail of dataset
 sample &lt;- mrp_sim[[&quot;sample&quot;]]
 rbind(head(sample), tail(sample))</code></pre>
 <pre><code>##      sage_pref male env_att income educ county   id
-## 1            1    0       3      7    1     22    1
-## 2            1    0       2      3    1     35    2
-## 3            1    0       3      7    1     18    3
-## 4            0    1       1      1    2     27    4
-## 5            0    0       1      3    1     14    5
-## 6            1    0       2      4    2      3    6
-## 1195         0    0       3      6    2     41 1195
-## 1196         1    0       1      7    2     18 1196
-## 1197         0    0       1      6    1      7 1197
-## 1198         1    1       3      5    2      6 1198
-## 1199         1    0       3      7    1     20 1199
-## 1200         1    0       3      7    3     24 1200</code></pre>
+## 1            0    0       2      1    2     37    1
+## 2            0    0       1      3    2     16    2
+## 3            0    0       1      5    1     27    3
+## 4            1    0       1      6    1     29    4
+## 5            1    0       1      4    2     16    5
+## 6            1    0       1      7    2     12    6
+## 1195         0    0       3      7    2      4 1195
+## 1196         1    1       3      4    1      6 1196
+## 1197         0    0       3      4    2     23 1197
+## 1198         1    0       3      5    1      1 1198
+## 1199         1    0       2      7    2     12 1199
+## 1200         1    0       3      6    1     32 1200</code></pre>
+<pre class="r"><code>#creating object being called in plots (Final Product code chunk)
+poststrat &lt;- mrp_sim[[&quot;poststrat&quot;]]</code></pre>
 </div>
 <div id="package-introduction" class="section level1">
 <h1>Package Introduction</h1>
@@ -773,20 +800,123 @@ postStratify.time &lt;- system.time(postStratify(
 
 rake.time</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.012   0.000   0.012</code></pre>
+##   0.013   0.000   0.014</code></pre>
 <pre class="r"><code>postStratify.time</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.005   0.000   0.005</code></pre>
+##   0.004   0.000   0.004</code></pre>
 <p>Using rake{survey} and postStratify{survey} returned the same weighted means for the three variables. However, I found rake{survey} to be a lot clunkier and ran into a higher number of errors while I was using it. The postStratify{survey} function was easier to understand and required fewer lines of code. It therefore took less time for me to weigh the data by respondent sex.</p>
 <p>I had first attempted to use a different tutorial for MRP, which did not go well. I still had some trouble with the ‘rstanarm’ package and complexities of the code here. The for loops ended up sending my computer into a tailspin after awhile, leading to a C stack usage error (due to having to run the function several times due to code breaks). It would be interesting to explore other MRP code in the future to evaluate differences in speed, as this one required some overhaul to get R processing at its usual speed again. However, the documentation in the vignette and on Github were relatively useful in troubleshooting some of the issues I was having.</p>
 </div>
 <div id="final-product" class="section level1">
 <h1>Final Product</h1>
-<p>I attempted to create plots to compare sample to population and the effects of post-stratification on preference for sagebrush, but kept reaching an error in gzfile(file,wb).</p>
+<p>Originally, I attempted to create plots to compare sample to population and the effects of post-stratification on preference for sagebrush, but kept reaching an error in gzfile(file,wb). When I later attempted this after fixing some issues with package dependencies and object calls, I was able to produce the plots I was hoping to produce.</p>
+<p>Conclusions from Plots: - Using the sample I created to estimate sagebrush preference may not give accurate estimates of sagebrush preference in the population. - There are different levels of preference for the different levels of post-stratification variables.</p>
+<pre class="r"><code>##Analysis/processing step 2 - Producing plots to compare sample to population and the effects of post-stratification on preference for sagebrush
+
+#First, sample and population comparisons
+income_popn &lt;- poststrat %&gt;%
+  group_by(income) %&gt;%
+  summarize(Num=sum(N)) %&gt;%
+  mutate(PROP=Num/sum(Num),TYPE=&#39;Popn&#39;,VAR=&#39;Income&#39;,CAT=income) %&gt;%
+  ungroup()
+income_data &lt;- sample %&gt;%
+  group_by(income) %&gt;%
+  summarise(Num=n()) %&gt;%
+  mutate(PROP=Num/sum(Num),TYPE=&#39;Sample&#39;,VAR=&#39;Income&#39;,CAT=income) %&gt;%
+  ungroup()
+income&lt;-rbind(income_data[,2:6],income_popn[,2:6])
+educ_popn &lt;- poststrat%&gt;%
+  group_by(educ)%&gt;%
+  summarize(Num=sum(N))%&gt;%
+  mutate(PROP=Num/sum(Num),TYPE=&#39;Popn&#39;,VAR=&#39;Education&#39;,CAT=educ)%&gt;%
+  ungroup()
+educ_data &lt;- sample%&gt;%
+  group_by(educ)%&gt;%
+  summarise(Num=n())%&gt;%
+  mutate(PROP=Num/sum(Num),TYPE=&#39;Sample&#39;,VAR=&#39;Education&#39;,CAT=educ)%&gt;%
+  ungroup()
+educ &lt;- rbind(educ_data[,2:6],educ_popn[,2:6] )
+env_att_popn &lt;- poststrat%&gt;%
+  group_by(env_att)%&gt;%
+  summarize(Num=sum(N))%&gt;%
+  mutate(PROP=Num/sum(Num),TYPE=&#39;Popn&#39;,VAR=&#39;Environmental Attitude&#39;,CAT=env_att)%&gt;%
+  ungroup()
+env_att_data &lt;- sample%&gt;%
+  group_by(env_att)%&gt;%
+  summarise(Num=n())%&gt;%
+  mutate(PROP=Num/sum(Num),TYPE=&#39;Sample&#39;,VAR=&#39;Environmental Attitude&#39;,CAT=env_att)%&gt;%
+  ungroup()
+env_att&lt;-rbind(env_att_data[,2:6],env_att_popn[,2:6])
+male_popn &lt;- poststrat%&gt;%
+  group_by(male)%&gt;%
+  summarize(Num=sum(N))%&gt;%
+  mutate(PROP=Num/sum(Num),TYPE=&#39;Popn&#39;,VAR=&#39;Male&#39;,CAT=male)%&gt;%
+  ungroup()
+male_data &lt;- sample%&gt;%
+  group_by(male)%&gt;%
+  summarise(Num=n())%&gt;%
+  mutate(PROP=Num/sum(Num),TYPE=&#39;Sample&#39;,VAR=&#39;Male&#39;,CAT=male)%&gt;%
+  ungroup()
+male &lt;- rbind(male_data[,2:6],male_popn[,2:6])
+plot_data &lt;- rbind(male,env_att,educ,income)
+plot_data$TYPE &lt;- factor(plot_data$TYPE, levels = c(&quot;Sample&quot;,&quot;Popn&quot;))
+
+ggplot(data=plot_data, aes(x=as.factor(CAT), y=PROP, group=as.factor(TYPE), linetype=as.factor(TYPE))) +
+  geom_point(stat=&quot;identity&quot;,colour=&#39;black&#39;)+
+  geom_line()+
+  facet_wrap( ~ VAR, scales = &quot;free&quot;,nrow=1,ncol=5)+
+  theme_bw()+
+  scale_fill_manual(values=c(&#39;#1f78b4&#39;,&#39;#33a02c&#39;,
+                             &#39;#e31a1c&#39;,&#39;#ff7f00&#39;,&#39;#8856a7&#39;),guide=FALSE)+
+  scale_y_continuous(breaks=c(0,.25,.5,.75,1), labels=c(&#39;0%&#39;,&#39;25%&#39;,&quot;50%&quot;,&quot;75%&quot;,&quot;100%&quot;))+
+  scale_alpha_manual(values=c(1, .3))+
+  ylab(&#39;Proportion&#39;)+
+  labs(alpha=&#39;&#39;)+
+  theme(legend.position=&quot;bottom&quot;,
+        axis.title.y=element_blank(),
+        axis.title.x=element_blank(),
+        legend.title=element_blank(),
+        legend.text=element_text(size=10),
+        axis.text=element_text(size=10),
+        strip.text=element_text(size=10),
+        strip.background = element_rect(fill=&#39;grey92&#39;))</code></pre>
+<p><img src="AdvancedTopicAssign_HN_files/figure-html/Final%20Product%20for%20MRP-1.png" width="672" /></p>
+<pre class="r"><code>#Second, effect of post-stratification
+#Summarise
+summary_by_poststrat_var &lt;- sample %&gt;%
+  gather(variable,category,c(&quot;income&quot;,&quot;env_att&quot;,&quot;educ&quot;,&quot;male&quot;)) %&gt;%
+  group_by(variable,category) %&gt;%
+  #Wald confidence interval
+  summarise(y_mean=mean(sage_pref),y_sd=sqrt(mean(sage_pref)*(1-mean(sage_pref))/n())) %&gt;%
+  ungroup()
+summary_by_poststrat_var$variable &lt;- as.factor(summary_by_poststrat_var$variable)
+levels(summary_by_poststrat_var$variable) &lt;- list(&#39;Education&#39;=&#39;educ&#39;,&#39;Environmental Attitude&#39;=&#39;env_att&#39;,&#39;Income&#39;=&#39;income&#39;,&#39;Male&#39;=&#39;male&#39;)
+
+ggplot(data=summary_by_poststrat_var, aes(x=as.factor(category), y=y_mean,group=1)) +
+  geom_errorbar(aes(ymin=y_mean-y_sd, ymax=y_mean+y_sd), width=0)+
+  geom_line()+
+  geom_point()+
+  scale_colour_manual(values=c(&#39;#1f78b4&#39;,&#39;#33a02c&#39;,&#39;#e31a1c&#39;,&#39;#ff7f00&#39;,
+                               &#39;#8856a7&#39;))+theme_bw()+
+  facet_wrap(~variable,scales = &quot;free_x&quot;,nrow=1,ncol=5)+
+  scale_y_continuous(breaks=c(.5,.75,1), labels=c(&quot;50%&quot;,&quot;75%&quot;,
+                                                  &quot;100%&quot;), limits=c(0.4-.4*.05,.9),expand = c(0,0))+
+  labs(x=&quot;&quot;,y=&quot;Sagebrush preference&quot;)+
+  theme(legend.position=&quot;none&quot;,
+        axis.title.y=element_text(size=10),
+        axis.title.x=element_blank(),
+        axis.text=element_text(size=10),
+        strip.text=element_text(size=10),
+        strip.background = element_rect(fill=&#39;grey92&#39;))</code></pre>
+<p><img src="AdvancedTopicAssign_HN_files/figure-html/Final%20Product%20for%20MRP-2.png" width="672" /></p>
 </div>
-<div id="reflection" class="section level1">
-<h1>Reflection</h1>
+<div id="original-reflection-march-10" class="section level1">
+<h1>Original Reflection (March 10)</h1>
 <p>This exercise has helped me work through some of the basics of post-stratification and MRP. It has also helped me realize some additional functionality for these methods that I hope to explore further to better inform my survey sampling strategy. I need to explore the interaction effects in the MRP code more in the future, as this was a line of code that kept leading to errors (“subscript out of bounds”) when I changed the variables that were interacting. This would allow me to better explore interactions between variables, such as income, education, and environmental attitude, which will help determine thresholds needed to detect the effects of some variables that may have complex interactions with others. I am looking forward to figuring out what is going wrong in that code so that I can investigate interaction effects further.</p>
+</div>
+<div id="updates-to-reflection-april-14" class="section level1">
+<h1>Updates to Reflection (April 14)</h1>
+<p>After additional trial-and-error, in addition to running into issues from a software update breaking my RStudio and Github connection a few times, I was able to develop the plots to examine the relationship between the post-stratified sample and the population, indicating that the sample may not accurately estimate preference in the population. I plan to continue to work on exploring interactions between these variables in the future.</p>
 </div>
 <div id="additional-resources-on-this-topic" class="section level1">
 <h1>Additional Resources on This Topic</h1>
