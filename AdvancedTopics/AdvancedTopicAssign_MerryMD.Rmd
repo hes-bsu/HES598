@@ -1,5 +1,5 @@
 ---
-title: "Advanced Topic Instructions"
+title: "Advanced Topic: Landscape Metrics and Raster Data"
 author: "Merry Davidson"
 date: "3/5/2020"
 output: html_document
@@ -24,20 +24,19 @@ Give a brief introduction to your research and identify how your "Advanced Topic
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
 #load the libraries - tell us which packages you're using and why
-## SDMToolsl()#limited FRAGSTATS package
 
+## landscapemetrics() FRAGSTATS package in R
 
-## landscapemetrics() More recent FRAGSTATS package
 
 #load your data - which datasets do you need?
 ##Dadanawa raster file. will use the planetLabs file OR the SUA classification of year 2015
 
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
-##might not be necessary
+##NA OR the raster has to be transformed
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
-
+#Quantify the metrics by landcover type: water, forest, bareground and quantify the amount of patches per class
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
 
