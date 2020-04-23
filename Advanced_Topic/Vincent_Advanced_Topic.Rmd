@@ -45,13 +45,237 @@ In addition to the calculation of the F-score for the model output, it is also i
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
 #load the libraries - tell us which packages you're using and why
+
+library(raster)
+library(rgdal)
+library(zoo)
+library(ggplot2)
+library(fields)
+
+
 #load your data - which datasets do you need?
+
+modis<-brick()
+landsat<-brick()
+
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
-#Analysis/processing step 1 - what are you hoping to do here, why? 
-#Analysis/processing step 2 - what are you hoping to do here, why? 
-#Check the outcomes? How will you know if your steps worked?
-# 
+
+
 ```
+#Analysis/processing step 1 - Run the STARFM model and save model results 
+
+The code for this section is based on a script originally written by Faye Peters, modified by Megan Gallagher and Jake Graham for use in Megan's M.S. thesis, and then finally further modified by myself for my own research purposes.
+
+#Analysis/processing step 2 - Perform pixel-by-pixel comparison of the raster of the model results vs the raster of the Landsat data. 
+
+Classify anything as 0.4 NDSI or greater as snow, and everything else as no-snow, for both rasters.
+Compare the two rasters and create a confusion matrix to quantify how well the model did at correctly classifying pixels.
+Calculate accuracy, precision, recall, f-score of the model.
+
+#Analysis/processing step 3  - Produce randomized rasters to evaluate model behavior against.
+
+Create a new raster with the same fraction of pixels classified as snow as the model output, but with those pixels randomly placed throughout the raster. Repeat this 100(?) times with a Monte Carlo simulation. Evaluate accuracy, precision, recall, and f-score metrics for each randomized raster.
+
+#Analysis/processing step 4 - Create a figure that will display the variance of the above metrics from the actual metrics of the model results. 
+
+If the model is indeed correctly predicting the location of snow-cover, then the model results should have better accuracy, precision, recall, and f-score than the random matrices. 
+
+
+#Check the outcomes? How will you know if your steps worked?
+
+
+
+
+Processing Step 1:
+```{r}
+
+# Prior to runing this section, the following needs to be setup separately on a non-Windows machine:
+# 1. Install STARFM, software and download instructions can be found here:                  https://www.ars.usda.gov/research/software/download/?softwareid=432&amp;modecode=80-42-05-10
+# 2. Set up a folder that contains the Landsat and MODIS files, as well as the starfm.exe and starfmconfig.txt 
+    # a. starfmconfig.txt is where model parameters are set
+# 3. Create a separate folder called "Output" in that folder
+
+setwd('/home/ALLISONVINCENT/Documents/Research/STARFM/StarFM/STARFMtest/STARFM_NDSI_test')
+
+perc<- 99
+# percentage of cover that is used to find "good" landsat scenes for interpolation 
+# is the inverse of the actual cloud cover, 99 percent means 1 percent of the pixels is an actual value
+
+
+# STARFM Function
+ #  INPUTS:
+ #     modis = raster brick with MODIS data for all dates
+ #     landsat = raster brick with all Landsat data for time period, also nodata fill layers for dates w/out Landsat
+ #     perc = percentage of cover used to find "good" landsat scenes for interpolation
+ #     handleNA = logical variable indicating if the zeros in the data have been replaced with NA yet, default to TRUE for the first run
+
+ #  OUTPUTS:
+ #     "./modis_t1.envi" data for modis dates with corresponding "before" landsat dates
+ #     "./modis_t2.envi" data for all modis dates in between
+ #     "./modis_t3.envi" data for modis dates with corresponding "after" landsat dates
+ #     "./landsat_t1.envi" data for landsat dates before corresponding modis dates
+ #     "./landsat_t3.envi" data for landsat dates after corresponding modis dates
+ #     "./landsat_t2_sim.envi" simulated data for non-landsat dates
+ #     "./landsat_sim.tif" fused dataset with landsat and simulated data
+
+
+starfm<-function(modis,landsat,perc, handleNA = TRUE){
+  # read the rows and columns in the input vectors and update the config file with this information
+  config <- readLines("./StarFM_config.txt")
+  config <- gsub("(.*NROWS = ).*$", paste0("\\1", nrow(landsat)),config )
+  config <- gsub("(.*NCOLS = ).*$", paste0("\\1", ncol(landsat)),config )
+  cat(config, file="./StarFM_config.txt", sep="\n")
+  
+  
+
+  if(handleNA){
+     # Fix any missing data that enters as zeroes to our NA value. We have to do this by layer as operating on the entire stack may run          into memory issues on larger subsets:
+     for (i in 1:nlayers(modis)) {
+       # Use the raster Which() function for speed:
+       masked <- Which(modis[[i]] == 0, cells=TRUE)
+       modis[[ i ]][ masked ] <- -32768
+       masked <- Which(landsat[[i]] == 0, cells=TRUE)
+       landsat[[ i ]][ masked ] <- -32768
+     }
+    writeRaster(modis, "./2016_mod_NA_Handled.tif")
+    writeRaster(landsat,"./2016_landsat_NA_Handled.tif")
+  } else {
+    masked <- brick("./2016_mod_NA_Handled.tif")
+    landsat <- brick("./2016_landsat_NA_Handled.tif")
+  }
+  print("Here")
+  flush.console()
+  
+  # Automatically choose "good" landsat layers, at the moment this includes all actual landsat images
+  # To create a threshhold for masking, change the percentage. 
+  # i.e. if percent = 30, more than 70 percent of the image must be actual pixel values (non-cloud masked)
+  
+  
+  area<-landsat@nrows*landsat@ncols  # find total area of landsat grid
+  perc_Area<-(perc/100)*area  # find the value of (example 99%) total grid area with data
+  
+  # Preallocating variables
+  test2<-rep(NA,nlayers(modis)) # create a new logical vector with number of NA values as raster brick layers
+  filternew<-rep(NA,nlayers(modis))  # rename the variable
+  
+  
+  # Go through landsat layers (starting at the 2nd layer)    
+  for (i in 2:nlayers(modis)){  
+    test2[i] <-sum(landsat[[i]][])  # sum the value of the data found in each layer 
+    filternew[i] <-(test2[i]>{-32768*perc_Area}) == 1  # if the sum from above is greater than -32768*perc_Area, then set the value of        that layer equal to TRUE (meaning the data is valid)
+  }
+  
+  
+  filt3 = which(filternew==1) # find which layers from above equal TRUE
+  filt3 <-append(filt3,1,0) # add a 1 to the beginning of the filt3 vector
+  # end up with the filt3 variable being the layer id numbers of all legitimate landsat data (every Landsat date included here, the layers    in between each 16 days removed)
+  
+  ## Test a single landsat image from list
+  
+  good_layer <-filt3[1] # select the 1st landsat image (could be any image)
+  plot(landsat[[good_layer]]) # plot it to look at it
+  
+  ## If the above all works, then we run the following to loop over the
+  ## MODIS time steps, filling in Landsat output as we go:
+  
+  landsat_sim <- stack(modis) # duplicate the modis stack as a new variable
+  landsat_sim[] <- NA # convert all values in the stack to NA
+  
+  ## Iterate and run StarFM for each MODIS date, choosing the
+  ## nearest pair of good MODIS/Landsat dates, one before and
+  ## one after the date being simulated where possible: 
+  print("HERE 2!")
+  flush.console()
+  
+  good_landsat <- c(filt3) # create a new vector with the valid landsat layers from above
+  if(!length(good_landsat)){
+    print("WARNING!!!! No good landsat dates... exiting program...")
+    flush.console()
+    return(-1)
+  } else {
+    pb <- pbCreate((nlayers(landsat_sim)), "window", style=3,label='Time Step Progress') # create a progress bar
+    for (i in 1:nlayers(landsat_sim)) { # advance progress bar by 1 for each layer the following code loops over
+      
+      ## jakes/megan's work
+      if (i %in% c(filt3)){  # detemines if the layer in the landsat sim rasterbrick is also in the vector filt3.. i.e., you have a 'good'       landsat image on this day
+        ls_t1<- i # set variable equal to layer id.. there is a "good" landsat image on the first day, so no need to pull prev images
+        ls_t3 <- i # set variable equal to layer id.. there is a "good" landsat image on the last day, so no need to pull post images
+      }
+      else {  # if the layer (i.e., day) does not have a "good" landsat image then do...
+        foo <- good_landsat - i # subtract i (~DOY) from the "good" landsat dates. This produces a measure of time differences
+        if(!length(which(foo==0))){ # safeguard in case there are NO "good" landsat images
+          ls_t1 <- good_landsat[which(foo==max(foo[foo < 0]))] # select the closest date with a "good" image BEFORE this date
+          ls_t3  <- good_landsat[which(foo==min(foo[foo > 0]))] # select the closest date with a "good" image AFTER this date
+        }
+      }
+      
+      
+      ##end
+      
+      m_t1 <- ls_t1  # set "good" landsat date to a variable that can be used for modis dataset
+      m_t3 <- ls_t3  # set "good" landsat date to a variable that can be used for modis dataset
+
+      modis_t1 <- modis[[m_t1]]  # modis dates with corresponding "start" landsat dates
+      modis_t2 <- modis[[i]]  # all other modis dates, no landsat  
+      modis_t3 <- modis[[m_t3]] # modis dates with corresponding "end" landsat dates
+      landsat_t1 <- landsat[[ls_t1]]  # all "good" landsat start dates
+      landsat_t3 <- landsat[[ls_t3]]  # all "good" landsat end dates
+      
+      ## write rasters for StarFM to work on... can be seen in config file... "StarFM_config.txt"
+      writeRaster(modis_t1, filename="./modis_t1.envi", bandorder='BSQ', datatype='INT2S', format="ENVI", overwrite=TRUE)
+      writeRaster(modis_t2, filename="./modis_t2.envi",bandorder='BSQ', datatype='INT2S', format="ENVI", overwrite=TRUE)
+      writeRaster(modis_t3, filename="./modis_t3.envi", bandorder='BSQ', datatype='INT2S', format="ENVI", overwrite=TRUE)
+      writeRaster(landsat_t1, filename="./landsat_t1.envi", bandorder='BSQ', datatype='INT2S', format="ENVI", overwrite=TRUE)
+      writeRaster(landsat_t3, filename="./landsat_t3.envi", bandorder='BSQ', datatype='INT2S', format="ENVI", overwrite=TRUE)
+      
+      # run the actual STARFM model
+      system2(command="./StarFM.exe",args="StarFM_config.txt", wait=TRUE) # Calls the StarFM.exe file and produces "/landsat_t2_sim.envi" 
+      
+      landsat_t2_sim <- raster("./landsat_t2_sim.envi")
+      
+      ## Set any -32768 to NA values before writing:
+      landsat_t2_sim[ landsat_t2_sim == -32768 ] <- NA
+      
+      ## In our filled data set, set any missing Landsat dates to those simulated via StarFM:
+      landsat_sim[[i]] <- landsat_t2_sim[]
+      
+    pbStep(pb, step=NULL, label='Processed Layer') } # display when a layer is finished processing
+    pbClose(pb, timer=T) # close the progress bar once all layers are processed
+    return(landsat_sim)
+  }
+}
+
+#### here we actually run the function
+
+# if first time running
+landsat_sim<-starfm(modis,landsat,perc)
+
+# if re-running and NAs are already converted (mosty for debugging), uncomment line below
+#landsat_sim<-starfm(modis,landsat,perc, handleNA = F)
+
+
+#### Raster output for saving
+
+writeRaster(landsat_sim, filename="./output/2016_East_fusion.tif", bandorder='BSQ', 
+            datatype='INT2S',format='GTiff', overwrite=TRUE)
+
+```
+Processing Step 2
+
+```{r}
+
+## Starting with this section, this code should be able to be run on any machine using the links to the data provided in the shared Google drive folder
+
+## Because the output files produced by STARFM are extremely large (~60 MB), I have taken a single layer from the output raster brick, and a single layer from the Lansat raster brick input file, for analysis.
+
+
+
+
+
+
+```
+
+
 
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
