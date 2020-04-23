@@ -28,7 +28,7 @@ Before you get started programming all of the potential things you could do duri
 
 #load your data - which datasets do you need?
 #I'll be working with simulated point data to demonstrate some point pattern analyses. In order
-#to do this, I'll create a plot with points within it using rnorm. 
+#to do this, I'll create a plot with points within it, and then use spatial tests to investigate point patterns. Finally, I'll bring in real data and use the tests on the real data as well. 
 
 #Making uniform density patterns:
 
@@ -83,11 +83,10 @@ plot(disc(radius)); points(xx, yy)
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
 
-#I'll list simulated data in different forms here:
-#uniform in a circle
-#uniform in a rectangle
-#clustered in a circle
-#clustered in a rectangle
+####I'll list simulated data in different forms here, and then demonstrate a test :
+#random 
+#clustered 
+#inhibitory/regular
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
 
@@ -106,9 +105,34 @@ ppxy <- ppp(x = xx, y = yy, window = disc(radius))
 # Test the point pattern
 qt <- quadrat.test(ppxy)
 
-# Inspect the results
+# View the results
 plot(qt)
 print(qt)
+
+### Simulating clustered and regular point distributions
+### Will use a function for a Thomas process for the clustered points, and a function for a 
+### Straus process for the regular distribution
+
+# Create a disc of radius 10, for the window space
+disc10 <- disc(10)
+
+# Generate clustered points from a Thomas process
+set.seed(123)
+p_cluster <- rThomas(kappa = 0.35, scale = 1, mu = 3, win = disc10)
+plot(p_cluster)
+
+# Run a quadrat test -- and this time test against an alt. hypothesis that the points are
+#clustered
+quadrat.test(p_cluster, alternative = "clustered")
+
+# Regular points from a Strauss process
+set.seed(123)
+p_regular <- rStrauss(beta = 2.9, gamma = 0.025, R = .5, W = disc10)
+plot(p_regular)
+
+# Run a quadrat test, and in this case set the alternative hypothesis to specifically be 
+#that the points are regularly distributed
+quadrat.test(p_regular, alternative = "regular")
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
 
