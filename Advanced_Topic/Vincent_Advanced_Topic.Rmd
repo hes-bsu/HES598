@@ -55,6 +55,7 @@ library(sp)
 library(spam)
 library(maps)
 library(sf)
+library(caret)
 
 #load your data - which datasets do you need?
 
@@ -273,12 +274,33 @@ Processing Step 2
 
 setwd('C:/Users/Allison and Brian/Documents/HES598/Advanced_Topic')
 
-landsat_jan29<- raster("./Landsat_testday_012916.tif")
-starfm_jan29<- raster("./STARFM_testday_012916.tif")
-ER <- shapefile('EastRiver_Project.shp')
+
+landsat_jan29<- raster("./Data/Landsat_testday_012916.tif")
+starfm_jan29<- raster("./Data/STARFM_testday_012916.tif")
+ER <-readOGR("./Data/EastRiver_Project.shp")
+
+# Check the projections of our inputs
+proj4string(ER)
+proj4string(landsat_jan29)
+proj4string(starfm_jan29)
+
+data_proj = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#co_utm ="+proj=utm +zone=13 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+#landsat_jan29 <- projectRaster(landsat_jan29, crs = co_utm)
+#proj4string(landsat_jan29)
+
+#starfm_jan29 <- projectRaster(starfm_jan29, crs = co_utm)
+#proj4string(starfm_jan29)
+
+ER_proj<-spTransform(ER, CRS(data_proj))
+proj4string(ER_proj)
+
+```
+
+```{r}
 
 # Make quick plots of the raster inputs to get an idea of the data we're working with
-
 ## Landsat 'no data' values are currently set to 0. Creating a mask to change them to -11111, which is the 'no data' value in the model output
 
 
@@ -292,16 +314,63 @@ starfm_jan29 <- reclassify(starfm_jan29,cbind(-Inf, -11111, NA))
 
 par(mfrow=c(1,2)) 
 plot(landsat_jan29,  col = rev(cm.colors(40)), main = "NDSI from Landsat")
-plot(ER, border = "black", add = TRUE)
+plot(ER_proj, border = "black", add = TRUE)
 plot(starfm_jan29, col = rev(cm.colors(40)), main = "NDSI from Model")
-plot(ER, border = "black", add = TRUE)
-
+plot(ER_proj, border = "black", add = TRUE)
 
 
 ```
 
+```{r}
+## Once we know our data is displaying correctly, classify each pixel as "snow" or "no-snow" using a threshold of 0.4 NDSI
+
+landsat_binary <- reclassify(landsat_jan29,cbind(-Inf, 4000, 0))
+starfm_binary <- reclassify(starfm_jan29,cbind(-Inf, 4000, 0))
+
+landsat_binary <- reclassify(landsat_binary,cbind(4000, Inf, 1))
+starfm_binary <- reclassify(starfm_binary,cbind(4000, Inf, 1))
+
+par(mfrow=c(1,2)) 
+plot(landsat_binary,  col = rev(cm.colors(40)), main = "Snow/No-Snow from Landsat")
+plot(ER_proj, border = "black", add = TRUE)
+plot(starfm_binary, col = rev(cm.colors(40)), main = "Snow/No-Snow from Model")
+plot(ER_proj, border = "black", add = TRUE)
+
+```
+
+```{r}
+
+## Find the fSCA for each raster
 
 
+area_L8 = landsat_jan29@nrows*landsat_jan29@ncols
+
+L8_snow<-as.vector(landsat_binary, mode = 'numeric')
+L8_snow<-sum(L8_snow, na.rm = TRUE)
+
+L8_fsca<-L8_snow/area_L8
+
+
+area_starfm = starfm_jan29@nrows*starfm_jan29@ncols
+
+starfm_snow<-as.vector(starfm_binary, mode = 'numeric')
+starfm_snow<-sum(starfm_snow, na.rm = TRUE)
+
+starfm_fsca<-starfm_snow/area_starfm
+
+
+## Create a confusion matrix to evaluate the performance of the model against the Landsat data
+
+landsat_factor<-as.factor(landsat_binary)
+starfm_factor<-as.factor(starfm_binary)
+
+confusionMatrix(starfm_binary,landsat_binary, positive = 1)
+
+
+
+
+
+```
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
 
