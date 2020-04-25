@@ -53,8 +53,6 @@ library(RColorBrewer)
 library(ggplot2)
 
 
-
-
 #vignette(package="spdep")
 #vignette(package="here")
 
@@ -69,54 +67,38 @@ gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("datatemp/original/"), "/",gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
-#getwd()
-#paste0(here::here("datatemp/original/"),words)
-
-#getwd()
-#wd<-"C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/"
-
-## I don't think this helps you and definitelty doesn't work if I try to runit here. Suggest deleting
-#path="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/"
-#list.files(path)
-
-#originaldata_sample
-
-### After donwloaded the raster image from Google drive, I renamed the originalS06W080.hgt to S06W080.hgt.
-
-##This shouldn't be necessary
-#getwd()
-#wd<-"C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/"
-
 
 #options(stringsAsFactors=FALSE)
-#pixels <- read.csv(paste0(wd,"originaldata_sample.csv"))
+
 pixels <- read.csv(here::here("datatemp/original/data_sample.csv"), stringsAsFactors = FALSE)
 str(pixels)
 
-elev=raster::raster(here::here("datatemp/original/S06W080.hgt"))
+elev=raster::raster(here::here("datatemp/original/raster.tif"))
 elev
+
 
 ####This is where I stopped
 
-
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
 
-originaldata_sample
+pixels
 
-class(originaldata_sample)
-head(originaldata_sample)
-names(originaldata_sample)
-colnames(originaldata_sample)
-dim(originaldata_sample)
+class(pixels)
+head(pixels)
+names(pixels)
+colnames(pixels)
+rownames(pixels)
+dim(pixels)
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
 
-###Step1: I use crs function from sp package to project the originaldata_sample.
+###Step1: I used crs function from sp package to project the pixels dataframe.
 
 crs
 elev@crs
 pixels_spdf <- SpatialPointsDataFrame(
   pixels[,1:2],proj4string=elev@crs, pixels)
+
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
 ##Step2: I use extract funtion to get elevation data from the raster image.
@@ -127,10 +109,13 @@ pixel_elev <- raster::extract(elev, # raster layer
 pixel_elev
 str(pixel_elev)
 
+plot(elev)
+
 ### grab the name of the ID_pixel from the pixels_spdf
 
 pixel_elev$pix_id<- pixels_spdf$ID_pixel
 pixel_elev$pix_id
+
 
 #fix the column names
 names(pixel_elev) <- c('ID','elev','pix_id')
@@ -140,16 +125,88 @@ pixel_elev
 # The pixels and pixel_elev data were merged, using merge function from package base.
 
 pixelelev <- merge(pixels, pixel_elev, by.x = 'ID_pixel', by.y = 'pix_id')
-getAnywhere(merge)
-stats:::.makeNamesTs
-
 head(pixelelev)
+
+
+
+
+############plot pixels in raster
+
+plot(elev)
+myCol <- terrain.colors(6)
+plot(elev, col=myCol)
+points(pixels$Long, pixels$Lat, cex = 0.2)
+
 
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
 ##Step3: 
 
+library(gdistance)
+library(Matrix)
+library(igraph)
 
+
+##############################################################
+##############################################################
+##############################################################
+############    geodistance package #####$####################
+##############################################################
+##############################################################
+
+
+
+# define altitude difference function and create a transition matrix from the original
+
+###commutative distance, assymetric matrix
+
+hd1 <- transition(elev, transitionFunction=mean, directions=8)
+plot(raster(hd1), sub="non geo-corr", cex=0.8)
+text(raster(hd1),digits=3)
+
+
+altDiff <- function(x){x[2] - x[1]}
+hd <- transition(elev, altDiff, 8, symm=FALSE)
+plot(raster(hd), sub="non geo-corr", cex=0.8)
+text(raster(hd),digits=3)
+
+
+# 3) This is then geoCorrected to slope, i.e. altitude diff / distance travelled
+slope <- geoCorrection(hd,scl=FALSE)
+plot(raster(slope), sub="slope (height diff / distance))", cex.sub=0.8)
+text(raster(slope),digits=3)
+
+
+plot(raster(hd), main="raster(tr3)", xlab="Longitude (degrees)",
+ylab="Latitude (degrees)")
+
+
+
+############################################################
+############################################################
+################## EUCLIDEAN DISTANCE  #####################
+############################################################
+############################################################
+
+#####change names of variables in dataframe #######
+
+pixelelev
+names(pixelelev)
+df=pixelelev
+names(df)=c("ID_pixel","y","x","ndvi","ID","z")
+names(df)
+
+####### measure distance #####
+
+distxyz.fx=function(x1,x2,y1,y2,z1,z2){
+  sqrt((x1-x2)^2+(y1-y2)^2+(z1-z2)^2)
+}
+distmat=matrix(NA,nrow(df),nrow(df))
+for(i in 1:nrow(df)){
+  distmat[i,]=distxyz.fx(df$x[i],df$x,df$y[i],df$y,df$z[i],df$z)
+}
+
+distmat
 
 
 
@@ -161,6 +218,11 @@ head(pixelelev)
 
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
+
+
+
+
+
 
 
 
