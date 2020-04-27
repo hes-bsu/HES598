@@ -94,6 +94,8 @@ dim(pixels)
 
 ###Step1: I used crs function from sp package to project the pixels dataframe.
 
+pixels
+
 crs
 elev@crs
 pixels_spdf <- SpatialPointsDataFrame(
@@ -128,14 +130,12 @@ pixelelev <- merge(pixels, pixel_elev, by.x = 'ID_pixel', by.y = 'pix_id')
 head(pixelelev)
 
 
-
-
 ############plot pixels in raster
 
 plot(elev)
 myCol <- terrain.colors(6)
 plot(elev, col=myCol)
-points(pixels$Long, pixels$Lat, cex = 0.2)
+points(pixels$Long, pixels$Lat, cex = 0.5)
 
 
 
@@ -188,28 +188,77 @@ ylab="Latitude (degrees)")
 ############################################################
 ############################################################
 
-#####change names of variables in dataframe #######
+
+
+######### convert the lat long to UTM using this function
 
 pixelelev
+dplyr::glimpse(pixelelev)
+
+
+LongLatToUTM<-function(x,y,ID,zone){
+ xy <- data.frame(ID = ID, X = x, Y = y)
+ coordinates(xy) <- c("X", "Y")
+ proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")  ## for example
+ res <- spTransform(xy, CRS(paste("+proj=utm +south +zone=",zone," +ellps=WGS84",sep='')))
+ return(as.data.frame(res))
+}
+
+##Run the function
+x=LongLatToUTM(pixelelev$Long,pixelelev$Lat,ID=pixelelev$ID_pixel,17)
+
+x$ID_pixel=x$ID
+
+### Merge the new UTM coordinates to the locations dataframe.
+
+pixelelev= merge(pixelelev,x,by="ID_pixel")
+head(pixelelev)
+
+
+#####change names of variables in dataframe #######
+
 names(pixelelev)
 df=pixelelev
-names(df)=c("ID_pixel","y","x","ndvi","ID","z")
+names(df)=c("ID_pixel","Long","Lat","ID_veg","loc","ndvi","ID.x","z","ID.y","x","y")
 names(df)
 
-####### measure distance #####
+
+
+###################### measure distance #######################
 
 distxyz.fx=function(x1,x2,y1,y2,z1,z2){
   sqrt((x1-x2)^2+(y1-y2)^2+(z1-z2)^2)
 }
-distmat=matrix(NA,nrow(df),nrow(df))
-for(i in 1:nrow(df)){
-  distmat[i,]=distxyz.fx(df$x[i],df$x,df$y[i],df$y,df$z[i],df$z)
+dist.fx=function(x1,x2,y1,y2){
+  sqrt((x1-x2)^2+(y1-y2)^2)
 }
-
-distmat
-
-
-
+#pix=read.csv("pixelelev.csv")
+#df=read.csv("df.csv")
+df_forest=df[df$ID_veg=="forest",]
+df_fern=df[df$ID_veg=="fern",]
+distmat=matrix(NA,nrow=nrow(df_fern),ncol=nrow(df_forest))
+for(i in 1:nrow(df_fern)){
+  distmat[i,]=distxyz.fx(df_fern$x[i],df_forest$x,
+                         df_fern$y[i],df_forest$y,
+                         df_fern$z[i],df_forest$z)
+  # distmat[i,]=dist.fx(df_fern$x[i],df_forest$x,
+  #                     df_fern$y[i],df_forest$y)
+}
+# distmat is now a distnace matrix containing pairwise distances between fern patches and forest patches
+# now we need to select the nearest forest patch for each fern patch
+nearest_forest_id=rep(NA, nrow(df_fern))
+nearest_forest_dist=rep(NA, nrow(df_fern))
+for(i in 1:length(nearest_forest_id)){
+  nearest_forest_id[i] = which(distmat[i,] == range(distmat[i,])[1])
+  nearest_forest_dist[i] = distmat[i, which(distmat[i,] == range(distmat[i,])[1])]
+}
+df_fern$nearForestID=nearest_forest_id
+df_fern$nearForestDist=nearest_forest_dist
+plot(df$x,df$y,cex=.001)
+points(df_fern$x,df_fern$y,col="black",pch=19,cex=.5)
+points(df_forest$x[df_fern$nearForestID],
+       df_forest$y[df_fern$nearForestID],col="green",pch=19,cex=1)
+points(df_forest$x,df_forest$y,col="blue",cex=.5)
 
 #Check the outcomes? How will you know if your steps worked?
 
@@ -220,7 +269,17 @@ distmat
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
 
 
-
+library(here)
+library(raster)
+library(rasterVis)
+library(rgdal)
+library(viridis)
+library(scales)
+library(maptools)
+library(rgeos)
+library(dplyr)
+library(RColorBrewer)
+library(ggplot2)
 
 
 
@@ -233,8 +292,19 @@ Use profiling and benchmarking to evaluate which of your options is likely to be
 
 
 
+
+
+
+
 ## Show us your final product
 Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
+
+
+plot(df$x,df$y,cex=.001)
+points(df_fern$x,df_fern$y,col="black",pch=19,cex=.5)
+points(df_forest$x[df_fern$nearForestID],
+       df_forest$y[df_fern$nearForestID],col="green",pch=19,cex=1)
+points(df_forest$x,df_forest$y,col="blue",cex=.5)
 
 
 
