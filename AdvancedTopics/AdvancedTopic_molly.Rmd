@@ -183,9 +183,9 @@ p <- simpleNetwork(connect,
         zoom = T                    
         )
 
-library(htmlwidgets)
+# library(htmlwidgets)
 # make sure to set working directory to where you want the widget to save
-saveWidget(p, file=paste0( getwd(), "/HtmlWidget/networkInteractive2.html"))
+# saveWidget(p, file=paste0( getwd(), "/HtmlWidget/networkInteractive2.html"))
 ```
 
 
