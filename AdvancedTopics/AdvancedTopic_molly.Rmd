@@ -1,5 +1,5 @@
 ---
-title: "Advanced Topics: Networks"
+title: "Advanced Topics: Network Visualization"
 author: "Molly Levy"
 date: "4/3/2020"
 output: html_document
@@ -9,199 +9,116 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
-
 ## Introduce your problem
 
 My research aims to address conflicts on multiple use landscapes. Within my study area, the Thunder Basin ecoregion (TBER), there are multiple different types of stakeholder groups and actors with a variety of vested interest in different land uses supported by TBER. Given the diversity of actors involved, conflict often arises when the goals of different groups do not align. I am interested in examining the network relationships and degrees of interconnectedness between different groups and individuals involved in the management of TBER. As such, I will be testing and evaluating different packages frequently used in the preparation of network diagrams in order to determine how to efficiently build and visualize a network diagram. 
 
-## pseudocode
-
-```{r}
-#load the libraries - tell us which packages you're using and why
-
-#load your data
-
-#Analysis/processing step 1 - what are you hoping to do here, why? 
-
-#Analysis/processing step 2 - what are you hoping to do here, why? 
-
-#Check the outcomes? How will you know if your steps worked?
-
-```
-
 ## Introduce the packages
+
 library(igraph)
 
 igraph is a library and R package for network analysis. One online resource described igraph as "the  most important R package when it comess to build network diagrams." This package will be useful for building a network diagram from adjacency matrix, edge list, literal list of connections, and more. igraph also provides three different functions for visualizations. This package emphasizes efficiency and portability, so will be able  to try different combinations of network building and visualization. 
 
-```{r}
-#step-by-step with igraph: 
-
-#Using an adjacency matrix
-
-#library
-library(igraph)
-
-# Create data
-set.seed(10)
-data <- matrix(sample(0:2, 25, replace=TRUE), nrow=5)
-colnames(data) = rownames(data) = LETTERS[1:5]
- 
-# build the graph object
-network <- graph_from_adjacency_matrix(data)
- 
-# plot it
-plot(network)
-```
-
-```{r}
-#Using an incidence matrix
-
-# data
-set.seed(1)
-data <- matrix(sample(0:2, 15, replace=TRUE), nrow=3)
-colnames(data) <- letters[1:5]
-rownames(data) <- LETTERS[1:3]
- 
-# create the network object
-network <- graph_from_incidence_matrix(data)
- 
-# plot it
-plot(network)
-```
-
-```{r}
-#Using an Edge list
-
-links <- data.frame(
-    source=c("A","A", "A", "A", "A","F", "B"),
-    target=c("B","B", "C", "D", "F","A","E")
-    )
-
-# create the network object
-network <- graph_from_data_frame(d=links, directed=F) 
-
-# plot it
-plot(network)
-```
-
-```{r}
-# using a literal list of connections
-# create data:
-network <- graph_from_literal( A-B-C-D, E-A-E-A, D-C-A, D-A-D-C )
-
-# plot it
-plot(network)
-```
-
-
-```{r}
-#exploring chart parameters in igraph
-
-#creating a default network chart
-# Library
-library(igraph)
-
-# Create data
-set.seed(1)
-data <- matrix(sample(0:1, 100, replace=TRUE, prob=c(0.8,0.2)), nc=10)
-network <- graph_from_adjacency_matrix(data , mode='undirected', diag=F )
-
-# Default network
-par(mar=c(0,0,0,0))
-plot(network)
-```
-```{r}
-# customizing node features
-plot(network,
-    vertex.color = rgb(0.8,0.2,0.2,0.9),           # Node color
-    vertex.frame.color = "Forestgreen",            # Node border color
-    vertex.shape=c("circle","square"),             # One of “none”, “circle”, “square”, “csquare”, “rectangle” “crectangle”, “vrectangle”, “pie”, “raster”, or “sphere”
-    vertex.size=c(15:24),                          # Size of the node (default is 15)
-    vertex.size2=NA,                               # The second size of the node (e.g. for a rectangle)
-    )
-```
-```{r}
-#customizing label features
-plot(network,
-    vertex.label=LETTERS[1:10],                    # Character vector used to label the nodes
-    vertex.label.color=c("red","blue"),
-    vertex.label.family="Times",                   # Font family of the label (e.g.“Times”, “Helvetica”)
-    vertex.label.font=c(1,2,3,4),                  # Font: 1 plain, 2 bold, 3, italic, 4 bold italic, 5 symbol
-    vertex.label.cex=c(0.5,1,1.5),                 # Font size (multiplication factor, device-dependent)
-    vertex.label.dist=0,                           # Distance between the label and the vertex
-    vertex.label.degree=0 ,                        # The position of the label in relation to the vertex (use pi)
-    )
-```
-
-```{r}
-#customizing link features
-plot(network,
-    edge.color=rep(c("red","pink"),5),           # Edge color
-    edge.width=seq(1,10),                        # Edge width, defaults to 1
-    edge.arrow.size=1,                           # Arrow size, defaults to 1
-    edge.arrow.width=1,                          # Arrow width, defaults to 1
-    edge.lty=c("solid")                           # Line type, could be 0 or “blank”, 1 or “solid”, 2 or “dashed”, 3 or “dotted”, 4 or “dotdash”, 5 or “longdash”, 6 or “twodash”
-    #edge.curved=c(rep(0,5), rep(1,5))            # Edge curvature, range 0-1 (FALSE sets it to 0, TRUE to 0.5)
-    )
-```
-```{r}
-#combining customizations in one chart
-par(bg="black")
-
-plot(network, 
-    
-    # === vertex
-    vertex.color = rgb(0.8,0.4,0.3,0.8),          # Node color
-    vertex.frame.color = "white",                 # Node border color
-    vertex.shape="circle",                        # One of “none”, “circle”, “square”, “csquare”, “rectangle” “crectangle”, “vrectangle”, “pie”, “raster”, or “sphere”
-    vertex.size=14,                               # Size of the node (default is 15)
-    vertex.size2=NA,                              # The second size of the node (e.g. for a rectangle)
-    
-    # === vertex label
-    vertex.label=LETTERS[1:10],                   # Character vector used to label the nodes
-    vertex.label.color="white",
-    vertex.label.family="Times",                  # Font family of the label (e.g.“Times”, “Helvetica”)
-    vertex.label.font=2,                          # Font: 1 plain, 2 bold, 3, italic, 4 bold italic, 5 symbol
-    vertex.label.cex=1,                           # Font size (multiplication factor, device-dependent)
-    vertex.label.dist=0,                          # Distance between the label and the vertex
-    vertex.label.degree=0 ,                       # The position of the label in relation to the vertex (use pi)
-    
-    # === Edge
-    edge.color="white",                           # Edge color
-    edge.width=4,                                 # Edge width, defaults to 1
-    edge.arrow.size=1,                            # Arrow size, defaults to 1
-    edge.arrow.width=1,                           # Arrow width, defaults to 1
-    edge.lty="solid",                             # Line type, could be 0 or “blank”, 1 or “solid”, 2 or “dashed”, 3 or “dotted”, 4 or “dotdash”, 5 or “longdash”, 6 or “twodash”
-    edge.curved=0.3    ,                          # Edge curvature, range 0-1 (FALSE sets it to 0, TRUE to 0.5)
-    )
-```
-
-```{r}
-#applying different layouts using igraph
-
-# library
-library(igraph)
- 
-# Create data
-data <- matrix(sample(0:1, 400, replace=TRUE, prob=c(0.8,0.2)), nrow=20)
-network <- graph_from_adjacency_matrix(data , mode='undirected', diag=F )
- 
-# When ploting, we can use different layouts:
-par(mfrow=c(2,2), mar=c(1,1,1,1))
-plot(network, layout=layout.sphere, main="sphere")
-plot(network, layout=layout.circle, main="circle")
-plot(network, layout=layout.random, main="random")
-plot(network, layout=layout.fruchterman.reingold, main="fruchterman.reingold")
- 
-# See the complete list with
-# help(layout)
-```
 library(networkD3)
 
 The networkD3 package allows to build interactive network diagrams with R, including zoom, hover nodes, reorganize the layout. This package will provide features for dynamic data manipulation and visualization and allows users to become active participants in data visualization process by allowing users to explore data points, hierarchies among the data, filter data by groups, and similar. It also provides pseudo-data to use to play around with. This package can plot many different types of networks and is also supposed to interact well with the igraph package.  
+
+```{r}
+library(igraph)
+library(networkD3)
+```
+
+## Analysis/processing step 1 - igraph
+
+In this step, I am creating a network diagram using the igraph package. My goal is to create a "simple" (non-interactive) network diagram that displays a coauthor network of researchers who have or have not published with one another. Researchers are the nodes, represented as dots. If 2 researchers have published at least one scientific paper together, they are connected. The node size will be proportional to the number of coauthors. I'm also using the colormap packge to distinguish between different "clusters" within the network, which will make it easier for the viewer to interpret the network structure on their own.
+
+For the network layout algorithm, I am going to use the Fruchterman-Reingold algorithm, which is a force-directed method that is probably the most widely used algorithm. Finding the most optimal position for each node is tricky and will impact the output, so future work should evaluate how the use of different algorithms impacts the interpretation of the final network chart. 
+
+```{r}
+#creating a network diagram with igraph
+
+#load packages
+library(tidyverse)
+library(viridis)
+library(patchwork)
+library(ggraph)
+library(igraph)
+library(networkD3)
+library(colormap)
+
+# load data
+dataUU <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/13_AdjacencyUndirectedUnweighted.csv", header=TRUE)
+
+# transform the adjacency matrix in a long format
+connect <- dataUU %>% 
+  gather(key="to", value="value", -1) %>%
+  mutate(to = gsub("\\.", " ",to)) %>%
+  na.omit() 
+
+# number of connection per person
+c( as.character(connect$from), as.character(connect$to)) %>%
+  as.tibble() %>%
+  group_by(value) %>%
+  summarize(n=n()) -> coauth
+colnames(coauth) <- c("name", "n")
+
+# create a graph object with igraph
+mygraph <- graph_from_data_frame( connect, vertices = coauth, directed = FALSE )
+
+# find community
+com <- walktrap.community(mygraph)
+
+#Reorder dataset and make the graph
+coauth <- coauth %>% 
+  mutate( grp = com$membership) %>%
+  arrange(grp) %>%
+  mutate(name=factor(name, name))
+
+# keep only 10 first communities
+coauth <- coauth %>% 
+  filter(grp<16)
+
+# keep only those people in edges
+connect <- connect %>%
+  filter(from %in% coauth$name) %>%
+  filter(to %in% coauth$name)
+
+# create a graph object with igraph
+mygraph <- graph_from_data_frame( connect, vertices = coauth, directed = FALSE )
+
+# prepare a vector of n color in the viridis scale
+mycolor <- colormap(colormap=colormaps$viridis, nshades=max(coauth$grp))
+mycolor <- sample(mycolor, length(mycolor))
+
+# make the graph
+ggraph(mygraph, layout="fr") + 
+  geom_edge_link(edge_colour="black", edge_alpha=0.2, edge_width=0.3, fold=TRUE) +
+  geom_node_point(aes(size=n, color=as.factor(grp), fill=grp), alpha=0.9) +
+  scale_size_continuous(range=c(0.5,8)) +
+  scale_color_manual(values=mycolor) +
+  geom_node_text(aes(label=ifelse(n>6, as.character(name), "")), angle=65, hjust=rep(c(0,1),58), nudge_y = rep(c(0.5,-0.5),58), size=2.3, color="grey") +
+  theme_void() +
+  theme(
+    legend.position="none",
+    plot.margin=unit(c(0,0,0,0), "null"),
+    panel.spacing=unit(c(0,0,0,0), "null")
+  ) +
+  expand_limits(x = c(-1.2, 1.2), y = c(-1.2, 1.2)) 
+```
+
+## Outcomes - igraph 
+
+I am pleased with how this code turned out. It returned a functional network diagram, with changes in color denoting different clusters and node sizing proportional to the number of co-authors. The final graph depicts papers where Vincent Ranwez was involved, and the network of coauthors he published with. From the diagram, we can see that a few gorups of rsearchers are isolated. In the middle, there is a massife network of researchers, which demonstrate that the people Vincent Ranwez publish with more often are also more linked together. 
+
+One thing I learned from this chart is that network graphs, at least in igraph, are not very good at labeling every single pointL the names start to overlap the edges which can make the figure unreadable. Further research on the internet suggested that an arc diagram might be a useful alternative to a network chart if you want to show all labels. 
+
+The critical step in this code is using igraph to create a graph object, which is then plotted using ggraph. I also chose to limit the number of communities/connections that were displayed in this chart in order to keep or more readable, but careful thought needs to be given to each individual dataset before choosing to exclude portions from the visualization and analysis. 
+
+Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
+
+## Analysis/processing step 2 - networkD3
+
+In this step, I am using the same dataset from above to create an interactive network diagram using the networkD3 package. Given that the chart is meant to be interactive, I want users to be able to zoom into specific clusters in order to see researcher names or get a more detailed view of specific areas of the network. I also want to be able to export/save the interactive network "widget" so that this visualization could be used online for a project website. 
 
 ```{r}
 # using network D3 to create interactive graph
@@ -210,7 +127,6 @@ The networkD3 package allows to build interactive network diagrams with R, inclu
 library(tidyverse)
 library(viridis)
 library(patchwork)
-library(hrbrthemes)
 library(ggraph)
 library(igraph)
 library(networkD3)
@@ -250,75 +166,212 @@ simpleNetwork(connect,
         zoom = T                    # Can you zoom on the figure?
         )
 
-#Analysis/processing step 1 - what are you hoping to do here, why? 
+# if you want to save the widget...
 
-#Analysis/processing step 2 - what are you hoping to do here, why? 
+p <- simpleNetwork(connect,     
+        Source = 1,                 
+        Target = 2,                 
+        height = 880,              
+        width = 1980,
+        linkDistance = 10,        
+        charge = -4,              
+        fontSize = 5,             
+        fontFamily = "serif",       
+        linkColour = "#666",        
+        nodeColour = "#69b3a2",     
+        opacity = 0.9,              
+        zoom = T                    
+        )
 
-#Check the outcomes? How will you know if your steps worked?
-
-# 
+library(htmlwidgets)
+# make sure to set working directory to where you want the widget to save
+saveWidget(p, file=paste0( getwd(), "/HtmlWidget/networkInteractive2.html"))
 ```
 
-```
 
+## Outcomes - networkD3
 
-Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
+I think this interactive network is really cool - I like that you can zoom in to different areas of the map to get a more detailed look at specific nodes and researcher's names. I also like that you can save this widget, so that it can then be displayed on a website or a different venue. However, I do think this chart is a little hard to read. In the future, I would like to play around with the node size (and maybe weighting the nodes like we did in the igraph chart) to see if I can make this diagram more readable.
 
-## Evaluate your choices
-Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
-
-## Show us your final product
-Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
-
-## Reflect
-Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
-
-Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
-
+## Evaluate your choices - igraph
 ```{r}
- # Transform the adjacency matrix in a long format
+library(microbenchmark)
+library(profvis)
+
+# how long does it take to create a graph object with igraph?
+
+graph.time <- system.time(mygraph <- graph_from_data_frame( connect, vertices = coauth, directed = FALSE ))
+
+graph.time
+
+# how long does it take to make the actual network graph?
+
+plot.time <- system.time(ggraph(mygraph) + 
+  geom_edge_link(edge_colour="black", edge_alpha=0.2, edge_width=0.3, fold=TRUE) +
+  geom_node_point(aes(size=n, color=as.factor(grp), fill=grp), alpha=0.9) +
+  scale_size_continuous(range=c(0.5,8)) +
+  scale_color_manual(values=mycolor) +
+  geom_node_text(aes(label=ifelse(n>6, as.character(name), "")), angle=65, hjust=rep(c(0,1),58), nudge_y = rep(c(0.5,-0.5),58), size=2.3, color="grey") +
+  theme_void() +
+  theme(
+    legend.position="none",
+    plot.margin=unit(c(0,0,0,0), "null"),
+    panel.spacing=unit(c(0,0,0,0), "null")
+  ) +
+  expand_limits(x = c(-1.2, 1.2), y = c(-1.2, 1.2)))
+
+plot.time
+
+# is there a rate-limiting step in my simple network diagram code?
+
+network.prof <- profvis(expr = {
+#load data 
+dataUU <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/13_AdjacencyUndirectedUnweighted.csv", header=TRUE)
+# Transform the adjacency matrix in a long format
 connect <- dataUU %>% 
   gather(key="to", value="value", -1) %>%
   mutate(to = gsub("\\.", " ",to)) %>%
   na.omit() 
-
 # Number of connection per person
 c( as.character(connect$from), as.character(connect$to)) %>%
   as.tibble() %>%
   group_by(value) %>%
   summarize(n=n()) -> coauth
 colnames(coauth) <- c("name", "n")
-
 # Create a graph object with igraph
 mygraph <- graph_from_data_frame( connect, vertices = coauth, directed = FALSE )
-
 # Find community
 com <- walktrap.community(mygraph)
-
 #Reorder dataset and make the graph
 coauth <- coauth %>% 
-  mutate(grp = com$membership) %>%
+  mutate( grp = com$membership) %>%
   arrange(grp) %>%
-  mutate(name=factor(names, names))
-
+  mutate(name=factor(name, name))
 # keep only 10 first communities
 coauth <- coauth %>% 
   filter(grp<16)
-
 # keep only this people in edges
 connect <- connect %>%
   filter(from %in% coauth$name) %>%
   filter(to %in% coauth$name)
-
 # Create a graph object with igraph
 mygraph <- graph_from_data_frame( connect, vertices = coauth, directed = FALSE )
-
 # prepare a vector of n color in the viridis scale
 mycolor <- colormap(colormap=colormaps$viridis, nshades=max(coauth$grp))
 mycolor <- sample(mycolor, length(mycolor))
-
 # Make the graph
-ggraph(mygraph) + 
+ggraph(mygraph, layout="fr") + 
+  geom_edge_link(edge_colour="black", edge_alpha=0.2, edge_width=0.3, fold=TRUE) +
+  geom_node_point(aes(size=n, color=as.factor(grp), fill=grp), alpha=0.9) +
+  scale_size_continuous(range=c(0.5,8)) +
+  scale_color_manual(values=mycolor) +
+  geom_node_text(aes(label=ifelse(n>6, as.character(name), "")), angle=65, hjust=rep(c(0,1),58), nudge_y = rep(c(0.5,-0.5),58), size=2.3, color="grey") +
+  theme_void() +
+  theme(
+    legend.position="none",
+    plot.margin=unit(c(0,0,0,0), "null"),
+    panel.spacing=unit(c(0,0,0,0), "null")
+  ) +
+  expand_limits(x = c(-1.2, 1.2), y = c(-1.2, 1.2))
+}, interval = 0.01, prof_output = 'fstr-prof' ) 
+
+network.prof
+
+```
+
+## Evaluate your choices - networkD3
+
+```{r}
+library(microbenchmark)
+library(profvis)
+
+#How long does it take to transform the adjacency matrix into the appropriate dataframe?
+
+transform.time <- system.time(connect <- dataUU %>% 
+  gather(key="to", value="value", -1) %>%
+  na.omit())
+
+transform.time
+
+#How long does it take for my system to compute an interactive network diagram?
+
+plot.time <- system.time(simpleNetwork(connect,     
+        Source = 1,                 # column number of source
+        Target = 2,                 # column number of target
+        height = 880,               # height of frame area in pixels
+        width = 1980,
+        linkDistance = 10,         # distance between node. Increase this value to have more space between nodes
+        charge = -4,              # numeric value indicating either the strength of the node repulsion (negative value) or attraction (positive value)
+        fontSize = 5,              # size of the node names
+        fontFamily = "serif",       # font og node names
+        linkColour = "#666",        # colour of edges, MUST be a common colour for the whole graph
+        nodeColour = "#69b3a2",     # colour of nodes, MUST be a common colour for the whole graph
+        opacity = 0.9,              # opacity of nodes. 0=transparent. 1=no transparency
+        zoom = T                    # Can you zoom on the figure?
+        ))
+
+plot.time
+
+#is there a rate-limiting step in this code chunk?
+ 
+interactive.prof <- profvis(expr = {
+  #load packages
+library(tidyverse)
+library(viridis)
+library(patchwork)
+library(ggraph)
+library(igraph)
+library(networkD3)
+#load your data
+dataUU <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/13_AdjacencyUndirectedUnweighted.csv", header=TRUE)
+## Transform the adjacency matrix in a long format
+connect <- dataUU %>% 
+  gather(key="to", value="value", -1) %>%
+  na.omit()
+# Number of connection per person
+c( as.character(connect$from), as.character(connect$to)) %>%
+  as.tibble() %>%
+  group_by(value) %>%
+  summarize(n=n()) -> coauth
+colnames(coauth) <- c("name", "n")
+# NetworkD3 format
+graph=simpleNetwork(connect)
+# Plot
+simpleNetwork(connect,     
+        Source = 1,                 # column number of source
+        Target = 2,                 # column number of target
+        height = 880,               # height of frame area in pixels
+        width = 1980,
+        linkDistance = 10,         # distance between node. Increase this value to have more space between nodes
+        charge = -4,              # numeric value indicating either the strength of the node repulsion (negative value) or attraction (positive value)
+        fontSize = 5,              # size of the node names
+        fontFamily = "serif",       # font og node names
+        linkColour = "#666",        # colour of edges, MUST be a common colour for the whole graph
+        nodeColour = "#69b3a2",     # colour of nodes, MUST be a common colour for the whole graph
+        opacity = 0.9,              # opacity of nodes. 0=transparent. 1=no transparency
+        zoom = T                    # Can you zoom on the figure?
+        )}, interval = 0.01, prof_output = 'fstr-prof' )
+
+
+interactive.prof
+
+```
+
+When creating a network diagram (simple or interactive), actually reading the dataset and then converting it into the appropriate format are the longest steps, then followed by creating the actual interactive network diagram. This is useful information as it indicates that the size of the data sample you are using could have impacts on the efficiency of this process. While this code converts the loaded data into a frame that can then be used for network visualization, a possible shortcut could be to format your dataset ahead of time so that it is already in the correct format, this saving the time of having R re-format the data for you. However, this could also be really time-intensive to do by hand, and letting R manipulate the data might actually be the quickest route, even if it is the longest step in the process. 
+
+
+## How much slower is it to create a fancy, interactive network diagram instead of just a "normal," standard visualization?
+```{r}
+network.prof
+interactive.prof
+```
+
+It takes 120 milliseconds to create the simple network, and only 30 milliseconds to create the interactive diagram, which I found surprising; I had assumed it would take longer to make the interactive diagram since the output is more complex. However, I wonder if the fact that the nodes are different colors and sizes in the simple diagram causes this output to take more time, whereas the nodes in the interactive diagram have a more uniform appearance. Future work should address if it still faster to make the interactive diagram when everything is held constant - color, size of nodes, etc. 
+
+## Show us your final product
+```{r}
+# Simple network diagram using igraph
+ggraph(mygraph, layout="fr") + 
   geom_edge_link(edge_colour="black", edge_alpha=0.2, edge_width=0.3, fold=TRUE) +
   geom_node_point(aes(size=n, color=as.factor(grp), fill=grp), alpha=0.9) +
   scale_size_continuous(range=c(0.5,8)) +
@@ -332,6 +385,25 @@ ggraph(mygraph) +
   ) +
   expand_limits(x = c(-1.2, 1.2), y = c(-1.2, 1.2)) 
 
+# Interactive network diagram using networkD3
+simpleNetwork(connect,     
+        Source = 1,                 # column number of source
+        Target = 2,                 # column number of target
+        height = 880,               # height of frame area in pixels
+        width = 1980,
+        linkDistance = 10,         # distance between node. Increase this value to have more space between nodes
+        charge = -4,              # numeric value indicating either the strength of the node repulsion (negative value) or attraction (positive value)
+        fontSize = 5,              # size of the node names
+        fontFamily = "serif",       # font og node names
+        linkColour = "#666",        # colour of edges, MUST be a common colour for the whole graph
+        nodeColour = "#69b3a2",     # colour of nodes, MUST be a common colour for the whole graph
+        opacity = 0.9,              # opacity of nodes. 0=transparent. 1=no transparency
+        zoom = T                    # Can you zoom on the figure?
+        )
 ```
 
 
+## Reflect
+Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
+
+Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
