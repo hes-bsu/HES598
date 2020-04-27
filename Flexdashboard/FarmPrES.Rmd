@@ -16,6 +16,12 @@ library(shiny) #neccesary for an interactive plot
 library(googledrive) #needed to download data from google drive 
 library(here) #specify location of data 
 
+#Date: 4-27-2020
+#Creator: Sarah Halperin 
+#Contact: sarahhalperin@u.boisestate.edu
+#Notes: Below you will find code to create a flexdashboard, which I have used to give a brief outline of my project on one tab and another tab that is an interactive bar chart. The code provides good examples of how to organize a flexdashboard, write text, import images (which doesn't work awesomely), and create a simple interactive figure. If you have any questions or suggestions please email me at sarahhalperin@u.boisestate.edu. Happy Coding! 
+
+
 #You may need to set the working directory to your local copy of the respository and create a folder called HES598/Flexdashboard 
 
 #Useful Link to learn how to format a flexdashboard 
