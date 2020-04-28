@@ -15,11 +15,13 @@ SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
 ## Introduce your problem
 
 Advanced topics focus: Spatial Stats, Point Patterns, Nearest Neighbors
-Give a brief introduction to your research and identify how your "Advanced Topic" plays into what you are hoping to do. For example, if you are just starting out on your project and your topic is "Study Design" you might be interested in developing a spatially informed sampling/stratification scheme.Or maybe your work is going to have a big public outreach component that you'd like to support with some nice interactive maps. Give us a sense for what "success" would look like - what is your ideal end product for the analysis/approach you're testing out. This will help us figure out if the tools you tried were successful.
 
--Mapping recreation disturbance patterns on the landscape. This is the starting place for identifying cumulative impacts hotspots and thresholds in sensitive habitat areas of the Owyhees and Boise Foothills. 
+My current research is focused on recreation disturbance patterns, and the greater ecological implications they can have for an ecosystem. I am working with the BLM Bruneau Field office to map baseline disturbance levels near subpopulations of Mulford's Milkvetch, a special status plant and a conservation priority for the region. These sites are ideal for study because the subpopulations have been monitored for decades, and long term data on their status, as well as nearby plant, human, and animal disturbances exist.  
 
--I will explore some code for basic spatial stats and point patterns that will be useful as I move forward with this work. 
+The goal of my collaboration with the BLM will be to produce actionable products, such as maps and datasets that can inform management decisions. One of the ways a point pattern analysis could be used to this end would be to identify clusters of disturbance points, and use this to examine if something can explain why such a clustering might exist. 
+
+Because I don't have point data yet, I will use this project to develop code that can test my future data. For this project I will use stand-in data that I've made in Google Earth, and converted to a shapefile. The shapefile is of points along official roads and trails where an unofficial trail starts, and represents an area within 0.25mi^2 distance of one of the subpopulations. This is the kind of point data I hope to have in the future, and I'll explore what it might look like here. I will also use this as an opportunity to practice simulating spatial data, and will explore the tests I run on simulated data as well. 
+
 
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
