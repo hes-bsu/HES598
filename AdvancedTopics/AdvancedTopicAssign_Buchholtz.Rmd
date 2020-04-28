@@ -26,12 +26,48 @@ Because I don't have point data yet, I will use this project to develop code tha
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
-#load the libraries - tell us which packages you're using and why
+#Libraries used: spatstat
+#This is a basic spatial stats package with good documentation, and a focus on simulating and analyzing
+#point patterns. A basic list of its functions and capabilities can be found here: https://spatstat.org/resources/spatstatQuickref.pdf
 
 #load your data - which datasets do you need?
 #I'll be working with simulated point data to demonstrate some point pattern analyses. In order
-#to do this, I'll create a plot with points within it, and then use spatial tests to investigate point patterns. Finally, I'll bring in real data and use the tests on the real data as well. 
+#to do this, I'll create a plot with points within it, and then use spatial tests to investigate point patterns. Finally, I'll bring in sample data I've made of points near my study sites, and use the tests on this data as well. 
 
+###The simulated data will be:
+#Points in a rectangular window 
+#points in a circular window
+
+###The sample data will be:
+#a shapefile called 'DeviationPoints', and will represent points where informal trails deviate from established roads and trails. 
+
+
+#Analysis/processing step 2 - what are you hoping to do here, why? 
+#I will test the data to see if it is clustered or regular 
+#-->I would like to see if I can identify clusters themselves, and have a data output showing me which sites are clustered with each other
+
+
+#Check the outcomes? How will you know if your steps worked?
+#One way I could test my outcomes is to map the points, and to use colors or symbols to show which points are assigned to which clusters.
+
+# 
+```
+
+## Introduce the packages
+Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
+```{r}
+
+```
+
+## Evaluate your choices
+Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
+```{r}
+
+```
+
+## Show us your final product
+Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
+```{r}
 #Making uniform density patterns:
 
 #Starting with doing it in a rectangle.
@@ -135,22 +171,7 @@ plot(p_regular)
 # Run a quadrat test, and in this case set the alternative hypothesis to specifically be 
 #that the points are regularly distributed
 quadrat.test(p_regular, alternative = "regular")
-
-#Analysis/processing step 2 - what are you hoping to do here, why? 
-
-#Check the outcomes? How will you know if your steps worked?
-
-# 
 ```
-
-## Introduce the packages
-Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
-
-## Evaluate your choices
-Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
-
-## Show us your final product
-Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
 
 ## Reflect
 Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
