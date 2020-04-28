@@ -19,7 +19,7 @@ I wanted to focus on using bivariate mapping to display how one variable varys w
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 
-###Libraries
+### Libraries
 ```{r map_logic, echo=TRUE, message=FALSE, fig.keep='all'}
 #load the libraries - tell us which packages you're using and why
 library(tidycensus) #load the ACS data; note - you'll need your own census keycode to access the data
@@ -29,37 +29,23 @@ library(sf) #we are using tidycensus which will return a sf-class dataframe
 library(ggplot2) #plotting the data
 library(leaflet) #interactive map
 library(leaflet.extras) #extra goodies for prettying up the interactive map 
-library(htmlwidgets)
+library(htmlwidgets) #provides capacity for mouseover and interactive zooming
 library(htmltools)
 ```
-###load your data - which datasets do you need?
+## Load geography and datasets
+Here, I'm using two datasets that I want to see vary together household income and personal income, as well as the Gini Coefficient which I want to see as a popup on the map. These variables are determined by the table name. 
 
-## ACS table and variable names
+## Data Organization
+I want a spatial dataframe in sf form to play nice with tidycensus, with each row (44) to be an Idaho county and each column (3) to be a variable, as well as the GEOID as a unique identifier, the pretty name of the County, and geometries for each county. 
 
-#Here, I'm using two datasets that I want to see vary together household income and personal income, as well as the Gini Coefficient which I want to see as a popup on the map.
+## Processing step 1
+Create bins or 'breaks' that will indicate which level of income or Gini Coefficient the county falls into, compared to all the counties in the state of Idaho. This will allow me to view each level of the income as a specific color, according to the category (break) that county falls into.
 
-###Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
+## Processing step 2
+Map the incomes based on the breaks I calculated. Once these are mapped, I can add interactive features (i.e., actual values of the variables) to popup as I mouseover the county.
 
-#I want a spatial dataframe in sf form to play nice with tidycensus, with each row (44) to be an Idaho county and each column (3) to be a variable, as well as the GEOID as a unique identifier, the pretty name of the County, and geometries for each county. 
-
-###Analysis/processing step 1 - what are you hoping to do here, why? 
-
-#Bring the data I want from ACS - make sure if looks right. 
-
-##Create bins or 'breaks' that will indicate which level of income or Gini Coefficient the county falls into, compared to all the counties in the state of Idaho.
-
-###Analysis/processing step 2 - what are you hoping to do here, why? 
-
-##Map the incomes based on the breaks I calculated. 
-
-#Add interactive features (i.e., actual values of the variables)
-
-#Check the outcomes? How will you know if your steps worked?
-
-#Display the map
-
-# 
-
+## Outcomes
+Display the map, and visualize how household income varies with personal income.
 
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
@@ -67,7 +53,7 @@ Given your psuedo code, where is the critical step? What packages and functions 
 ## Evaluate your choices
 Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
 
-```{r load-data, echo=FALSE, results='hide', message = FALSE}
+```{r load-data, echo=TRUE, results='hide', message = FALSE}
 # Named vector of ACS tables to get from Census API
 varlist <- c("hhinc" = "B19013_001",
              "pearn" = "B20002_001",
@@ -91,8 +77,7 @@ idaho <- idaho[, c(1, 2, seq(3, 9, by = 2))]
 # re-project to play nice with leaflet
 idaho <- st_transform(idaho, 4326, type = "datum")
 
-# get median hh income for SF-Oakland-Hayward MSA as baseline for breaks
-# returns 92714 - retain in case API is down
+# get median hh income for state of Idaho baseline for breaks
 hhinc_idaho <- get_acs(
   geography = "state",
   variables = c("hhinc" = "B19013_001"),
@@ -116,7 +101,6 @@ pal_hhinc <- colorBin(
 
 
 # get median personal earnings for state
-# returns 46477
 pearn_state <- get_acs(
   geography = "state",
   variables = c("pearn" = "B20002_001"),
@@ -159,7 +143,8 @@ pal_gini <- colorQuantile(
 ```
 
 
-```{r initial-map, echo=FALSE, fig.keep='all', message = FALSE}
+## Maps! Adding three layers, with one toggle for both income types and the Gini Coefficient as the background layer
+```{r initial-map, echo=TRUE, fig.keep='all', message = FALSE}
 m <- idaho %>% 
   leaflet(
     width = "100%",
@@ -207,7 +192,7 @@ m <- idaho %>%
 
 m
 
-# data frame with no geographic data
+# data frame with no geographic data - used to get the dataframe to reference spatial information when mouseover occurs
 nogeog <- st_drop_geometry(idaho)
 
 # list of HTML for each observation (census tract)
@@ -221,7 +206,9 @@ labs <- lapply(seq(nrow(nogeog)), function(i) {
 ```
 
 
-```{r final-map, echo=FALSE, fig.keep='all', message = FALSE}
+
+## Now, to get the legend on there...
+```{r final-map, echo=TRUE, fig.keep='all', message = FALSE}
 m %<>% 
   addPolygons(
     label = lapply(labs, htmltools::HTML),
@@ -272,7 +259,7 @@ legend <- ggplot() +
 ggsave("idaho_income_legend.svg", plot = legend,
        width = 3, height = 3, bg = "transparent")
 
-legend_img <- "~/AdvancedTopics/idaho_income_legend.svg"
+legend_img <- "~/AdvancedTopics/idaho_income_legend.svg" #this doesn't work...
 
 m %<>%
   leafem::addLogo(legend_img, 
