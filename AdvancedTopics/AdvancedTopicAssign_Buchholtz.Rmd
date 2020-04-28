@@ -44,7 +44,7 @@ Before you get started programming all of the potential things you could do duri
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
 #I will test the data to see if it is clustered or regular 
-#-->I would like to see if I can identify clusters themselves, and have a data output showing me which sites are clustered with each other
+#-->I would like to see if I can identify clusters themselves, and have a data output showing me which sites are clustered with each other. Maybe I'll use K means to do this??
 
 
 #Check the outcomes? How will you know if your steps worked?
