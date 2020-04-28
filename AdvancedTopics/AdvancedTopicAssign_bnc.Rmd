@@ -1,7 +1,7 @@
 ---
 title: "Advanced Topic Instructions: Connectivity"
 author: "Brent Clark"
-date: "4/20/2020"
+date: "4/27/2020"
 output: html_document
 ---
 
@@ -26,34 +26,29 @@ How is recruitement in a semi-colonial raptor species impacted by demographic co
 
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
-```{r}
-#load the libraries - tell us which packages you're using and why
 
-#Tidyverse
-#Tidycensus
-#sp
-#ggplot2
-#viridis
-#scales
-#sf
-#rgdal
-#maps
-#mapproj
-#readxl
+```{r install and load packages, include = FALSE}
+#load the libraries 
+install.packages("samc")
+install.packages("popbio")
+library(tidyverse)
+library(tidycensus)
+library(sp)
+library(ggplot2)
+library(viridis)
+library(scales)
+library(sf)
+library(rgdal)
+library(maps)
+library(mapproj)
+library(readxl)
 
 #load your data - which datasets do you need?
-#Load Idaho Shape file (Still need to complete this)
-#Load burrow (artificial and natural) locations dataset (UTMs) (Still need to complete this)
-
-#Create Map of Idaho with the counties of interest outlined
-#Create the state of idaho (including county polygons)
-#creates seperate map of just "Ada" and "Elmore" counties
-#highlights counties where artificial and natural burrowing owl burrows are known for research purposes
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
 
-#create spatial table of burrow locations
-#create burrow locations based on spatial table
+#create spatial table of burrow locations (X) 
+#create burrow locations based on spatial table (X)
 #Include total number of nestlings produced at each nest site for all years
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
@@ -67,6 +62,46 @@ Before you get started programming all of the potential things you could do duri
 #Check the outcomes? How will you know if your steps worked?
 
 # 
+```
+
+Introduce the study area
+```{r bnc_studyArea,include = TRUE}
+###
+#Create the state of Idaho and study area counties
+###
+
+#Create Map of Idaho with the counties of interest outlined
+idaho <- readOGR("./data/idaho_cty.shx")
+
+#creates seperate map of just "Ada" and "Elmore" counties
+stdyArea <- subset(idaho, NAME == "Ada" | NAME == "Elmore")
+
+#Plot the study area
+plot(idaho)  %/%
+
+#highlights counties where artificial and natural burrows are known
+plot(stdyArea, add = TRUE, col = "blue")   
+```
+
+Create each of the artificial and natural burrow locations
+```{r burrowLocals, include = TRUE}
+###
+#Create artificial and natural burrow locations
+###
+
+#copy excel data on burrowing owl locations into new data_frame
+BUOW_utm <- read_excel("Belthoff Burrows - UTMs_revised.xlsx")
+
+#Create spatial talbe of burrow locations
+BUOW_spatialTable <- BUOW_utm %>% st_as_sf(coords = c("EASTING", "NORTHING"), crs = 4326)
+
+#Create burrow locations based on 'BUOW_spatialTable'
+BUOW_burrow <- st_geometry(BUOW_spatialTable) %>% plot(cex = 1, col = "orange") 
+```
+
+Overlay the Burrowing Owl Locations onto study area
+```{r burrowMap, include = TRUE}
+
 ```
 
 ## Introduce the packages
