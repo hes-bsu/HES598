@@ -14,48 +14,52 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Give a brief introduction to your research and identify how your "Advanced Topic" plays into what you are hoping to do. For example, if you are just starting out on your project and your topic is "Study Design" you might be interested in developing a spatially informed sampling/stratification scheme.Or maybe your work is going to have a big public outreach component that you'd like to support with some nice interactive maps. Give us a sense for what "success" would look like - what is your ideal end product for the analysis/approach you're testing out. This will help us figure out if the tools you tried were successful.
 
-Climate-related impacts are projected to occur across the US with increasing severity. Much funding and attention has been directed towards vulnerabiltiy assessments and adaptation. However, it is unclear how effective the assessments are at assessing vulnerability, and many do not consider social vulnerability. Research has shown that people who do not percieve themselves at risk, are less likely to adapt and are actually at a hieghtened risk. Currently, many people across the US still do not perceive themselves to be at risk of climate change impacts. People who do not perceive personal risk will be unmotivated to prepare for or adapt to such risks. Here, we map alignment between risk perception and future risk of climate change related impacts across the US. We find that certain counties where climate change risks are high, perception of risk remains low. In these regions of high mismatch between projected risk and perception of risk, we further investigate other factors of vulnerability which can exacerbate or alleviate actual risks, or perceptions of risk. This study is timely because it considers climate-related impacts such as drought, wildfire and heatwaves, that have and will continue to impact lives across the country. The findings of this study can inform managers of particularly vulnerable regions in the country where climate related risks are highly likely, but where risk is not perceived. It is in these regions that preparation is most critical and potentially most challenging. With limited resources available to improve adaptation and increase preparedness, relying only on risk projections may be an ineffective way to manage for climate impacts. Most vulnerability assessments focus on ecological impacts, and social vulnerability assessments rarely, if ever, consider risk perception as it pertains to sensitivity or adaptive capacity. These gaps highlight a critical need to identify where risk perception and mismatch of risk (mis)align.
-
+I wanted to focus on using bivariate mapping to display how one variable varys with another, across space. After making bivariate maps that were static, I wanted to see if I could add more information about the data, or an additional dataset using some interactive features on the map. The purpose of the interactive map would be to better visualize complex datasets, as well as increase accessibilty for the public and policymakers. The next step would be to employ the same techniques in a shiny application for publication in an appropriate outlet. Here, I'm using publically available data that was used in the demonstration I followed, household income, personal income, and the Gini Coefficient. This data was derived from the 2017 American Community Survey 5-Year Estimates. 
 
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
-```{r}
+
+###Libraries
+```{r map_logic, echo=TRUE, message=FALSE, fig.keep='all'}
 #load the libraries - tell us which packages you're using and why
+library(tidycensus) #load the ACS data; note - you'll need your own census keycode to access the data
+library(dplyr) #data wrangling 
+library(magrittr) #data wrangling
+library(sf) #we are using tidycensus which will return a sf-class dataframe
+library(ggplot2) #plotting the data
+library(leaflet) #interactive map
+library(leaflet.extras) #extra goodies for prettying up the interactive map 
+library(htmlwidgets)
+library(htmltools)
+```
+###load your data - which datasets do you need?
 
-library(leaflet)
-library(tidyr)
-library(tigris) 
-library(rgdal)
-library(RColorBrewer)
-library(sf)
-library(raster)
-library(sp)
-library(fasterize)
-library(mapview)
-library(dplyr)
-library(tmaptools)
-library(ggplot2)
-library(velox)
+## ACS table and variable names
 
+#Here, I'm using two datasets that I want to see vary together household income and personal income, as well as the Gini Coefficient which I want to see as a popup on the map.
 
-#load your data - which datasets do you need?
+###Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
 
-##Shapefile of Western counties
-#Risk perception survey data
-#Climate change risk data
+#I want a spatial dataframe in sf form to play nice with tidycensus, with each row (44) to be an Idaho county and each column (3) to be a variable, as well as the GEOID as a unique identifier, the pretty name of the County, and geometries for each county. 
 
-#Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
+###Analysis/processing step 1 - what are you hoping to do here, why? 
 
-#Shapefile - 
+#Bring the data I want from ACS - make sure if looks right. 
 
-#Analysis/processing step 1 - what are you hoping to do here, why? 
+##Create bins or 'breaks' that will indicate which level of income or Gini Coefficient the county falls into, compared to all the counties in the state of Idaho.
 
-#Analysis/processing step 2 - what are you hoping to do here, why? 
+###Analysis/processing step 2 - what are you hoping to do here, why? 
+
+##Map the incomes based on the breaks I calculated. 
+
+#Add interactive features (i.e., actual values of the variables)
 
 #Check the outcomes? How will you know if your steps worked?
 
+#Display the map
+
 # 
-```
+
 
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
@@ -63,8 +67,230 @@ Given your psuedo code, where is the critical step? What packages and functions 
 ## Evaluate your choices
 Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
 
+```{r load-data, echo=FALSE, results='hide', message = FALSE}
+# Named vector of ACS tables to get from Census API
+varlist <- c("hhinc" = "B19013_001",
+             "pearn" = "B20002_001",
+             "gini" = "B19083_001")
+
+# tract-level summary data from Census API
+idaho <- get_acs(
+  geography = "county",
+  state = "ID",
+  variables = varlist,
+  survey = "acs5",
+  year = 2017,
+  output = "wide",
+  geometry = TRUE, 
+  key = "9af94992069cef5ed20227c7167a5916216d9705"
+)
+
+# drop margins of error
+idaho <- idaho[, c(1, 2, seq(3, 9, by = 2))]
+
+# re-project to play nice with leaflet
+idaho <- st_transform(idaho, 4326, type = "datum")
+
+# get median hh income for SF-Oakland-Hayward MSA as baseline for breaks
+# returns 92714 - retain in case API is down
+hhinc_idaho <- get_acs(
+  geography = "state",
+  variables = c("hhinc" = "B19013_001"),
+  survey = "acs5",
+  year = 2017,
+  key = "9af94992069cef5ed20227c7167a5916216d9705"
+) %>% 
+  select(estimate) %>% 
+  pull()
+
+# get values for lower & upper "Pew breaks"
+hhinc_lower <- ((2/3) * hhinc_idaho)
+hhinc_upper <- (2 * hhinc_idaho)
+
+# binned palette using Pew breaks & full-color univariate scale hex values
+pal_hhinc <- colorBin(
+  palette = c("#EDEDED", "#FF94C0", "#FF2C54"),
+  domain = idaho$hhinc,
+  bins = c(0, hhinc_lower, hhinc_upper, max(idaho$hhinc, na.rm = T))
+)
+
+
+# get median personal earnings for state
+# returns 46477
+pearn_state <- get_acs(
+  geography = "state",
+  variables = c("pearn" = "B20002_001"),
+  survey = "acs5",
+  year = 2017,
+  key = "9af94992069cef5ed20227c7167a5916216d9705"
+) %>% 
+  select(estimate) %>% 
+  pull()
+
+# personal earnings Pew breaks
+pearn_lower <- ((2/3) * pearn_state)
+pearn_upper <- (2 * pearn_state)
+
+# palette using same colors as hh income
+pal_pearn <- colorBin(
+  palette = c("#EDEDED", "#FF94C0", "#FF2C54"),
+  domain = idaho$pearn,
+  bins = c(0, pearn_lower, pearn_upper,  max(idaho$pearn, na.rm = T))
+)
+
+
+# gini scale, using breaks at terciles (1/3-quantiles)
+gini_state <- get_acs(
+  geography = "state",
+  variables = c("gini" = "B20002_001"),
+  survey = "acs5",
+  year = 2017,
+  key = "9af94992069cef5ed20227c7167a5916216d9705"
+) %>% 
+  select(estimate) %>% 
+  pull()
+
+
+pal_gini <- colorQuantile(
+  palette = c("#EDEDED", "#94C6E7", "#4CB1DF"),
+  domain = idaho$gini,
+  probs = seq(0, 1, length.out = 4)
+)
+```
+
+
+```{r initial-map, echo=FALSE, fig.keep='all', message = FALSE}
+m <- idaho %>% 
+  leaflet(
+    width = "100%",
+    options = leafletOptions(zoomSnap = 0.25, zoomDelta = 0.5)
+  ) %>% 
+  addProviderTiles("CartoDB.Positron") %>% 
+  # HH Income Layer
+  addPolygons(
+    group = "Household Income",
+    fillColor = ~pal_hhinc(idaho$hhincE),
+    fillOpacity = 0.5,
+    stroke = FALSE,
+    smoothFactor = 0
+  ) %>%
+# Personal Earnings Layer
+  addPolygons(
+    group = "Personal Earnings",
+    fillColor = ~pal_pearn(idaho$pearnE),
+    fillOpacity = 0.5,
+    stroke = FALSE,
+    smoothFactor = 0
+  ) %>% 
+  # Gini Layer
+  addPolygons(
+    group = "Gini Coefficient",
+    fillColor = ~pal_gini(idaho$giniE),
+    fillOpacity = 0.5,
+    stroke = FALSE,
+    smoothFactor = 0
+  ) %>% 
+  # income measure switching
+  addLayersControl(
+    baseGroups = c("Household Income", "Personal Earnings"),
+    options = layersControlOptions(collapsed = FALSE),
+    position = "topright"
+  ) %>% 
+  # forces income measure layer to bottom on switch
+  htmlwidgets::onRender("
+    function(el, x) {
+      this.on('baselayerchange', function(e) {
+        e.layer.bringToBack();
+      })
+    }
+  ")
+
+m
+
+# data frame with no geographic data
+nogeog <- st_drop_geometry(idaho)
+
+# list of HTML for each observation (census tract)
+labs <- lapply(seq(nrow(nogeog)), function(i) {
+  paste0(
+    "Median Household Income: $", prettyNum(nogeog[i, "hhincE"], big.mark = ","), "<br>",
+    "Median Presonal Earnings: $", prettyNum(nogeog[i, "pearnE"], big.mark = ","), "<br>",
+    "Gini Coefficient: ", round(as.numeric(nogeog[i, "giniE"]), 3)
+  ) 
+})
+```
+
+
+```{r final-map, echo=FALSE, fig.keep='all', message = FALSE}
+m %<>% 
+  addPolygons(
+    label = lapply(labs, htmltools::HTML),
+    labelOptions = labelOptions(textsize = "12px"),
+    fillColor = NA,
+    fillOpacity = 0,
+    color = "black",
+    weight = .5,
+    opacity = 1,
+    highlightOptions = highlightOptions(weight = 2)
+  ) %>% 
+  addResetMapButton() %>% 
+  addFullscreenControl() %>% 
+  suspendScroll(sleepNote = F, sleepOpacity = 1)
+
+m
+
+
+# data.frame of color values from 50% opacity region in template
+legend_scale <- data.frame(
+  income = c(rep(1, 3), rep(2, 3), rep(3, 3)),
+  inequality = c(rep(seq(1, 3, 1), 3)),
+  color = c("#F1F1F1", "#C3DEEE", "#A1D3EA",
+            "#F7DBE7", "#CAC8E3", "#A6BDDF",
+            "#F7C1CB", "#CAAEC8", "#A6A3C4")
+)
+
+# legend
+legend <- ggplot() + 
+  geom_tile(
+    data = legend_scale,
+    aes(x = income, y = inequality, fill = color)
+  ) + 
+  scale_fill_identity() +
+  labs(x = "Income →",
+       y = "Inequality →") +
+  theme(
+    axis.title = element_text(size = 20),
+    axis.line = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank(),
+    panel.background = element_blank(),
+    plot.margin = margin(10, 10, 10, 10),
+    plot.background = element_rect(fill = "transparent", color = NA)
+  )
+
+ggsave("idaho_income_legend.svg", plot = legend,
+       width = 3, height = 3, bg = "transparent")
+
+legend_img <- "~/AdvancedTopics/idaho_income_legend.svg"
+
+m %<>%
+  leafem::addLogo(legend_img, 
+    position = "topright",
+    #className = "legend-bivar"
+  )
+
+m
+
+```
+
+
 ## Show us your final product
 Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
+
+Defining the breaks and sticking the LEGEND on the interactive map is the hardest part of this whole thing.
+
+
 
 ## Reflect
 Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
