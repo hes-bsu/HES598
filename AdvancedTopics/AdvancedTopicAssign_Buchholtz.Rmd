@@ -48,7 +48,8 @@ Before you get started programming all of the potential things you could do duri
 
 
 #Check the outcomes? How will you know if your steps worked?
-#One way I could test my outcomes is to map the points, and to use colors or symbols to show which points are assigned to which clusters.
+#One way I could test my outcomes is to map the points
+#If I can identify distinct clusters, I could use colors or symbols to show which points are assigned to which clusters.
 
 # 
 ```
