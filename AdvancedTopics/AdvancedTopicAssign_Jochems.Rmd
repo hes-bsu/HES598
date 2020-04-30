@@ -42,11 +42,13 @@ library(raster)
 library(maps)
 library(mapproj)
 library(tmap)
+library(maptools)
 #These packages have functions to ensure my various shapefiles have the same projection, and can make my maps look pretty! 
 
 library(ggplot2)
 library(patchwork)
-#ggplot2 gives me the flexibility to make my plots more informative (see above about including multiple attributes), and patchwork will potentially allow me to plot multiple panel plots to compare and contrast patterns across different variables. 
+library(geofacet)
+#ggplot2 gives me the flexibility to make my plots more informative (see above about including multiple attributes), and patchwork will potentially allow me to plot multiple panel plots to compare and contrast patterns across different variables. Lastly, geofacet will help me create plots of processes organized by different geographic subsets in the state (county, great lake, geomorphic subset etc)
 
 library(RColorBrewer)
 library(latticeExtra)
@@ -54,8 +56,9 @@ library(RColorBrewer)
 library(viridis)
 #For making my plots looks look pretty with nice color palletes. Might be useful for some of my variables that are on different scales. 
 
-library(INLA)
-library(inlabru)
+#(INLA)
+#library(inlabru)
+library(dismo)
 #Finally, INLA allows me to create a species distribuion model (in a Bayesian framework) with a spatial/temporal autocorrelation terms relative to the effects of the hypothesized predictor variables. I can also plot the spatio-temporal effects of the variables across MI coastlines (ie. where/when EFB occurence exhibits the highest spatio-temporal autocorrelation). Eventually (though probably not in the scope of this exercise), I would like to plot the risk of uninvaded wetlands to potential EFB establishment. This would be based on the model estimates of the predictor's posterior distributions. 
 
 library(microbenchmark) 
@@ -114,13 +117,15 @@ veg_data <- SpatialPointsDataFrame(veg_data[,11:12],
 crs(veg_data) <- "+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs 
                  +ellps=WGS84 +towgs84=0,0,0"
 plot(veg_data)
+```
 
+```{r} 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
 #for INLA purposes, let's subset data to just 2018 (most recent year of data)
 #will load in subsetted data from class's google drive 
 folder.url <- "https://drive.google.com/open?id=1cjqJMM2JyQWDtVorNEyO6HLprB_s7XOF" #replace this link with the link to your specific folder which you can get by clicking the "get shareable link option"
 
-folder <- drive_get(as_id(folder_url))
+folder <- drive_get(as_id(folder.url))
 
 files <- drive_ls(folder)
 
@@ -128,7 +133,11 @@ lapply(files$id, function(x) drive_download(as_id(x), path = "~/Rspatial/", over
 
 file.list <- list.files((pattern = "*.csv")) #replace the pattern with the appropriate extensions for the files you want to load (e.g., .shp, .csv)
 
-rstrs <- lapply(file.list, read.csv) #Then read in the file using the appropriate read command (e.g., raster, read_sf, read.csv)
+field_data <- lapply(file.list, read.csv) #Then read in the file using the appropriate read command (e.g., raster, read_sf, read.csv)
+
+#for dem in folder as well? 
+file.list <- list.files((pattern = "*.tif")) 
+raster <- lapply(filelist,raster)
 
 
 #Check the outcomes? How will you know if your steps worked?
