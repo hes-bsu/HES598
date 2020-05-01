@@ -346,31 +346,49 @@ plot(ER_proj, border = "black", add = TRUE)
 area_L8 = landsat_jan29@nrows*landsat_jan29@ncols
 
 L8_snow<-as.vector(landsat_binary, mode = 'numeric')
-L8_snow<-sum(L8_snow, na.rm = TRUE)
+L8_snow_sum<-sum(L8_snow, na.rm = TRUE)
 
-L8_fsca<-L8_snow/area_L8
+L8_fsca<-L8_snow_sum/area_L8
 
 
 area_starfm = starfm_jan29@nrows*starfm_jan29@ncols
 
 starfm_snow<-as.vector(starfm_binary, mode = 'numeric')
-starfm_snow<-sum(starfm_snow, na.rm = TRUE)
+starfm_snow_sum<-sum(starfm_snow, na.rm = TRUE)
 
-starfm_fsca<-starfm_snow/area_starfm
+starfm_fsca<-starfm_snow_sum/area_starfm
 
 
 ## Create a confusion matrix to evaluate the performance of the model against the Landsat data
 
-landsat_factor<-as.factor(landsat_binary)
-starfm_factor<-as.factor(starfm_binary)
 
-confusionMatrix(starfm_binary,landsat_binary, positive = 1)
+landsat_factor<-as.factor(L8_snow)
+starfm_factor<-as.factor(starfm_snow)
 
+results <-confusionMatrix(starfm_factor,landsat_factor, positive = "1")
 
+## Save the results in matrices that can easily be viewed for reference
 
+overall <-as.matrix(results, what = "overall")
+classes <-as.matrix(results, what = "classes")
 
 
 ```
+
+
+```{r}
+
+## Generate our random rasters to compare our model results to
+
+
+
+
+
+
+
+
+````
+
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
 
