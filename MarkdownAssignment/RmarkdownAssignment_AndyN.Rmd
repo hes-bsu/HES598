@@ -1,0 +1,113 @@
+---
+title: "RMarkdown Assignment"
+author: "Andrew Nutting"
+date: "2/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidycensus)
+library(sp)
+library(ggplot2)
+library(viridis)
+library(scales)
+library(sf)
+```
+
+# Introduction
+
+## Introduce your dissertation or thesis
+
+My thesis did not have any interesting data to put into R so I will be writing about one of the projects I am on. Falls is one of the most reported injuries to elderly people. 
+Resource Mapping has become a vital tool in Public Health and it has shown its value in equitable resource allocation for community exercise-based fall prevention programs for elderly people. In 2004, a team in Idaho set out to create a community exercise-based fall prevention program focused on inproving elderly people's strength, flexability, and balance to help reduce their risk of falls, aptly called Fit and Fall Proof. The ability to show where the falls are occuring in relation to where exercise program are offered is critical in providing practiale and actionable information to key stakeholders. 
+
+## Study Area
+
+The study area is throughout the state of Idaho, in various urban and rural counties. America's current trend is that by the year 2034 there will be more elderly people that there are young. Idaho is a prime area for this study because according to most recent census data, there has been an increase in elderly people living in Idaho. More people more potential for falls.  
+
+
+**IMPORTANT: You'll need to make sure that any necessary packages are loaded in the first code chunk (called `setup` in this document) or explicitly reference them using `::` as each time you press the `knit` button initiaties a fresh R session outside of your current environment.**
+
+```{r studyarea}
+#Using GEOID from Census data as base to overlay my data on, since it does not have data. 
+
+id.falls = read.csv("C:/Users/andyj/Documents/R Projects/Classes/Nutting-CapstoneFAlls.csv", header = TRUE)
+
+census_api_key("d4a5662de1340722bd55c0cde4eb8af8c2263485")
+
+#download censu data
+id.county <- get_acs(geography = "county", 
+              variables = c("B19013_001"),
+              state = "ID", 
+              year = 2018, geometry = TRUE) %>% 
+  mutate(rename = str_replace_all(.$variable,
+                           (c("B01002_001"="age")))) %>% 
+  
+  #select the columns to keep
+  dplyr::select(c(GEOID, rename, estimate)) %>% 
+  #have to use spread because pivot_wider 
+  #not currently working for sf objects
+  spread(., key = rename, value = estimate) 
+
+id.census.sp <- as(id.census.sf, "Spatial")
+
+plot(id.census.sp, main = "Idaho Counties", 
+     sub="2018 Census Data", 
+     col="blue", 
+     border="white")
+
+```
+
+## Map an attribute of your data
+
+After you've made your study area map, trying plotting some attributes of your data. Remember, there's a lot of functionality that we haven't explored yet so be sure to checkout the package documentation and reference webpages if you're having trouble figuring out how to render the data you'd like to display.
+
+```{r attributeplot}
+tv.income.tct <- get_acs(geography = "tract", 
+              variables = "B19013_001",
+              state = "ID", 
+              year = 2018, geometry = TRUE) %>% 
+  filter(str_detect(NAME, "Ada | Boise | Canyon | Gem | Owyhee") )
+
+
+cty.map <- ggplot() +
+  geom_sf(data = id.census.sf, fill = "gray") +
+  geom_sf(data = tv.income.tct, aes(fill = estimate)) +
+  scale_fill_viridis()
+cty.map
+```
+
+## Plot your data a differnt way
+
+Throughout this course I will be encouraging you to plot your data in ways that don't require you to generate a map. This might help you see patterns that a map might make hard to detect. It might also help you recognize that your _is_ specifically tied to the spatial arrangement of your data (making maps and spatial analysis a critical component of your project). I use `ggplot2` as the primary means for generating these plots. There's a cheatsheet available for `ggplot2` as well (got to Help > Cheatsheets inside RStudio). I also recommend [Data Visualization: A Practical Introduction by Kieran Healy](https://socviz.co). His website has the code for building the plots in his book.
+
+```{r}
+med.inc <- median(id.census.sf$income)
+#fips_codes comes with tidycensus; using it here to get county names
+fips_codes$GEOID <- paste0(fips_codes$state_code, fips_codes$county_code)
+
+id.census.plot <- id.census.sf %>% 
+  left_join(fips_codes)
+
+np <- as.integer(id.census.plot$nonprof)
+np <- np[np != max(np)]
+bks <- log(quantile(np, probs = seq(0,1,0.25), names=FALSE), 10)
+bks <- c(bks, log(max(as.integer(id.census.plot$nonprof))))
+
+ggplot() +
+  geom_point(data=id.census.plot, 
+             aes(x=income, 
+                 y = reorder(county, income), color = log(as.integer(nonprof),10))) +
+  scale_color_gradient(breaks= bks ,guide="colourbar", name="Num of Nonprofits (log)")+
+  geom_vline(xintercept = med.inc)
+```
+
+## What did you learn?
+
+Tell me a little bit about how plotting your data spatially versus as a more traditional plot affects your thinking. Did you notice anything interesting about the spatial arrangment of the data? Are there trends in the data that the map makes hard to see? What about interactions. This doesn't have to be exhaustive, I just want you to reflect a little bit on how data visualtizaiton can help clarify your research questions.
+
+**Remember, you can use ? to at the prompt to learn more about a command (e.g., ?plot will tell you about the usage of the plot command). Send me questions if you need help!! Good luck.**
+
+**Once you've gotten everything in the Rmakrdown document, press the `knit` button and you'll see your work rendered as a webpage**
