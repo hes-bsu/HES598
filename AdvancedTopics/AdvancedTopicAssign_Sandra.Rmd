@@ -16,7 +16,7 @@ SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
 
 In the tropical Andes, bracken fern due to its vigor and rapid colonization inhibits the establishment of the native plants, delaying the recovery of the montane forest. My study investigate whether the distance and shape of Bracken fern-dominated patches from the forest affect natural regeneration in these patches in the north of Peru between 2014 and 2019. Satellite imagery of the Sentinel sensor from the last five years will be used to measure the vegetation index (NDVI) in each patch. Temporal changes in vegetation index within and between patches will be used as a measure of native vegetation recovery in the region.
 
-An expected result is that the configuration of Bracken fern patches will determine natural regeneration in these degraded areas. So, my first step will be to measure the distance from pixel to the close forest, applying the nearest neighbor analysis. To accomplish this first step, I will use sample data to test the efficiency of different packages in analyzing the distance of pixels located in the Bracken fern patches to the forest.
+An expected result is that the configuration of Bracken fern patches will determine natural regeneration in these degraded areas. So, my first step will be to measure the distance from each pixel to the forest edge, applying the nearest neighbor analysis. To accomplish this first step, I will use sample data to test the efficiency of different packages in analyzing the distance of pixels located in the Bracken fern patches to the forest.
 
 
 
@@ -29,21 +29,21 @@ Before you get started programming all of the potential things you could do duri
 #Packages:
 #  sp
 #  gdal
-  
+
 
 library(data.table)  
 library(sp)
 library(maptools)
-library(googledrive)
+library(googledrive)# I used this package to download files from googledrive into Rmarkdonw
 options(
   gargle_oauth_cache = ".secrets",
   gargle_oauth_email = TRUE
 )
 
-library(here)
-library(raster)
+library(here)# It was used to define file paths.
+library(raster)# I used it to work with a raster file
 library(rasterVis)
-library(rgdal)
+library(rgdal)# This package allowed to project and transform spatial data.
 library(viridis)
 library(scales)
 library(maptools)
@@ -77,8 +77,6 @@ elev=raster::raster(here::here("datatemp/original/raster.tif"))
 elev
 
 
-####This is where I stopped
-
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
 
 pixels
@@ -89,6 +87,14 @@ names(pixels)
 colnames(pixels)
 rownames(pixels)
 dim(pixels)
+
+
+ncell(elev)
+ncol(elev)
+nrow(elev)
+
+
+
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
 
@@ -101,8 +107,18 @@ elev@crs
 pixels_spdf <- SpatialPointsDataFrame(
   pixels[,1:2],proj4string=elev@crs, pixels)
 
+pixels
+str(pixels)
+# Then I plot pixels in raster
+
+plot(elev)
+myCol <- terrain.colors(6)
+plot(elev, col=myCol)
+points(pixels$Long, pixels$Lat, cex = 0.5)
+
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
+
 ##Step2: I use extract funtion to get elevation data from the raster image.
 
 pixel_elev <- raster::extract(elev, # raster layer
@@ -111,9 +127,8 @@ pixel_elev <- raster::extract(elev, # raster layer
 pixel_elev
 str(pixel_elev)
 
-plot(elev)
 
-### grab the name of the ID_pixel from the pixels_spdf
+### Then I grab the name of the ID_pixel from the pixels_spdf
 
 pixel_elev$pix_id<- pixels_spdf$ID_pixel
 pixel_elev$pix_id
@@ -130,67 +145,14 @@ pixelelev <- merge(pixels, pixel_elev, by.x = 'ID_pixel', by.y = 'pix_id')
 head(pixelelev)
 
 
-############plot pixels in raster
-
-plot(elev)
-myCol <- terrain.colors(6)
-plot(elev, col=myCol)
-points(pixels$Long, pixels$Lat, cex = 0.5)
-
+pixelelev
+str(pixelelev)
 
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
 ##Step3: 
 
-library(gdistance)
-library(Matrix)
-library(igraph)
-
-
-##############################################################
-##############################################################
-##############################################################
-############    geodistance package #####$####################
-##############################################################
-##############################################################
-
-
-
-# define altitude difference function and create a transition matrix from the original
-
-###commutative distance, assymetric matrix
-
-hd1 <- transition(elev, transitionFunction=mean, directions=8)
-plot(raster(hd1), sub="non geo-corr", cex=0.8)
-text(raster(hd1),digits=3)
-
-
-altDiff <- function(x){x[2] - x[1]}
-hd <- transition(elev, altDiff, 8, symm=FALSE)
-plot(raster(hd), sub="non geo-corr", cex=0.8)
-text(raster(hd),digits=3)
-
-
-# 3) This is then geoCorrected to slope, i.e. altitude diff / distance travelled
-slope <- geoCorrection(hd,scl=FALSE)
-plot(raster(slope), sub="slope (height diff / distance))", cex.sub=0.8)
-text(raster(slope),digits=3)
-
-
-plot(raster(hd), main="raster(tr3)", xlab="Longitude (degrees)",
-ylab="Latitude (degrees)")
-
-
-
-############################################################
-############################################################
-################## EUCLIDEAN DISTANCE  #####################
-############################################################
-############################################################
-
-
-
-######### convert the lat long to UTM using this function
+######### transform coordinates from lat long to UTM for measuring distance in raster files.
 
 pixelelev
 dplyr::glimpse(pixelelev)
@@ -200,9 +162,10 @@ LongLatToUTM<-function(x,y,ID,zone){
  xy <- data.frame(ID = ID, X = x, Y = y)
  coordinates(xy) <- c("X", "Y")
  proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")  ## for example
- res <- spTransform(xy, CRS(paste("+proj=utm +south +zone=",zone," +ellps=WGS84",sep='')))
+ res <- spTransform(xy, CRS(paste("+proj=utm +south +zone=",zone," +ellps=WGS84 +units=m +no_defs +towgs84=0,0,0", sep='')))
  return(as.data.frame(res))
 }
+
 
 ##Run the function
 x=LongLatToUTM(pixelelev$Long,pixelelev$Lat,ID=pixelelev$ID_pixel,17)
@@ -221,6 +184,142 @@ names(pixelelev)
 df=pixelelev
 names(df)=c("ID_pixel","Long","Lat","ID_veg","loc","ndvi","ID.x","z","ID.y","x","y")
 names(df)
+str(df)
+
+
+################### reproject raster from lat long into UTM
+
+# Define the Proj.4 spatial reference 
+
+CRS("+init=epsg:32717")
+
+
+sr <- "+proj=utm +south +zone=17 +ellps=WGS84 +units=m +no_defs +towgs84=0,0,0"
+
+# Project Raster
+elev_utm <- projectRaster(elev, crs = sr)
+
+# Write the RasterLayer to disk (See datatype documentation for other formats)
+
+writeRaster(elev_utm, filename="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/original/elev_utm.tif", overwrite=TRUE)
+
+
+### plot raster
+
+plot(elev_utm)
+
+plot(elev_utm, main="elev", xlab="East", ylab="North")
+
+myCol <- terrain.colors(6)
+plot(elev_utm, col=myCol)
+points(df$x, df$y, main="elev", xlab="East", ylab="North", cex = 0.5)
+
+
+
+
+##############################################################
+##############################################################
+##############################################################
+############    gdistance package #####$####################
+##############################################################
+##############################################################
+
+
+library(gdistance)# This package is used to measure distance using spatial data.
+library(Matrix)# This package allow getting distance matrix
+library(igraph)
+
+
+# create a transition matrix from the original
+
+
+### 2) define altitude difference function and create a transition matrix from the original
+
+altDiff <- function(x){x[2] - x[1]}
+hd <- transition(elev_utm, altDiff, 8, symm=FALSE)
+str(hd)
+plot(raster(hd), sub="non geo-corr", cex=0.8)
+
+
+#raster_hd <- geoCorrection(hd, type = "c")
+
+#rasValue=extract(hd, pointCoordinates)
+
+## write.table(hd,file="hd.csv", append=FALSE, sep= ",", row.names = FALSE, col.names=TRUE)
+
+
+# 3) This is then geoCorrected to slope, i.e. altitude diff / distance travelled
+slope <- geoCorrection(hd, type="c", scl=FALSE)
+plot(raster(slope), sub="slope (height diff / distance))", cex.sub=0.8)
+
+
+## now calculate distance using the least cost path
+
+# coords <- st_as_sf(coords, coords = c("longitude", "latitude"),                    crs = 4326, stringsAsFactors = FALSE) %>%          st_transform(crs = 32619)
+
+
+dist2 <- costDistance(slope,
+                      fromCoords = as(as_Spatial(coords[1,]), "SpatialPoints"),
+                      toCoords = as(as_Spatial(coords[-1,]), "SpatialPoints"))
+
+
+
+##############################################################
+##############################################################
+##############################################################
+############   igraph package #####$####################
+##############################################################
+##############################################################
+
+
+
+### I need to conver raster to polygon###
+
+
+
+
+
+library(igraph)
+library(sf)
+
+## Let’s create another grid, but this time, let’s make it hexagonal
+
+hex_elev_umt <- st_make_grid(elev_utm, cellsize = 250, square = FALSE)
+hex_elev_umt
+
+## we need to create an igraph network.
+## We must first create an edgelist (i.e. list to ‘from’ and ‘to’ cell id’s that represent neighbours), then convert into a network.
+
+edgelist <- as.matrix(as.data.frame(st_intersects(hex_elev_umt)))
+  # yes, the as.matrix and as.data.frame is a bit silly, but required to have the right format
+
+gr <- graph_from_edgelist(edgelist)
+
+#### distance between each neighbouring cell is 250m since we defined this when we created the grid
+
+E(gr)$weight <- 250
+  # setting the weight for ALL edges, alternatively could supply a vector here
+
+
+## We just need to figure out where the stations are relative to the hexagonal grid.
+
+whereispixels <- as.numeric(st_intersects(coords, hex_elev_umt))
+dist3 <- distances(gr, whereispixels[1], whereispixels[-1])
+
+dist3_df <- data.frame(dist3, row.names = "Distance from init:")
+
+# colnames(dist3_df) <- c("P1", "P2", "P3")
+
+kable(dist3_df)
+
+
+############################################################
+############################################################
+################## EUCLIDEAN DISTANCE  #####################
+############################################################
+############################################################
+
+
 
 
 
