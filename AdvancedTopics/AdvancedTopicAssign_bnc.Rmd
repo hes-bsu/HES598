@@ -1,7 +1,7 @@
 ---
 title: "Advanced Topic Instructions: Connectivity"
 author: "Brent Clark"
-date: "4/27/2020"
+date: "05/03/2020"
 output: html_document
 ---
 
@@ -64,6 +64,22 @@ library(readxl)
 # 
 ```
 
+```{r loadData_Google Drive, include = TRUE}
+
+#Provide link to data folder on google drive - folder "Brent"
+older.url <- "https://drive.google.com/open?id=1Mb8LbjqOGrGoWtbD1PXew0698boBJtH0" 
+
+folder <- drive_get(as_id(folder_url))
+
+files <- drive_ls(folder)
+
+lapply(files$id, function(x) drive_download(as_id(x), path = "~/Library/Mobile Documents/com~apple~CloudDocs/BSU/Graduate-MS Raptor Biology/R_Projects/HES598" overwrite = TRUE)) #replace the path with a folder on your computer outside of the repo directory
+
+file.list <- list.files((pattern = "*.tif, *.shp, *.csv") #replace the pattern with the appropriate extensions for the files you want to load (e.g., .shp, .csv)
+
+
+```
+
 Introduce the study area
 ```{r bnc_studyArea,include = TRUE}
 ###
@@ -71,7 +87,7 @@ Introduce the study area
 ###
 
 #Create Map of Idaho with the counties of interest outlined
-idaho <- readOGR("./data/idaho_cty.shx")
+idaho <- readOGR("./data/idaho_cty.shp")
 
 #creates seperate map of just "Ada" and "Elmore" counties
 stdyArea <- subset(idaho, NAME == "Ada" | NAME == "Elmore")
