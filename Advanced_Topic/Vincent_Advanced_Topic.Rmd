@@ -59,8 +59,8 @@ library(caret)
 
 #load your data - which datasets do you need?
 
-modis<-brick()
-landsat<-brick()
+modis<- brick()
+landsat<- brick()
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
 
@@ -277,14 +277,14 @@ setwd('C:/Users/Allison and Brian/Documents/HES598/Advanced_Topic')
 
 landsat_jan29<- raster("./Data/Landsat_testday_012916.tif")
 starfm_jan29<- raster("./Data/STARFM_testday_012916.tif")
-ER <-readOGR("./Data/EastRiver_Project.shp")
+ER<- readOGR("./Data/EastRiver_Project.shp")
 
 # Check the projections of our inputs
 proj4string(ER)
 proj4string(landsat_jan29)
 proj4string(starfm_jan29)
 
-data_proj = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+data_proj<- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 #co_utm ="+proj=utm +zone=13 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
 #landsat_jan29 <- projectRaster(landsat_jan29, crs = co_utm)
@@ -293,7 +293,7 @@ data_proj = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 #starfm_jan29 <- projectRaster(starfm_jan29, crs = co_utm)
 #proj4string(starfm_jan29)
 
-ER_proj<-spTransform(ER, CRS(data_proj))
+ER_proj<- spTransform(ER, CRS(data_proj))
 proj4string(ER_proj)
 
 ```
@@ -304,16 +304,16 @@ proj4string(ER_proj)
 ## Landsat 'no data' values are currently set to 0. Creating a mask to change them to -11111, which is the 'no data' value in the model output
 
 
-landsat_masked <- Which(landsat_jan29 == 0, cells = TRUE)
+landsat_masked<- Which(landsat_jan29 == 0, cells = TRUE)
 landsat_jan29[landsat_masked] <- -11111
 
 
 ## Reclassify all data values less than or equal to -11111 as NA
-landsat_jan29 <- reclassify(landsat_jan29,cbind(-Inf, -11111, NA))
-starfm_jan29 <- reclassify(starfm_jan29,cbind(-Inf, -11111, NA))
+landsat_jan29<- reclassify(landsat_jan29,cbind(-Inf, -11111, NA))
+starfm_jan29<- reclassify(starfm_jan29,cbind(-Inf, -11111, NA))
 
 par(mfrow=c(1,2)) 
-plot(landsat_jan29,  col = rev(cm.colors(40)), main = "NDSI from Landsat")
+plot(landsat_jan29, col = rev(cm.colors(40)), main = "NDSI from Landsat")
 plot(ER_proj, border = "black", add = TRUE)
 plot(starfm_jan29, col = rev(cm.colors(40)), main = "NDSI from Model")
 plot(ER_proj, border = "black", add = TRUE)
@@ -324,11 +324,11 @@ plot(ER_proj, border = "black", add = TRUE)
 ```{r}
 ## Once we know our data is displaying correctly, classify each pixel as "snow" or "no-snow" using a threshold of 0.4 NDSI
 
-landsat_binary <- reclassify(landsat_jan29,cbind(-Inf, 4000, 0))
-starfm_binary <- reclassify(starfm_jan29,cbind(-Inf, 4000, 0))
+landsat_binary<- reclassify(landsat_jan29,cbind(-Inf, 4000, 0))
+starfm_binary<- reclassify(starfm_jan29,cbind(-Inf, 4000, 0))
 
-landsat_binary <- reclassify(landsat_binary,cbind(4000, Inf, 1))
-starfm_binary <- reclassify(starfm_binary,cbind(4000, Inf, 1))
+landsat_binary<- reclassify(landsat_binary,cbind(4000, Inf, 1))
+starfm_binary<- reclassify(starfm_binary,cbind(4000, Inf, 1))
 
 par(mfrow=c(1,2)) 
 plot(landsat_binary,  col = rev(cm.colors(40)), main = "Snow/No-Snow from Landsat")
@@ -343,34 +343,34 @@ plot(ER_proj, border = "black", add = TRUE)
 ## Find the fSCA for each raster
 
 
-area_L8 = landsat_jan29@nrows*landsat_jan29@ncols
+area_L8<- landsat_jan29@nrows*landsat_jan29@ncols
 
-L8_snow<-as.vector(landsat_binary, mode = 'numeric')
-L8_snow_sum<-sum(L8_snow, na.rm = TRUE)
+L8_snow<- as.vector(landsat_binary, mode = 'numeric')
+L8_snow_sum<- sum(L8_snow, na.rm = TRUE)
 
-L8_fsca<-L8_snow_sum/area_L8
+L8_fsca<- L8_snow_sum/area_L8
 
 
-area_starfm = starfm_jan29@nrows*starfm_jan29@ncols
+area_starfm<- starfm_jan29@nrows*starfm_jan29@ncols
 
-starfm_snow<-as.vector(starfm_binary, mode = 'numeric')
-starfm_snow_sum<-sum(starfm_snow, na.rm = TRUE)
+starfm_snow<- as.vector(starfm_binary, mode = 'numeric')
+starfm_snow_sum<- sum(starfm_snow, na.rm = TRUE)
 
-starfm_fsca<-starfm_snow_sum/area_starfm
+starfm_fsca<- starfm_snow_sum/area_starfm
 
 
 ## Create a confusion matrix to evaluate the performance of the model against the Landsat data
 
 
-landsat_factor<-as.factor(L8_snow)
-starfm_factor<-as.factor(starfm_snow)
+landsat_factor<- as.factor(L8_snow)
+starfm_factor<- as.factor(starfm_snow)
 
-results <-confusionMatrix(starfm_factor,landsat_factor, positive = "1")
+results<- confusionMatrix(starfm_factor,landsat_factor, positive = "1")
 
 ## Save the results in matrices that can easily be viewed for reference
 
-overall <-as.matrix(results, what = "overall")
-classes <-as.matrix(results, what = "classes")
+overall<- as.matrix(results, what = "overall")
+classes<- as.matrix(results, what = "classes")
 
 
 ```
@@ -380,11 +380,16 @@ classes <-as.matrix(results, what = "classes")
 
 ## Generate our random rasters to compare our model results to
 
+set.seed(123)
 
+rand<- stack()
 
-
-
-
+n<- 100
+for (i in 1:n) {
+  n1<- sample(starfm_binary, replace = FALSE)
+  dim(n1) <- c(1590, 1805)
+  rand<- addLayer(rand, n1)
+}
 
 
 ````
