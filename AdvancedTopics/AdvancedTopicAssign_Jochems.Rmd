@@ -54,6 +54,7 @@ library(RColorBrewer)
 library(latticeExtra)
 library(RColorBrewer)
 library(viridis)
+#library(rJava)
 #For making my plots looks look pretty with nice color palletes. Might be useful for some of my variables that are on different scales. 
 
 #(INLA)
@@ -114,8 +115,7 @@ veg_data <- veg_data[which(veg_data$gps_lon < 0 & veg_data$gps_lat>0),]
 # now need to create .shp file
 veg_data <- SpatialPointsDataFrame(veg_data[,11:12],
                                     veg_data)
-crs(veg_data) <- "+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs 
-                 +ellps=WGS84 +towgs84=0,0,0"
+crs(veg_data) <- "+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
 plot(veg_data)
 ```
 
@@ -138,8 +138,61 @@ field_data <- lapply(file.list, read.csv) #Then read in the file using the appro
 #for dem in folder as well? 
 file.list <- list.files((pattern = "*.tif")) 
 raster <- lapply(filelist,raster)
+```
+
+```{r}
+#need to subset to counties with records that overlap our topobathymetry layer
+#will work with Munuscong Bay layer since it's the most contiguous 
+UP_data <- veg_data[which(veg_data$county == "Chippewa"),]
+UP_data <- as.data.frame(UP_data)
+
+#check for duplicates of GPS coordinates 
+dups <- UP_data[duplicated(UP_data[,c(11,12)]),c(11,12)]
+#none!
+#also see if there are no errors with gps coords 
+range(UP_data$gps_lon)
+range(UP_data$gps_lat)
+
+#since our lidar layer is even a smaller subset of the area, we need to further subset points to ROI, around Munuscong Bay on the St. Mary's River (technically lake huron)
+#will do so by site names, determined from GIS software
+UP_data$site_name <- as.factor(UP_data$site_name)
+Mcong <- UP_data[UP_data$site_name %in% c("Benchmark: Munuscong Island Wetland", "Benchmark: Munuscong Lake Wetland #6","Gogomain River Wetland #1","Munuscong Lake Wetland #2,#3 Munuscong River Delta","Raber Bay Wetland" ,"Roach Point Wetland"),]
+within(Mcong, rm(gps_lon.1, gps_lat.1))
+
+#let's make dataframe into spatial object with binomial occurence 
+# now need to create .shp file
+Mcong <- SpatialPointsDataFrame(Mcong[,11:12],
+                                    Mcong)
+crs(Mcong) <- "+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
+plot(Mcong)
+
+```
+
+```{r}
+#loading in raster 
+setwd("Z:/SDMData/GreatLakesLayers/Rasters")
+topobath <- raster("Job534911_2013_2015_usace_huron_dem.tif")
+
+#the two layers in different coordinate systems, I will reset topo layer to CRS of points layer 
+#crs(topobath) <- "+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
+extent(topobath) <- Mcong
+
+#or opposite? 
+crs(Mcong) <- "+proj=lcc +lat_1=47.08333333333334 +lat_2=45.48333333333333 +lat_0=44.78333333333333 +lon_0=-87 +x_0=7999999.999968001 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=ft +no_defs"
 
 
+plot(topobath)
+points(Mcong,cex=0.5)
+```
+
+```{r}
+#extract values from topobath layer to serve as a predictor variable for EFB presence 
+
+
+```
+
+
+```{r}
 #Check the outcomes? How will you know if your steps worked?
 
 ```
