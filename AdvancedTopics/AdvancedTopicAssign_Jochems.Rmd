@@ -37,6 +37,7 @@ library(sf)
 library(sp)
 library(rgdal)
 library(raster)
+library(spatialEco)
 #These libraries help me eventually turn my dataframe with lat/lons into a .shp file that I'll eventually plot all over the state of MI. Each point is a surveyed quadrat in a given wetland. 
 
 library(maps)
@@ -96,13 +97,13 @@ dim(veg_data)
 #[1] 2255   30
 #we have 2,225 rows with 30 columns of data. Each row is a quadrat from a given transect in a given year between 2011-18. 
 
-##now I need to load in shapefiles so that I could calculate additional, potentially important predictors, e.g. fetch 
-setwd("Z:/SDMData/RSpatialFiles")
-MI_boundary <- st_read("Z:/SDMData/RSpatialFiles/MichiganBoundaries.shp")#state boundary layer 
-GL_coastlines <- st_read("Z:/SDMData/RSpatialFiles/GreatLakesCoastlines.shp") #coastline layer useful for calculated fetch
-wetland_polys <- st_read("Z:/SDMData/RSpatialFiles/great_lakes_coastal_wetlands.shp") #delineated wetlands in GL 
-CWMP_surveys <- st_read("Z:/SDMData/RSpatialFiles/CWMPSurveys_EFB2011-18.shp") #centroid layer of all surveyed wetlands in time period
-invaded_sites <- st_read("Z:/SDMData/RSpatialFiles/MI_InvadedSites2011_18.shp") #centroid layer of EFB-invaded sites only 
+# ##now I need to load in shapefiles so that I could calculate additional, potentially important predictors, e.g. fetch 
+# setwd("Z:/SDMData/RSpatialFiles")
+# MI_boundary <- st_read("Z:/SDMData/RSpatialFiles/MichiganBoundaries.shp")#state boundary layer 
+# GL_coastlines <- st_read("Z:/SDMData/RSpatialFiles/GreatLakesCoastlines.shp") #coastline layer useful for calculated fetch
+# wetland_polys <- st_read("Z:/SDMData/RSpatialFiles/great_lakes_coastal_wetlands.shp") #delineated wetlands in GL 
+# CWMP_surveys <- st_read("Z:/SDMData/RSpatialFiles/CWMPSurveys_EFB2011-18.shp") #centroid layer of all surveyed wetlands in time period
+# invaded_sites <- st_read("Z:/SDMData/RSpatialFiles/MI_InvadedSites2011_18.shp") #centroid layer of EFB-invaded sites only 
 
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
@@ -163,37 +164,90 @@ within(Mcong, rm(gps_lon.1, gps_lat.1))
 # now need to create .shp file
 Mcong <- SpatialPointsDataFrame(Mcong[,11:12],
                                     Mcong)
-crs(Mcong) <- "+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
-plot(Mcong)
+#save crs for later 
+# crs(Mcong) <- "+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
+# plot(Mcong)
 
 ```
 
 ```{r}
 #loading in raster 
 setwd("Z:/SDMData/GreatLakesLayers/Rasters")
+
+# dir <- "Z:/SDMData/GreatLakesLayers/Rasters/"
+# files <- list.files(path = dir, pattern = ".tif")
+# rasters <- lapply(paste0(dir, files), raster)
+
+ #CRS("+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
 topobath <- raster("Job534911_2013_2015_usace_huron_dem.tif")
+topobath <- stack(topobath)
+#topobath <- raster("McongDEM.tif")
 
 #the two layers in different coordinate systems, I will reset topo layer to CRS of points layer 
 #crs(topobath) <- "+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
-extent(topobath) <- Mcong
+# #extent(Mcong) <- topobath
+# 
+# demext <- extent(26935960, 27001583, 482114.1, 551108.9)
+# extent(Mcong) <- demext
 
-#or opposite? 
-crs(Mcong) <- "+proj=lcc +lat_1=47.08333333333334 +lat_2=45.48333333333333 +lat_0=44.78333333333333 +lon_0=-87 +x_0=7999999.999968001 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=ft +no_defs"
+# #or opposite? 
+#crs(Mcong) <-  "+init=epsg:2251 +proj=lcc +lat_1=47.08333333333334 +lat_2=45.48333333333333 +lat_0=44.78333333333333 +lon_0=-87 +x_0=7999999.999968001 +y_0=0 +datum=NAD83 +units=ft +no_defs +ellps=GRS80 +towgs84=0,0,0"
+crs(topobath) <- "+init=epsg:2251 +proj=lcc +lat_1=47.08333333333334 +lat_2=45.48333333333333 +lat_0=44.78333333333333 +lon_0=-87 +x_0=7999999.999968001 +y_0=0 +datum=NAD83 +units=ft +no_defs +ellps=GRS80 +towgs84=0,0,0"
+# or that UTM again... 
 
+# not plotting correctly, will try to transform lat lon into utm? 
+cord.dec <- SpatialPointsDataFrame(UP_data[,11:12], UP_data, proj4string =CRS("+proj=longlat"))
+cord.NAD <- spTransform(cord.dec,CRS("+init=epsg:2251"))
+# plot(cord.UTM)
+
+# proj4string(Mcong) <- CRS("+init=epsg:32616 +proj=utm +zone=16 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0")
+#crs(topobath) <- "+init=epsg:32616 +proj=utm +zone=16 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#EPSG  32616 for UTM, 2251 for lcc NAD 1983
+#extent(topobath) <- cord.UTM
 
 plot(topobath)
-points(Mcong,cex=0.5)
+points(cord.NAD,cex=0.5)
+#points intersect with topolayer! 
 ```
 
 ```{r}
 #extract values from topobath layer to serve as a predictor variable for EFB presence 
+predictor <- extract(topobath,cord.NAD)
 
+topo_depth <- as.vector(predictor)
+
+#add predictor vector to our spatial data frame 
+cord.NAD$Job534911_2013_2015_usace_huron_dem <- topo_depth
+
+#glm will remove obs with NAs values, but for clealiness' sake, let's remove all transect survey plots in the rest of the county (those that did not intersect with the topobathymetry layer)
+#will likley make the mapping easier later 
+#cord.NAD_mod <- sp.na.omit(cord.NAD, col.name = "topobath")
+ 
+ 
+
+#now we are ready to run a glm between topo_depth 
+#binomial model for EFB occurence against topo_depth 
+m1 <- glm(hyd_bin~Job534911_2013_2015_usace_huron_dem, data=data.frame(cord.NAD), family="binomial")
+
+#names must match in raster object and predictor(s) for prediction to work later on! 
 
 ```
 
 
 ```{r}
 #Check the outcomes? How will you know if your steps worked?
+summary(m1)
+
+# on real numbers scale for interpetaible probabilities 
+real_m1 <- plogis(m1)
+#plot model predictions on entire extent of topobathymetry layer 
+p <- raster::predict(topobath, plogis(m1), progress='text')
+
+#map of proability of EFB occurence based on topobathymetry dem 
+plot(p)
+
+#still need to plogis cell values to get probabilities on real numbers scale 
 
 ```
 
