@@ -51,7 +51,7 @@ library(rgeos)
 library(dplyr)
 library(RColorBrewer)
 library(ggplot2)
-
+library(microbenchmark)
 
 #vignette(package="spdep")
 #vignette(package="here")
@@ -216,6 +216,48 @@ points(df$x, df$y, main="elev", xlab="East", ylab="North", cex = 0.5)
 
 
 
+#############coord
+
+library(dplyr)
+library(tidyverse)
+library(Rfast)
+library(sp)
+library(sf)
+
+df$East=df$x
+df$North=df$y
+colnames(df)
+class(df)
+
+
+df_spat=st_as_sf(df, coords = c("x", "y"), crs = ("+init=epsg:32717"))
+df_spat
+
+coordnt <- st_as_sf(df_spat, df_spat = c("x", "y"),
+                   crs = 32717, stringsAsFactors = FALSE)
+class(coordnt)
+
+coordnt
+coordnt$ID_pixel
+coordnt$ID_veg
+
+
+
+coord=coordnt
+coord <- st_set_geometry(coord,NULL)
+colnames(coord)
+
+myvars <- c("East", "North")
+coord_new <- coord[myvars]
+colnames(coord_new)
+
+as.matrix(sapply(coord_new, as.numeric))  
+
+id <- c("ID_veg", "ID_pixel")
+coord_id <- coord[id]
+
+as.matrix(sapply(coord_id, as.numeric))  
+
 
 ##############################################################
 ##############################################################
@@ -235,22 +277,32 @@ library(igraph)
 
 ### 2) define altitude difference function and create a transition matrix from the original
 
+### The units of height and distance should be identical.
+### slope = differenceinheight/distancetravelled
+
 altDiff <- function(x){x[2] - x[1]}
 hd <- transition(elev_utm, altDiff, 8, symm=FALSE)
 str(hd)
-plot(raster(hd), sub="non geo-corr", cex=0.8)
+plot(raster(hd), sub="slope (height diff / distance)", cex=0.8)
 
 
-#raster_hd <- geoCorrection(hd, type = "c")
+#Then we use the function geoCorrection to divide by the distance between cells.
 
-#rasValue=extract(hd, pointCoordinates)
+slope <- geoCorrection(hd, scl=FALSE)
+
+# inspect a transition matrix for slope, for example
+round(transitionMatrix(slope),3)
+
 
 ## write.table(hd,file="hd.csv", append=FALSE, sep= ",", row.names = FALSE, col.names=TRUE)
 
+adj <- adjacent(elev_utm, cells=1:ncell(elev_utm), pairs=TRUE, directions=8)
+speed <- hd
+speed[adj] <- 6 * exp(-3.5 * abs(slope[adj] + 0.05))
 
-# 3) This is then geoCorrected to slope, i.e. altitude diff / distance travelled
-slope <- geoCorrection(hd, type="c", scl=FALSE)
-plot(raster(slope), sub="slope (height diff / distance))", cex.sub=0.8)
+conductance <- geoCorrection(speed)
+
+str(conductance)
 
 
 ## now calculate distance using the least cost path
@@ -258,13 +310,17 @@ plot(raster(slope), sub="slope (height diff / distance))", cex.sub=0.8)
 # coords <- st_as_sf(coords, coords = c("longitude", "latitude"),                    crs = 4326, stringsAsFactors = FALSE) %>%          st_transform(crs = 32619)
 
 
-dist2 <- costDistance(slope,
-                      fromCoords = as(as_Spatial(coords[1,]), "SpatialPoints"),
-                      toCoords = as(as_Spatial(coords[-1,]), "SpatialPoints"))
+dist2 <- costDistance(conductance,
+                      fromCoords = as(as_Spatial(coordnt[1,]), "SpatialPoints"),
+                      toCoords = as(as_Spatial(coordnt), "SpatialPoints"))
 
+dist2
+colnames(dist2) <- coordnt$ID_pixel
+dist2
+colnames(dist2) <- coordnt$ID_veg
+dist2
 
-
-##############################################################
+##############################################
 ##############################################################
 ##############################################################
 ############   igraph package #####$####################
@@ -272,45 +328,113 @@ dist2 <- costDistance(slope,
 ##############################################################
 
 
-
-### I need to conver raster to polygon###
-
-
-
-
-
 library(igraph)
 library(sf)
+library(rgdal)
 
-## Let’s create another grid, but this time, let’s make it hexagonal
 
-hex_elev_umt <- st_make_grid(elev_utm, cellsize = 250, square = FALSE)
-hex_elev_umt
+########## extract coords
+
+library(tidyverse)
+library(tibble)
+library(devtools)
+library(usethis)
+
+
+
+######### Duplicate and Extract coordinates
+
+library (sf)
+library(sp)
+
+class(df)
+colnames(df)
+
+# [1] "ID_pixel" "Long"     "Lat"      "ID_veg"   "loc"      "ndvi"     "ID.x"    
+# [8] "z"        "ID.y"     "x"        "y"
+
+df$East=df$x
+df$North=df$y
+colnames(df)
+class(df)
+
+
+df_spat=st_as_sf(df, coords = c("x", "y"), crs = ("+init=epsg:32717"))
+df_spat
+
+coordnt <- st_as_sf(df_spat, df_spat = c("x", "y"),
+                   crs = 32717, stringsAsFactors = FALSE)
+class(coordnt)
+
+colnames(coordnt)
+class(coordnt)
+coordnt <- coordnt %>% rename(GEOMETRY=geometry)
+coordnt
+class(coordnt)
+
+
+
+
+### Convert raster to polygon###
+
+elev_utm
+
+elev_utm_poly = rasterToPolygons(elev_utm,na.rm=TRUE)
+
+class(elev_utm_poly)
+
+## save shapefile elev_utm_poly in folder
+writeOGR(elev_utm_poly,"elev_utm_shape", dsn="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp", driver="ESRI Shapefile",overwrite=TRUE)
+
+## call shapefile elev_utm_shape and transform into sf file
+elev_utm_shape <- st_read("elev_utm_shape.shp")%>%
+       st_transform(crs = 32717)
+class(elev_utm_shape)
+
+
+
+###create an hexagonal grid
+hex_elev_utm_shape <- st_make_grid(elev_utm_shape, cellsize = 50, square = FALSE)
+hex_elev_utm_shape
+
+plot(hex_elev_utm_shape,axes=TRUE,col="green",pch=19,cex=.5,xlab="East", ylab="North")
+
+
+############ Create an igraph network, it will represent neighbouring cells
+
 
 ## we need to create an igraph network.
 ## We must first create an edgelist (i.e. list to ‘from’ and ‘to’ cell id’s that represent neighbours), then convert into a network.
 
-edgelist <- as.matrix(as.data.frame(st_intersects(hex_elev_umt)))
+edgelist <- as.matrix(as.data.frame(st_intersects(hex_elev_utm_shape)))
+
   # yes, the as.matrix and as.data.frame is a bit silly, but required to have the right format
+edgelist
 
-gr <- graph_from_edgelist(edgelist)
 
-#### distance between each neighbouring cell is 250m since we defined this when we created the grid
+gr <- graph_from_edgelist(edgelist, directed=TRUE)
 
-E(gr)$weight <- 250
-  # setting the weight for ALL edges, alternatively could supply a vector here
+#### distance between each neighbouring cell is 50m since we defined this when we created the grid
+
+E(gr)$weight <- 50
 
 
 ## We just need to figure out where the stations are relative to the hexagonal grid.
 
-whereispixels <- as.numeric(st_intersects(coords, hex_elev_umt))
-dist3 <- distances(gr, whereispixels[1], whereispixels[-1])
+
+hex_pixels <- as.numeric(st_intersects(coordnt, hex_elev_utm_shape))
+hex_pixels
+
+dist3 <- distances(gr, hex_pixels[1], hex_pixels[-1])
 
 dist3_df <- data.frame(dist3, row.names = "Distance from init:")
 
-# colnames(dist3_df) <- c("P1", "P2", "P3")
 
-kable(dist3_df)
+coordnt$ID_veg
+colnames(dist3_df)<- c(coordnt$ID_veg)
+
+
+
 
 
 ############################################################
@@ -319,18 +443,20 @@ kable(dist3_df)
 ############################################################
 ############################################################
 
-
-
-
-
 ###################### measure distance #######################
 
-distxyz.fx=function(x1,x2,y1,y2,z1,z2){
+microbenchmark 
+
+
+ distxyz.fx=function(x1,x2,y1,y2,z1,z2){
   sqrt((x1-x2)^2+(y1-y2)^2+(z1-z2)^2)
 }
 dist.fx=function(x1,x2,y1,y2){
   sqrt((x1-x2)^2+(y1-y2)^2)
 }
+
+
+
 #pix=read.csv("pixelelev.csv")
 #df=read.csv("df.csv")
 df_forest=df[df$ID_veg=="forest",]
@@ -358,6 +484,8 @@ points(df_fern$x,df_fern$y,col="black",pch=19,cex=.5)
 points(df_forest$x[df_fern$nearForestID],
        df_forest$y[df_fern$nearForestID],col="green",pch=19,cex=1)
 points(df_forest$x,df_forest$y,col="blue",cex=.5)
+
+
 
 #Check the outcomes? How will you know if your steps worked?
 
