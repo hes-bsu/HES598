@@ -1,7 +1,6 @@
 ---
-title: "Advanced Topic - Interactive BiVariate Map"
+title: "Interactive Bivariate Map"
 author: "Lauren Hunt"
-date: "4/28/2020"
 output: html_document
 ---
 
@@ -10,16 +9,23 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-## Introduce your problem
-
-Give a brief introduction to your research and identify how your "Advanced Topic" plays into what you are hoping to do. For example, if you are just starting out on your project and your topic is "Study Design" you might be interested in developing a spatially informed sampling/stratification scheme.Or maybe your work is going to have a big public outreach component that you'd like to support with some nice interactive maps. Give us a sense for what "success" would look like - what is your ideal end product for the analysis/approach you're testing out. This will help us figure out if the tools you tried were successful.
-
+## Introduction
 I wanted to focus on using bivariate mapping to display how one variable varys with another, across space. After making bivariate maps that were static, I wanted to see if I could add more information about the data, or an additional dataset using some interactive features on the map. The purpose of the interactive map would be to better visualize complex datasets, as well as increase accessibilty for the public and policymakers. The next step would be to employ the same techniques in a shiny application for publication in an appropriate outlet. Here, I'm using publically available data that was used in the demonstration I followed, household income, personal income, and the Gini Coefficient. This data was derived from the 2017 American Community Survey 5-Year Estimates. 
 
-## PSUEDOCODE!!
-Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
+## Psuedocode 
 
-###Libraries
+1. Load and Organize data. Need to have a working census API key to access data. I'm using two datasets that I want to see vary together household income and personal income, as well as the Gini Coefficient which I want to see as a popup on the map. I want a spatial dataframe in sf form to play nice with tidycensus, with each row (44) to be an Idaho county and each column (3) to be a variable, as well as the GEOID as a unique identifier, the pretty name of the County, and geometries for each county. 
+
+2. *CRITICAL* Create bins or 'breaks' that will indicate which level of income or Gini Coefficient the county falls into, compared to all the counties in the state of Idaho. It's important that these are calculated to show what I want them to, because everything else depends on these bins. Jenks, Quartile, Fisher are all options to use.
+
+3. Map the incomes based on the breaks I calculated. 
+
+4. Add interactive features (i.e., display actual values of the variables)
+
+5. Display the map, check the values from the table to the mouseover
+
+
+## Required libraries
 ```{r map_logic, echo=TRUE, message=FALSE, fig.keep='all'}
 #load the libraries - tell us which packages you're using and why
 library(tidycensus) #load the ACS data; note - you'll need your own census keycode to access the data
@@ -32,42 +38,11 @@ library(leaflet.extras) #extra goodies for prettying up the interactive map
 library(htmlwidgets)
 library(htmltools)
 ```
-###load your data - which datasets do you need?
-
-## ACS table and variable names
-
-#Here, I'm using two datasets that I want to see vary together household income and personal income, as well as the Gini Coefficient which I want to see as a popup on the map.
-
-###Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
-
-#I want a spatial dataframe in sf form to play nice with tidycensus, with each row (44) to be an Idaho county and each column (3) to be a variable, as well as the GEOID as a unique identifier, the pretty name of the County, and geometries for each county. 
-
-###Analysis/processing step 1 - what are you hoping to do here, why? 
-
-#Bring the data I want from ACS - make sure if looks right. 
-
-##Create bins or 'breaks' that will indicate which level of income or Gini Coefficient the county falls into, compared to all the counties in the state of Idaho.
-
-###Analysis/processing step 2 - what are you hoping to do here, why? 
-
-##Map the incomes based on the breaks I calculated. 
-
-#Add interactive features (i.e., actual values of the variables)
-
-#Check the outcomes? How will you know if your steps worked?
-
-#Display the map
-
-# 
-
-
-## Introduce the packages
-Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
 
 ## Evaluate your choices
 Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
 
-```{r load-data, echo=FALSE, results='hide', message = FALSE}
+```{r load-data, echo=T, results='hide', message = FALSE}
 # Named vector of ACS tables to get from Census API
 varlist <- c("hhinc" = "B19013_001",
              "pearn" = "B20002_001",
@@ -158,8 +133,10 @@ pal_gini <- colorQuantile(
 )
 ```
 
+## Bivariate map
+Two layers: household income and personal earnings
 
-```{r initial-map, echo=FALSE, fig.keep='all', message = FALSE}
+```{r initial-map, echo=T, fig.keep='all', message = FALSE}
 m <- idaho %>% 
   leaflet(
     width = "100%",
@@ -221,7 +198,12 @@ labs <- lapply(seq(nrow(nogeog)), function(i) {
 ```
 
 
-```{r final-map, echo=FALSE, fig.keep='all', message = FALSE}
+
+## Show us your final product
+
+Defining the breaks and sticking the LEGEND on the interactive map is the hardest part of this whole thing. There is no native covariate legend available in R (yet) so there are several creative ways I've seen. In an interactive map, this is particularly difficult because there isn't an easy way to insert a local image (which isn't reproducible). The only solution I've found are to add as a image that is hosted from the same server, which requires an html link to the image. The other option I can think of would be include the legend as a logo which I believe also requires an html link. The other thing to consider is how the breaks or bins of data are defined to be referenced as a color on the bivariate color scale. These breaks define how the data is visualized, and so taking care to define them in a logical way is very important.
+
+```{r final-map, echo=FALSE, fig.keep='all', message=FALSE}
 m %<>% 
   addPolygons(
     label = lapply(labs, htmltools::HTML),
@@ -236,8 +218,6 @@ m %<>%
   addResetMapButton() %>% 
   addFullscreenControl() %>% 
   suspendScroll(sleepNote = F, sleepOpacity = 1)
-
-m
 
 
 # data.frame of color values from 50% opacity region in template
@@ -269,15 +249,13 @@ legend <- ggplot() +
     plot.background = element_rect(fill = "transparent", color = NA)
   )
 
-ggsave("idaho_income_legend.svg", plot = legend,
+ggsave("idaho_income_legend.png", plot = legend,
        width = 3, height = 3, bg = "transparent")
 
-legend_img <- "~/AdvancedTopics/idaho_income_legend.svg"
-
 m %<>%
-  leafem::addLogo(legend_img, 
-    position = "topright",
-    #className = "legend-bivar"
+  addControl("<img src = 'https://davidelambert.com/img/alameda_income_legend.svg' width = '128' height = '128' alt = 'legend'>",
+              position = "topright",
+        className = "legend-bivar"
   )
 
 m
@@ -285,14 +263,32 @@ m
 ```
 
 
-## Show us your final product
-Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
 
-Defining the breaks and sticking the LEGEND on the interactive map is the hardest part of this whole thing.
+## Reflection
+Converting a static covariate map to an interavtive version increases the amount of information available to the user, as well as ease of use. The interactive covariate map can show exact values of data which are somewhat concealed in a static covariate map. I particuarly liked the mouseover feature in this vignette, compared to a point and click popup. This seems much more intuitive to use, though I can see it may be overwhelming on a larger map. While the toggle between income type in this particular example doesn't seem particuarly useful, the next steps would be to use this feature for different data that would be more revealing. I still wish I understood the best ways to calculate breaks, and how to host a legend image without saving and uploading. Next steps will be to experiment with different break calculations and convert this map to a shiny application, withe the ability to plot the data in different ways.
 
+## Mapping References
 
+Reading in NetCDF data in R and exporting as a geotiff 
+https://chris35wills.github.io/netcdf-R/
 
-## Reflect
-Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
+Velox extract and summarize raster data
+https://philipphunziker.com/velox/extract.html#using_sf_objects
 
-Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
+Merging Spatial Data
+http://www.nickeubank.com/wp-content/uploads/2015/10/RGIS2_MergingSpatialData_part1_Joins.html
+by Nick Eubank, building off excellent tutorials by Claudia Engel
+
+Bivariate chloropleth map with leaflet
+https://davidelambert.com/post/bivarite-choropleths-in-leaflet-for-r/
+
+Interactive Maps with Shiny
+https://spatialanalysis.github.io/workshop-notes/interactive-maps-with-shiny.html#interactive-tutorial-7
+
+Interactive Choropleths with Shiny and Leaflet
+by Sean Angiolillo
+https://sean.rbind.io/project/electricity-latrine/
+https://humansofdata.atlan.com/2019/01/shiny-electricity-latrine-water-india/#Working_with_Leaflet_in_Shiny
+
+Shiny App Examples
+https://shiny.rstudio.com/gallery/
