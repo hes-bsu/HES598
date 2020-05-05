@@ -394,28 +394,45 @@ for (i in 1:n) {
 }
 
 
+test<- rand[[9]]
+dim(test)<- c(1590, 1805)
+test_sum<- sum(test, na.rm = TRUE)
+
+
+
+r<- raster(test, crs=data_proj)
+e<- extent(-107.1678, -106.6814, 38.63501, 39.06351)
+extent(r)<- e
+res(r)<- 0.0002694946
+
+
+library(metaSEM)
+
+
+
 ### Below here, things are still sketchy and not working
 
-<- rand[[1]]
-dim(test)<- c(1590, 1805)
-test<- as.matrix(test)
+#r_all<- stack()
+r_all<- array(NA, dim=c(1590, 1805, n))
+
+for (i in 1:length(rand)) {
+  rand_layer<- rand[[i]]
+  dim(rand_layer)<- c(1590, 1805)
+  r_all[[i]] = rand_layer
+  #r_all[[i]]<- raster(rand_layer, crs=data_proj)
+  #extent(r_all)<- e
+  #res(r_all)<- 0.0002694946
+  #rand_all[[i]]<- r_all
+}
 
 
-e<- extent(-107.1678, -106.6813, 38.63501, 39.06351)
-p<- as(e, "SpatialPolygons")
-crs(p) = "+proj=longlat +datum=WGS84"
-
-pp<- spTransform(p, CRS(data_proj))
-
-#r<- raster(test, ext=e, crs=data_proj, resolution=30, ...)
-r<- raster(pp)
 
 
-rpar(mfrow=c(1,2)) 
+par(mfrow=c(1,2)) 
 plot(starfm_binary, col = rev(cm.colors(40)), main = "Snow/No-Snow from Model")
 plot(ER_proj, border = "black", add = TRUE)
-plot(test, col = rev(cm.colors(40)), main = "Snow/No-Snow from Random Raster")
-#plot(ER_proj, border = "black", add = TRUE)
+plot(r, col = rev(cm.colors(40)), main = "Snow/No-Snow from Random Raster")
+plot(ER_proj, border = "black", add = TRUE)
 
 ```
 
