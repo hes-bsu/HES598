@@ -383,6 +383,7 @@ summary {
 #install.packages(&#39;spatialEco&#39;)
 library(raster)</code></pre>
 <pre><code>## Loading required package: sp</code></pre>
+<pre><code>## Warning: package &#39;sp&#39; was built under R version 3.6.3</code></pre>
 <pre class="r"><code>library(sf)</code></pre>
 <pre><code>## Linking to GEOS 3.6.1, GDAL 2.2.3, PROJ 4.9.3</code></pre>
 <pre class="r"><code>library(dynatopmodel)</code></pre>
@@ -400,13 +401,13 @@ library(raster)</code></pre>
 ##  Linking to sp version: 1.3-2</code></pre>
 <pre class="r"><code>library(microbenchmark)
 library(tidyverse)</code></pre>
-<pre><code>## -- Attaching packages ----------------------------------------------------------------------------------------------------- tidyverse 1.3.0 --</code></pre>
+<pre><code>## -- Attaching packages ----------------------------------------------------------------------------------------------------------------------------- tidyverse 1.3.0 --</code></pre>
 <pre><code>## v ggplot2 3.3.0     v purrr   0.3.3
 ## v tibble  2.1.3     v dplyr   0.8.3
 ## v tidyr   1.0.2     v stringr 1.4.0
 ## v readr   1.3.1     v forcats 0.4.0</code></pre>
 <pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 3.6.3</code></pre>
-<pre><code>## -- Conflicts -------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+<pre><code>## -- Conflicts -------------------------------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
 ## x tidyr::extract() masks raster::extract()
 ## x dplyr::filter()  masks stats::filter()
 ## x dplyr::lag()     masks stats::lag()
@@ -418,7 +419,11 @@ library(tidyverse)</code></pre>
 <pre><code>## The following object is masked from &#39;package:raster&#39;:
 ## 
 ##     shift</code></pre>
-<pre class="r"><code>#setwd()
+<pre class="r"><code>library(googledrive) ## for storing files</code></pre>
+<pre><code>## Warning: package &#39;googledrive&#39; was built under R version 3.6.3</code></pre>
+<pre class="r"><code>##PSEUDOCODE!
+
+#setwd()
 
 ## defining projection of interest e
 
@@ -449,15 +454,135 @@ library(tidyverse)</code></pre>
 <p>Critical steps for this process are loading the the DEM, performing analyses to derive variables such as slope, aspect, TPI, and TWI. The terrain() function in the raster package is the most straightforward way to calculate slope, aspect, and TPI from a DEM. Topmodel (dynatopmodel) is a way that I have seen others calculate TWI other than using ArcGIS. These were the baselines used for benchmarking other methods. Plotting these help to make sure outputs are sensible.</p>
 <p>I found an alternative function for creating slope and aspect rasters from a DEM stored as a SpatialGridDataFrame in the landsat package for comparison with the terrain() function from the raster package. Similarly, I compared the tpi() function in the spatialEco package (takes a DEM as a raster as the only required argument) to the TPI value returned from the terrain() function.</p>
 <p>Through exploration, I found that the dynatopmodel package is not well maintained and has bugs that I was unable to resolve quickly. Fortunately, others have already been in this position and I found some function definitions on stack overflow to work-around the dynatopmodel issue.</p>
-<pre class="r"><code>#setwd(&#39;C:/Users/nicholaskolarik/DDeSuP/mgmt/&#39;)
-setwd(&#39;C:/Users/nicho/BSU/rgeo/topo&#39;)
+<pre class="r"><code>## update with your local dir -&gt; setwd to location where downloaded files should go -&gt; didn&#39;t futz with ./data/file.ext format in the lapply below
+#setwd(&#39;C:/Users/nicholaskolarik/DDeSuP/mgmt/&#39;)
+wd &lt;- &#39;C:/Users/nicho/BSU/rgeo/topo&#39;
+setwd(wd)
 
+## google drive dir
+folder.url &lt;- &quot;https://drive.google.com/open?id=1iwjO_HNMNYUaIxdfYPnz-NUMpcQBKQbu&quot;
+folder &lt;- drive_get(as_id(folder.url))</code></pre>
+<pre><code>## Using an auto-discovered, cached token.
+## To suppress this message, modify your code or options to clearly consent to the use of a cached token.
+## See gargle&#39;s &quot;Non-interactive auth&quot; vignette for more details:
+## https://gargle.r-lib.org/articles/non-interactive-auth.html
+## The googledrive package is using a cached token for nicholaskolarik@u.boisestate.edu.</code></pre>
+<pre class="r"><code>## list files in drive dir
+files &lt;- drive_ls(folder)
+
+## download them locally
+## update your local path!
+#path &lt;- &quot;/path/to/your/local/directory/not/class repo/&quot;
+#path &lt;- &quot;./data/googletest/&quot;
+lapply(files$id, function(x) drive_download(as_id(x), overwrite = TRUE)) #replace the path with a folder on your computer outside of the repo directory</code></pre>
+<pre><code>## File downloaded:
+##   * flow_acc.tif
+## Saved locally as:
+##   * flow_acc.tif</code></pre>
+<pre><code>## File downloaded:
+##   * te_fre_mad_huc10.sbx
+## Saved locally as:
+##   * te_fre_mad_huc10.sbx</code></pre>
+<pre><code>## File downloaded:
+##   * te_fre_mad_huc10.cpg
+## Saved locally as:
+##   * te_fre_mad_huc10.cpg</code></pre>
+<pre><code>## File downloaded:
+##   * te_fre_mad_huc10.shp.xml
+## Saved locally as:
+##   * te_fre_mad_huc10.shp.xml</code></pre>
+<pre><code>## File downloaded:
+##   * te_fre_mad_huc10.dbf
+## Saved locally as:
+##   * te_fre_mad_huc10.dbf</code></pre>
+<pre><code>## File downloaded:
+##   * te_fre_mad_huc10.shx
+## Saved locally as:
+##   * te_fre_mad_huc10.shx</code></pre>
+<pre><code>## File downloaded:
+##   * te_fre_mad_huc10.shp
+## Saved locally as:
+##   * te_fre_mad_huc10.shp</code></pre>
+<pre><code>## File downloaded:
+##   * te_fre_mad_huc10.sbn
+## Saved locally as:
+##   * te_fre_mad_huc10.sbn</code></pre>
+<pre><code>## File downloaded:
+##   * te_fre_mad_huc10.prj
+## Saved locally as:
+##   * te_fre_mad_huc10.prj</code></pre>
+<pre><code>## File downloaded:
+##   * DEM_ID_prj.tif
+## Saved locally as:
+##   * DEM_ID_prj.tif</code></pre>
+<pre><code>## [[1]]
+## # A tibble: 1 x 4
+##   name         local_path   id                                drive_resource   
+## * &lt;chr&gt;        &lt;chr&gt;        &lt;chr&gt;                             &lt;list&gt;           
+## 1 flow_acc.tif flow_acc.tif 1k0QRxq5yZxI4aWYPJBRul2OJJlXf17yo &lt;named list [40]&gt;
+## 
+## [[2]]
+## # A tibble: 1 x 4
+##   name             local_path         id                        drive_resource  
+## * &lt;chr&gt;            &lt;chr&gt;              &lt;chr&gt;                     &lt;list&gt;          
+## 1 te_fre_mad_huc1~ te_fre_mad_huc10.~ 13Cuh_XpxsC5kpovuPbi3cbQ~ &lt;named list [39~
+## 
+## [[3]]
+## # A tibble: 1 x 4
+##   name             local_path         id                        drive_resource  
+## * &lt;chr&gt;            &lt;chr&gt;              &lt;chr&gt;                     &lt;list&gt;          
+## 1 te_fre_mad_huc1~ te_fre_mad_huc10.~ 1-wT3ZDFjvGiKUIOhpHFwJmm~ &lt;named list [39~
+## 
+## [[4]]
+## # A tibble: 1 x 4
+##   name               local_path          id                      drive_resource 
+## * &lt;chr&gt;              &lt;chr&gt;               &lt;chr&gt;                   &lt;list&gt;         
+## 1 te_fre_mad_huc10.~ te_fre_mad_huc10.s~ 1HE8tVQzxHuA-5o2_7WF9_~ &lt;named list [3~
+## 
+## [[5]]
+## # A tibble: 1 x 4
+##   name             local_path         id                        drive_resource  
+## * &lt;chr&gt;            &lt;chr&gt;              &lt;chr&gt;                     &lt;list&gt;          
+## 1 te_fre_mad_huc1~ te_fre_mad_huc10.~ 1gz2B24yqV6o_2sBKokonkqR~ &lt;named list [39~
+## 
+## [[6]]
+## # A tibble: 1 x 4
+##   name             local_path         id                        drive_resource  
+## * &lt;chr&gt;            &lt;chr&gt;              &lt;chr&gt;                     &lt;list&gt;          
+## 1 te_fre_mad_huc1~ te_fre_mad_huc10.~ 1aG9ymAxoq7ZYVbNC8myfcnu~ &lt;named list [39~
+## 
+## [[7]]
+## # A tibble: 1 x 4
+##   name             local_path         id                        drive_resource  
+## * &lt;chr&gt;            &lt;chr&gt;              &lt;chr&gt;                     &lt;list&gt;          
+## 1 te_fre_mad_huc1~ te_fre_mad_huc10.~ 124aEklH1rJ-lHXVSl-cHpBc~ &lt;named list [39~
+## 
+## [[8]]
+## # A tibble: 1 x 4
+##   name             local_path         id                        drive_resource  
+## * &lt;chr&gt;            &lt;chr&gt;              &lt;chr&gt;                     &lt;list&gt;          
+## 1 te_fre_mad_huc1~ te_fre_mad_huc10.~ 1jD1uFo_pa40VKRtezEcrkHx~ &lt;named list [39~
+## 
+## [[9]]
+## # A tibble: 1 x 4
+##   name             local_path         id                        drive_resource  
+## * &lt;chr&gt;            &lt;chr&gt;              &lt;chr&gt;                     &lt;list&gt;          
+## 1 te_fre_mad_huc1~ te_fre_mad_huc10.~ 1wjlaySZdbiKPbZOXH2mbn52~ &lt;named list [39~
+## 
+## [[10]]
+## # A tibble: 1 x 4
+##   name           local_path     id                              drive_resource  
+## * &lt;chr&gt;          &lt;chr&gt;          &lt;chr&gt;                           &lt;list&gt;          
+## 1 DEM_ID_prj.tif DEM_ID_prj.tif 1QLhIsP81bLAJkpqdtqVjD2ntMJH5v~ &lt;named list [40~</code></pre>
+<pre class="r"><code>setwd(wd)
 ## defining projection of interest -&gt; &#39;borrowed&#39; from in class example
 idaho.cent &lt;- &quot;+proj=tmerc +lat_1=41.66666666666666 +lon_0=-114 +k=0.9999473679999999 +x_0=500000.0001016001 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs &quot;
 
 ## Teton/Fremont/Madison Counties as example study area
 ## HUC10 units
-tefremad &lt;- read_sf(&quot;./data/te_fre_mad_huc10.shp&quot;)
+#tefremad &lt;- read_sf(&quot;./data/te_fre_mad_huc10.shp&quot;)
+tefremad &lt;- read_sf(&quot;./te_fre_mad_huc10.shp&quot;)
+
 ## project it
 tefremad.prj &lt;- st_transform(tefremad, st_crs(idaho.cent))
 
@@ -466,7 +591,8 @@ tefremad.prj &lt;- st_transform(tefremad, st_crs(idaho.cent))
 study.area &lt;- tefremad.prj %&gt;% summarise(area = sum(AreaSqKm))
 
 ## DEM
-dem &lt;- raster(&#39;./data/DEM_ID_prj.tif&#39;)
+#dem &lt;- raster(&#39;./data/DEM_ID_prj.tif&#39;)
+dem &lt;- raster(&#39;./DEM_ID_prj.tif&#39;)
 dem.prj &lt;- projectRaster(dem, crs = idaho.cent)
 dem.tfm &lt;- crop(dem.prj, study.area)
 

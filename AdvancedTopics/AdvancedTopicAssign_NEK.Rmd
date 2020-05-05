@@ -31,6 +31,9 @@ library(landsat)
 library(microbenchmark)
 library(tidyverse)
 library(spatialEco)
+library(googledrive) ## for storing files
+
+##PSEUDOCODE!
 
 #setwd()
 
@@ -69,15 +72,38 @@ Through exploration, I found that the dynatopmodel package is not well maintaine
 
 
 ```{r}
-#setwd('C:/Users/nicholaskolarik/DDeSuP/mgmt/')
-setwd('C:/Users/nicho/BSU/rgeo/topo')
 
+
+## update with your local dir -> setwd to location where downloaded files should go -> didn't futz with ./data/file.ext format in the lapply below
+#setwd('C:/Users/nicholaskolarik/DDeSuP/mgmt/')
+wd <- 'C:/Users/nicho/BSU/rgeo/topo'
+setwd(wd)
+
+## google drive dir
+folder.url <- "https://drive.google.com/open?id=1iwjO_HNMNYUaIxdfYPnz-NUMpcQBKQbu"
+folder <- drive_get(as_id(folder.url))
+
+## list files in drive dir
+files <- drive_ls(folder)
+
+## download them locally
+## update your local path!
+#path <- "/path/to/your/local/directory/not/class repo/"
+#path <- "./data/googletest/"
+lapply(files$id, function(x) drive_download(as_id(x), overwrite = TRUE)) #replace the path with a folder on your computer outside of the repo directory
+
+```
+
+```{r}
+setwd(wd)
 ## defining projection of interest -> 'borrowed' from in class example
 idaho.cent <- "+proj=tmerc +lat_1=41.66666666666666 +lon_0=-114 +k=0.9999473679999999 +x_0=500000.0001016001 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs "
 
 ## Teton/Fremont/Madison Counties as example study area
 ## HUC10 units
-tefremad <- read_sf("./data/te_fre_mad_huc10.shp")
+#tefremad <- read_sf("./data/te_fre_mad_huc10.shp")
+tefremad <- read_sf("./te_fre_mad_huc10.shp")
+
 ## project it
 tefremad.prj <- st_transform(tefremad, st_crs(idaho.cent))
 
@@ -86,7 +112,8 @@ tefremad.prj <- st_transform(tefremad, st_crs(idaho.cent))
 study.area <- tefremad.prj %>% summarise(area = sum(AreaSqKm))
 
 ## DEM
-dem <- raster('./data/DEM_ID_prj.tif')
+#dem <- raster('./data/DEM_ID_prj.tif')
+dem <- raster('./DEM_ID_prj.tif')
 dem.prj <- projectRaster(dem, crs = idaho.cent)
 dem.tfm <- crop(dem.prj, study.area)
 
