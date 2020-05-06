@@ -99,7 +99,6 @@ Processing Step 1:
     # a. starfmconfig.txt is where model parameters are set
 # 3. Create a separate folder called "Output" in that folder
 
-setwd('/home/ALLISONVINCENT/Documents/Research/STARFM/StarFM/STARFMtest/STARFM_NDSI_test')
 
 perc<- 99
 # percentage of cover that is used to find "good" landsat scenes for interpolation 
@@ -285,13 +284,7 @@ proj4string(landsat_apr25)
 proj4string(starfm_apr25)
 
 data_proj<- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-#co_utm ="+proj=utm +zone=13 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-#landsat_jan29 <- projectRaster(landsat_jan29, crs = co_utm)
-#proj4string(landsat_jan29)
-
-#starfm_jan29 <- projectRaster(starfm_jan29, crs = co_utm)
-#proj4string(starfm_jan29)
 
 ER_proj<- spTransform(ER, CRS(data_proj))
 proj4string(ER_proj)
@@ -382,56 +375,53 @@ classes<- as.matrix(results, what = "classes")
 
 set.seed(123)
 
-# rand<- stack()
 rand<- list()
 
 ## Randomize the model results by resampling them. This will preserve the same amount of 0's, 1's and NA values. Doing this in a list format for ease of computation.
 n<- 10
 for (i in 1:n) {
  n1<- sample(starfm_binary, replace = FALSE)
- #dim(n1) <- c(1590, 1805)
  rand[[i]] = n1
 }
 
 
-test<- rand[[9]]
+## Project a single random matrix 
+test<- rand[[1]]
 dim(test)<- c(1590, 1805)
 test_sum<- sum(test, na.rm = TRUE)
-
-
-
 r<- raster(test, crs=data_proj)
 e<- extent(-107.1678, -106.6814, 38.63501, 39.06351)
 extent(r)<- e
-res(r)<- 0.0002694946
+resol<- 0.0002694946
+res(r)<- resol
 
 
-library(metaSEM)
-
-
-
-### Below here, things are still sketchy and not working
-
-#r_all<- stack()
-r_all<- array(NA, dim=c(1590, 1805, n))
+## Convert the list of the random samples (currently in vector format) into matrices with the correct dimensions
+rand_all<- vector("list", n)
 
 for (i in 1:length(rand)) {
   rand_layer<- rand[[i]]
   dim(rand_layer)<- c(1590, 1805)
-  r_all[[i]] = rand_layer
-  #r_all[[i]]<- raster(rand_layer, crs=data_proj)
-  #extent(r_all)<- e
-  #res(r_all)<- 0.0002694946
-  #rand_all[[i]]<- r_all
-}
+  rand_all[[i]]<- rand_layer
+}  
+  
+  
+## Convert the matrices of the randomly sampled raster values into raster format and project to match the actual data
+r_all<- vector("list", n)
 
+for(i in 1:length(rand_all)) {
+  rand_matrix<- raster(rand_all[[i]], crs=data_proj)
+  extent(rand_matrix)<- e
+  res(rand_matrix)<- resol
+  r_all[[i]]<- rand_matrix
+}
 
 
 
 par(mfrow=c(1,2)) 
 plot(starfm_binary, col = rev(cm.colors(40)), main = "Snow/No-Snow from Model")
 plot(ER_proj, border = "black", add = TRUE)
-plot(r, col = rev(cm.colors(40)), main = "Snow/No-Snow from Random Raster")
+plot(r_all[[10]], col = rev(cm.colors(40)), main = "Snow/No-Snow from Random Raster")
 plot(ER_proj, border = "black", add = TRUE)
 
 ```
@@ -440,10 +430,20 @@ plot(ER_proj, border = "black", add = TRUE)
 
 ```{r}
 ## Run the classification with the randomized matrices and create confusion matrices for each one
+
+
+r_all_vec<- vector("list", n)
+
+for (i in 1:length(r_all)) {
+ r_all_to_vec<- r_all[[i]]
+ r_all_vec[[i]]<- as.vector(r_all_to_vec, mode = 'numeric')
+} 
+ 
 rand_results<- vector("list", n)
 
-for (i in 1:length(rand)) {
- rand_factor<- as.factor(rand[[i]])
+for (i in 1:length(r_all_vec)) { 
+ vec_to_fac<- r_all_vec[[i]]
+ rand_factor<- as.factor(vec_to_fac)
  rand_results_layer<- confusionMatrix(rand_factor,landsat_factor, positive = "1")
  rand_results[[i]] = rand_results_layer
 }
@@ -483,10 +483,27 @@ for (i in 1:length(classes_total)) {
 }
 
 
+## Store the recall from the "By Class" statistics from each matrix in their own list variable
+recall_all<- vector("list", n)
+
+for (i in 1:length(classes_total)) {
+  levels<- classes_total[[i]]
+  recall_all[[i]] = levels[['Recall']] 
+}
+
+```
+
+```{r}
+
+## Create figures to display the statistical values from the model results to those from the random matrices
 
 
 
-````
+
+
+
+
+```
 
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
