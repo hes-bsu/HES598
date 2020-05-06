@@ -7,6 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(rgdal)
+library(raster)
 ```
 
 
@@ -24,25 +26,33 @@ Give a brief introduction to your research and identify how your "Advanced Topic
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
 #load the libraries - tell us which packages you're using and why
-
-## landscapemetrics() FRAGSTATS package in R
+##Both raster packages to help format my 2 rasters  
+## library(rgdal)
+## library(raster)
 
 
 #load your data - which datasets do you need?
-##Dadanawa raster file. The SUA classification of year 2015
+##Dadanawa raster file Landsat 7, year 2015 greenest pixel composite image "DADYR15". 
+DADYR15 <- 
+##The SUA classification of year 2015 "SUADAD15"
+SUADAD15 <- 
+##GPS points to get SUA totals for
+DADPTS <- 
 
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
-##NA OR the raster has to be transformed
+##Make sure the two rasters stack up
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
 #Quantify the metrics by landcover type: water, forest, bareground and quantify the amount of patches per class
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
+#Are there differences in SUA values between the points? 9 out of the 13 points have been classified as bush island habitats. Is there more resolution or variability using SUA values instead of the catergorical habitat description?
 
 #Check the outcomes? How will you know if your steps worked?
+#If I have a SUA value for 13 points I will know I did it correctly.
 
-# 
+#
 ```
 
 ## Introduce the packages
