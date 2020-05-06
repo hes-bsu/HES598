@@ -1,0 +1,80 @@
+---
+title: "HES598AdvVisMattClark"
+author: "Matt Clark"
+date: "5/6/2020"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(shiny)
+library(shinyWidgets)
+library(raster)
+library(RColorBrewer)
+library(rgdal)
+bio<-getData('worldclim',var = 'bio',res = 0.5, lon=39.74,lat=-5.313)
+
+
+
+```
+
+### Background
+The goal of this project was to help me explore options for gathering and visualizing spatial data from Eastern Africa, specifically Tanzania's Zanzibar archipelago. A major focus of my research is understanding how vulnerable communities adapt to changing environmental condition sand what role conservation can play in that adaptation. With this goal in mind, I decided to map temperature data for this project.
+
+### Data 
+I was able to use the `getData` function in the `raster` package to download world climate data directly into R. This data can also be found [here](https://www.worldclim.org/). For this project, I chose to visualize average temperature data from 1950 - 2010 in Eastern Africa. The variables available for display are: Annual Mean Temperature (C), Temperature Seasonality (C), Maximum Temperature of Warmest Month (C), & Minimum Temperature of Coldest Month (C).
+
+### Visualization
+For this project, I chose to move beyond simply providing the option for users to select climate variables of interest. In addition to this option, I also coded an option for users to zoom and scroll around the selected map. I did this by modifying the `bbox` of the raster objects using the `knobInput` functions in the `shinyWidgets` package. 
+
+
+```{r eruptions, echo=FALSE}
+inputPanel(
+ selectInput("variable",
+                        "Climate Variable",
+                        choices = c('Annual Mean Temp (C)'="1", 'Temperature Seasonality (C)'= "4",
+                                    "Max Temperature of Warmest Month (C)"="5","Min Temperature of Coldest Month (C)" ="6",
+                                    'Temperature Annual Range (C)'= "7")),
+            knobInput("zoom",
+                        "Zoom:",
+                        min = 0.01,
+                        max = 0.99,
+                        value = 0.5,step=0.05),
+            knobInput("vert",
+                      "Vertical Movement:",
+                      min = -15,
+                      max = 15,
+                      value = 0,step=1),
+            knobInput("horiz",
+                      "Horizontal Movement:",
+                      min = -15,
+                      max = 15,
+                      value = 0,step=1))
+            
+
+renderPlot({
+ t.pal <- rev(brewer.pal(n = 7, name = "RdYlBu"))
+        
+        scale.parameter = round(1-(input$zoom),digits=2)  # scaling paramter. less than 1 is zooming in, more than 1 zooming out. 
+        xshift = input$horiz # Shift to right in map units. 
+        yshift = input$vert  # Shift to left in map units. 
+        original.bbox = bbox(bio) # Pass bbox of your Spatial* Object. 
+        # Just copy-paste the following
+        edges = original.bbox
+        
+        edges[1, ] <- (edges[1, ] - mean(edges[1, ])) * scale.parameter + mean(edges[1, 
+                                                                                     ]) + xshift
+        edges[2, ] <- (edges[2, ] - mean(edges[2, ])) * scale.parameter + mean(edges[2, 
+                                                                                     ]) + yshift
+        
+       x<-as.numeric(input$variable)
+              spplot((bio[[x]])/10, 
+                     col.regions = t.pal, 
+                     cuts = 6,main="Eastern Tanzania & Zanzibar Climate Data 1950 - 2000",
+                      xlim = edges[1, ], ylim = edges[2, ])
+})
+```
+
+
+
+
