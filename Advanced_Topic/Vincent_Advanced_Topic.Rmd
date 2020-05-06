@@ -56,6 +56,7 @@ library(spam)
 library(maps)
 library(sf)
 library(caret)
+library(stats)
 
 #load your data - which datasets do you need?
 
@@ -365,6 +366,11 @@ results<- confusionMatrix(starfm_factor,landsat_factor, positive = "1")
 overall<- as.matrix(results, what = "overall")
 classes<- as.matrix(results, what = "classes")
 
+acc_model<- overall[[1]]
+prec_model<- classes[[5]]
+recall_model<- classes[[6]]
+f1_model<- classes[[7]]
+
 
 ```
 
@@ -491,6 +497,15 @@ for (i in 1:length(classes_total)) {
   recall_all[[i]] = levels[['Recall']] 
 }
 
+
+## Store the f-score from the "By Class" statistics from each matrix in their own list variable
+f1_all<- vector("list", n)
+
+for (i in 1:length(classes_total)) {
+  levels<- classes_total[[i]]
+  f1_all[[i]] = levels[['F1']] 
+}
+
 ```
 
 ```{r}
@@ -498,7 +513,35 @@ for (i in 1:length(classes_total)) {
 ## Create figures to display the statistical values from the model results to those from the random matrices
 
 
+## First, find the mean and standard deviation of all statistical metrics we are evaluating
+acc_vec<- as.vector(accuracy_all, mode = 'numeric')
+mean_acc<- mean(acc_vec)
+sd_acc<- sd(acc_vec)
 
+prec_vec<- as.vector(precision_all, mode = 'numeric')
+mean_prec<- mean(prec_vec)
+sd_prec<- sd(prec_vec)
+
+recall_vec<- as.vector(recall_all, mode = 'numeric')
+mean_recall<- mean(recall_vec)
+sd_recall<- sd(recall_vec)
+
+f1_vec<- as.vector(f1_all, mode = 'numeric')
+mean_f1<- mean(f1_vec)
+sd_f1<- sd(f1_vec)
+
+
+
+model_vals<- c(acc_model, prec_model, recall_model, f1_model)
+labels<- c("Accuracy","Precision","Recall","F-Score")
+means<- c(mean_acc, mean_prec, mean_recall, mean_f1)
+sds<- c(sd_acc, sd_prec, sd_recall, sd_f1)
+mid<- barplot(means)
+
+par(mfrow=c(1,2))
+barplot(model_vals, names.arg=labels, main="Metrics from Model Results", ylab="Value", las=2, ylim=range(pretty(c(0, model_vals))))
+barplot(means, names.arg=labels, main="Metrics from Randomized Rasters", ylab="Mean Value", las=2, ylim=range(pretty(c(0, model_vals))))
+arrows(x0=mid, y0=means-sds, x1=mid, y1=means+sds, code=3, angle=90, length=0.1)
 
 
 
