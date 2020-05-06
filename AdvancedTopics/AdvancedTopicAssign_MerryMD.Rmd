@@ -32,12 +32,12 @@ Before you get started programming all of the potential things you could do duri
 
 
 #load your data - which datasets do you need?
-##Dadanawa raster file Landsat 7, year 2015 greenest pixel composite image "DADYR15". 
-DADYR15 <- 
+##Dadanawa raster file Landsat 7, year 2015 greenest pixel composite image "DADYR15"
+#DADYR15 <- raster()
 ##The SUA classification of year 2015 "SUADAD15"
-SUADAD15 <- 
-##GPS points to get SUA totals for
-DADPTS <- 
+#SUADAD15 <- raster()
+##GPS points to get SUA totals for "DADPTS"
+#DADPTS <- read.csv("C:/Users/Nessa/Desktop/BSU/RESEARCH/GUYresearch/Camera_trap/DAD1/DadAnalysisDAD1_GPSPoints.csv")
 
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
@@ -57,6 +57,12 @@ DADPTS <-
 
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
+
+#folder.url <- "https://drive.google.com/open?id=1Co7q8ggqr1CjbdUcbN0-9LtnHygshKkq"
+
+#folder <- drive_get(as_id(folder_url))
+
+#files <- drive_ls(folder)
 
 ## Evaluate your choices
 Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
