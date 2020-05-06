@@ -1,7 +1,7 @@
 ---
 title: "Advanced Topic: Landscape Metrics and Raster Data"
 author: "Merry Davidson"
-date: "3/5/2020"
+date: "4/6/2020"
 output: html_document
 ---
 
@@ -14,16 +14,17 @@ library(raster)
 
 SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
 
-## Introduce your problem
+## Introduction:
 My thesis research aims to quantify the degree of landscape change on the landscape. The study site of interest is the Rupununi savanna-forest boundary located on the Southwest portion of Guyana (South America). In order to quantify change, I have generated rasters using Spectral Unmixing Analysis (SUA) classification for the period of 2000-2018.
 My chosen Advanced Topic for this course is: Landscape Metrics and Raster Data. 
 My goal for this assignment is to learn how to use raster data in R by using raster packages and fucntions [Specify wich ones here}}}. Specifically, I will obtain SUA pixel totals of 13 specific points in a subset of my study area.  
 Bigger picture: This inforation will be used in a statistical generalized linear model that will look at wildlife-landscape interactions.
 
-Give a brief introduction to your research and identify how your "Advanced Topic" plays into what you are hoping to do. For example, if you are just starting out on your project and your topic is "Study Design" you might be interested in developing a spatially informed sampling/stratification scheme.Or maybe your work is going to have a big public outreach component that you'd like to support with some nice interactive maps. Give us a sense for what "success" would look like - what is your ideal end product for the analysis/approach you're testing out. This will help us figure out if the tools you tried were successful.
 
-## PSUEDOCODE!!
-Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
+
+## PSUEDOCODE:
+
+
 ```{r}
 #load the libraries - tell us which packages you're using and why
 ##Both raster packages to help format my 2 rasters  
@@ -57,6 +58,12 @@ Before you get started programming all of the potential things you could do duri
 
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
+library(googledrive)
+#for loading in the data
+## library(rgdal)
+## library(raster)
+
+#Actual code:
 
 #folder.url <- "https://drive.google.com/open?id=1Co7q8ggqr1CjbdUcbN0-9LtnHygshKkq"
 
