@@ -68,16 +68,39 @@ Load data
 
 ```{r}
 #for loading in the data
+## 
+library(googledrive) #where data is stored
+# designate project-specific cache
+options(gargle_oauth_cache = ".merrymd")
+# check the value of the option, if you like
+gargle::gargle_oauth_cache()
+# trigger auth on purpose --> store a token in the specified cache
+drive_auth()
+###Run the above one time,done
 
-install.packages("help")
+library(googledrive)
+#authenticating google drive
+options(
+  gargle_oauth_cache = ".merrymd",
+  gargle_oauth_email = TRUE
+)
+
+
+library(curl) #called for Google Drive data access
+library(here) #called for Google Drive data access (makes a temp folder for downloads)
+library(readxl) #reads Excel files (how the data is stored)
+
 
 folder_url <- "https://drive.google.com/open?id=1Co7q8ggqr1CjbdUcbN0-9LtnHygshKkq"
 
 folder <- drive_get(as_id(folder_url))
 
-#files <- drive_ls(folder)
-#library(help)
-#lapply(files$id, function(x) drive_download(as_id(x), path = paste0(here::here("datatemp/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+files <- drive_ls(folder)
+str(files)
+
+lapply(files$id, function(x) drive_download(as_id(x), path = paste0(here::here("datatemp/original/"), files[files$id==x,]$name), overwrite = TRUE))
+
+
 
 #"/path/to/your/local/directory/not/class repo/" overwrite = TRUE)) #replace the path with a folder on your computer outside of the repo directory
 
