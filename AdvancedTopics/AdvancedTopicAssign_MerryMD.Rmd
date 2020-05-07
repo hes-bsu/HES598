@@ -58,7 +58,7 @@ Bigger picture: This inforation will be used in a statistical generalized linear
 
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
-library(googledrive)
+#library(googledrive)
 #for loading in the data
 ## library(rgdal)
 ## library(raster)
@@ -68,15 +68,15 @@ Load data
 
 ```{r}
 #for loading in the data
-## 
-library(googledrive) #where data is stored
+## ########
+#library(googledrive) #where data is stored
 # designate project-specific cache
-options(gargle_oauth_cache = ".merrymd")
+#options(gargle_oauth_cache = ".merrymd")
 # check the value of the option, if you like
-gargle::gargle_oauth_cache()
+#gargle::gargle_oauth_cache()
 # trigger auth on purpose --> store a token in the specified cache
-drive_auth()
-###Run the above one time,done
+#drive_auth()
+###Run the above one time,done####
 
 library(googledrive)
 #authenticating google drive
@@ -98,8 +98,16 @@ files <- drive_ls(folder)
 
 lapply(files$id, function(x) drive_download(as_id(x), path = paste0(here::here("datatemp/original/"), files[files$id==x,]$name), overwrite = TRUE))
 
+#load in points
 DADPTS <- read.csv("C:/Users/Nessa/Courses/HES598/datatemp/originalDAD1_GPSPointsONLY.csv")
+str(DADPTS)
 
+library(rgdal)
+library(raster)
+#load in Year 2015 raster
+DADYR15 <- raster("C:/Users/Nessa/Courses/HES598/datatemp/originalGreenCompositeYear2015_DAD.tif")
+#load in SUA Year 2015 raster
+SUADAD15 <- raster("C:/Users/Nessa/Courses/HES598/datatemp/originalYear2015.tif")
 #"/path/to/your/local/directory/not/class repo/" overwrite = TRUE)) #replace the path with a folder on your computer outside of the repo directory
 
 ###file.list <- list.files((pattern = "*.tif") #replace the pattern with the appropriate extensions for the files you want to load (e.g., .shp, .csv)
