@@ -38,7 +38,7 @@ Bigger picture: This inforation will be used in a statistical generalized linear
 ##The SUA classification of year 2015 "SUADAD15"
 #SUADAD15 <- raster()
 ##GPS points to get SUA totals for "DADPTS"
-#DADPTS <- read.csv("C:/Users/Nessa/Desktop/BSU/RESEARCH/GUYresearch/Camera_trap/DAD1/DadAnalysisDAD1_GPSPoints.csv")
+#DADPTS <- read.csv()
 
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
@@ -58,10 +58,10 @@ Bigger picture: This inforation will be used in a statistical generalized linear
 
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
-#library(googledrive)
+#library(googledrive) where data is stored
 #for loading in the data
 ## library(rgdal)
-## library(raster)
+## library(raster)to load rasters
 
 #Actual code:
 Load data
@@ -87,7 +87,7 @@ options(
 
 
 library(curl) #called for Google Drive data access
-library(here) #called for Google Drive data access (makes a temp folder for downloads)
+library(here) #called for Google Drive data access (be srue to make a temp folder for downloads)
 
 
 folder_url <- "https://drive.google.com/open?id=1Co7q8ggqr1CjbdUcbN0-9LtnHygshKkq"
@@ -98,26 +98,33 @@ files <- drive_ls(folder)
 
 lapply(files$id, function(x) drive_download(as_id(x), path = paste0(here::here("datatemp/original/"), files[files$id==x,]$name), overwrite = TRUE))
 
-#load in points
-DADPTS <- read.csv("C:/Users/Nessa/Courses/HES598/datatemp/originalDAD1_GPSPointsONLY.csv")
-str(DADPTS)
-
+#load in points (UTM transformed points in a shapefile)
+DADPTS <- readOGR("C:/Users/Nessa/Courses/HES598/datatemp/originalUTMzone21N.shp")
+str(DADPTS)#check the data
+plot(DADPTS)
 library(rgdal)
-library(raster)
+library(raster) #to load rasters
 #load in Year 2015 raster
 DADYR15 <- raster("C:/Users/Nessa/Courses/HES598/datatemp/originalGreenCompositeYear2015_DAD.tif")
 #load in SUA Year 2015 raster
 SUADAD15 <- raster("C:/Users/Nessa/Courses/HES598/datatemp/originalYear2015.tif")
-#"/path/to/your/local/directory/not/class repo/" overwrite = TRUE)) #replace the path with a folder on your computer outside of the repo directory
-
-###file.list <- list.files((pattern = "*.tif") #replace the pattern with the appropriate extensions for the files you want to load (e.g., .shp, .csv)
-
-###rstrs <- lapply(file.list raster) #Then read in the file using the appropriate read command (e.g., raster, read_sf, read.csv)
-
+#visualize the rasters
+plot(DADYR15)
+plot(SUADAD15)
 ```
 
 
+#Making 100m buffers around points
+https://www.maths.lancs.ac.uk/~rowlings/Teaching/UseR2012/cheatsheet.html
+```{r}
+#Turn GPS points into spatial dataframe
 
+
+#First transform lat/long to UTM
+
+```
+
+#Make buffers around the points 
 
 ## Evaluate your choices
 Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
