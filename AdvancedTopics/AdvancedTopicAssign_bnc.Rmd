@@ -1,7 +1,7 @@
 ---
 title: "Advanced Topic Instructions: Connectivity"
 author: "Brent Clark"
-date: "05/06/2020"
+date: "05/07/2020"
 output: html_document
 ---
 
@@ -43,14 +43,6 @@ library(rgdal)
 library(raster)
 library(readxl)
 
-#load your data - which datasets do you need?
-
-#Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
-
-#create spatial table of burrow locations (X) 
-#create burrow locations based on spatial table (X)
-#Include total number of nestlings produced at each nest site for all years
-
 #Analysis/processing step 1 - what are you hoping to do here, why? 
 
 #attempting to create a heat map of nestingls per nest site to help understand what nest sites have produced the most nestlings for the last 20+ years
@@ -81,25 +73,25 @@ file.list <- list.files(pattern = "*.tif, *.shp, *.csv, *.xlsx") #replace the pa
 ```
 
 Introduce the study area (State of Idaho)
-```{r bnc_studyArea,include = TRUE}
+```{r bnc_studyAreaState,include = TRUE}
 ###
 #Create the state of Idaho and elevation Map
 ###
 
 #Get the Global Administration boundries with state lines of the United States
 USA_0 <- getData(name = 'GADM', country = 'USA', level = 1)
-plot(USA_0)
+#plot(USA_0)
 
 #create the state of Idaho
 idaho <- c("Idaho")
 
 #extract the state of idaho from the GADM
 ID = USA_0[match(toupper(idaho),toupper(USA_0$NAME_1)),]
-plot(ID)
+#plot(ID)
 
-#crop the GADM to only indclude the state of idaho
+#crop the GADM of US to only indclude the state of idaho
 idaho_0 <- crop(USA_0, ID)
-plot(idaho_0)
+#plot(idaho_0)
 
 #Get the SRTM with 90m resolution elevation data of the area around Idaho using longitude and latitude
 elevID_1 <- getData("SRTM", lon = -115, lat = 44)
@@ -109,15 +101,40 @@ elevID_4 <- getData("SRTM", lon = -113, lat = 47)
 
 #mosaic the SRTM's so that all of Idaho is covered and the boundries of Idaho is shown
 elevID_mosaic <- mosaic(elevID_1, elevID_2, elevID_3, elevID_4, fun = mean)
-plot(elevID_mosaic)
-plot(idaho_0, add = TRUE)
+#plot(elevID_mosaic)
+#plot(idaho_0, add = TRUE)
 
 #crop the mosaic of SRTM data with the boundry polygon of Idaho and plot new map
 elevIdaho <- crop(elevID_mosaic, idaho_0)
+
+###add counties where 'ABS' burrows are located
+#read in idaho counties shape file
+idaho_counties <- readOGR("~/library/Mobile Documents/com~apple~CloudDocs/BSU/Graduate - MS Raptor biology/r_Projects/HES598/datatemp/original/idaho_cty.shp")
+
+#create separate map of Ada & Elmore counties
+counties_AE <- subset(idaho_counties, NAME == "Ada" | NAME == "Elmore") #creates seperate map of just "Ada" and "Elmore" counties
+
+#plot map with elevations, Idaho, and counties of interest
 plot(elevIdaho, main = "Idaho Elevation (SRTM 90m Res)", xlab = "Longitude", ylab = "Latitude", legend.args = list(text = 'Elevation (m)', side = 4, line = 3, font = 2))
 plot(idaho_0, add = TRUE)
+plot(counties_AE, add = TRUE)
+```
+
+Introduce study area at the county level (Ada & Elmore Counties)
+```{r studyAreaCounty}
+###
+#create an elvation map of Ada & Elmore counties 
+###
+
+#crop Idaho raster with county pologons to create only counties raster
+elevCounties <- crop(elevIdaho, counties_AE)
+
+#plot map of Ada & Elmore counties and elevations
+plot(elevCounties, main = "Ada & Elmore County Elevation (SRTM 90m Res)", xlab = "Longitude", ylab = "Latitude", legend.args = list(text = 'Elevation (m)', side = 4, line = 3, font = 2))
+plot(counties_AE, add = TRUE)
 
 ```
+
 
 Create each of the artificial locations
 ```{r burrowLocals, include = TRUE}
@@ -125,11 +142,12 @@ Create each of the artificial locations
 #create the artificial burrows as a spatial object
 ###
 
-#read excel data on artificial burrow locations (UTM's) into new data_frame
-artBurrow_utm <- read_excel("~/library/Mobile Documents/com~apple~CloudDocs/BSU/Graduate - MS Raptor biology/r_Projects/HES598/datatemp/original/Belthoff Burrows - UTMs_revised.xlsx")
+#read excel data on artificial burrow locations (Lat & Long) into new data_frame
+artBurrow_latlong <- read_excel("~/library/Mobile Documents/com~apple~CloudDocs/BSU/Graduate - MS Raptor biology/r_Projects/HES598/datatemp/original/Belthoff Burrows - latlong_revised.xlsx")
 
 #from artificial burrow locaiton data_frame create spatial table 
-artBurrow_spatialTable <- artBurrow_utm %>% st_as_sf(coords = c("EASTING", "NORTHING"), crs = 4326)
+#artBurrow_spatialTable <- artBurrow_utm %>% st_as_sf(coords = c("EASTING", "NORTHING"), crs = 4326)
+artBurrow_spatialTable <- artBurrow_latlong %>% st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
 
 #creates burrow location points based on 'artBurrow_spatialTable'
 artBurrow <- st_geometry(artBurrow_spatialTable) 
@@ -141,17 +159,13 @@ plot(artBurrow, cex = 1.5, col = "black")
 Overlay the artificial burrow locations onto study area
 ```{r burrowMap, include = TRUE}
 ###
-#Add Artificial Burrrows as an attribute to Idaho Elevation map ('elevIdaho')
+#Overlay 'ABS' locations onto Ada & Elmore county Elevation map ('elevCounties')
 ###
-#Convert 'sf' spatial data to raster data
-artBurrow_ID <- rasterize(artBurrow_spatialTable, elevIdaho, field = "ABS_NAME", fun = min)
-artBurrow_ID2 <- rasterize(artBurrow_spatialTable, elevIdaho, field = "ABS_NAME", fun = max)
-plot(artBurrow_ID, artBurrow_ID2, cex = 1.0)
 
-plot(elevIdaho, main = "Idaho Elevation (SRTM 90m Res)", xlab = "Longitude", ylab = "Latitude", legend.args = list(text = 'Elevation (m)', side = 4, line = 3.2, font = 2))
-plot(idaho_0, add = TRUE)
-
-#plot(artBurrow, cex = 1.5, col = "black", add = TRUE)
+#plot map of Ada & Elmore counties and elevations with 'ABS' locals
+plot(elevCounties, main = "'ABS' locations - Ada & Elmore County Elevation (SRTM 90m Res)", xlab = "Longitude", ylab = "Latitude", legend.args = list(text = 'Elevation (m)', side = 4, line = 3, font = 2))
+plot(counties_AE, add = TRUE)
+plot(artBurrow, cex = 0.8, col = "black", add = TRUE)
 ```
 
 ## Introduce the packages
