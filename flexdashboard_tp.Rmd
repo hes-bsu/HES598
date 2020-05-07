@@ -48,13 +48,11 @@ This dashboard is an example for how to show time-series data in an interactive 
 
 The goal of this flexdashboard is to compare two different mapping packages and assess the pros/cons to these packages. 
 
-**Packages for this project**
-Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
 
 Column {data-width=650}
 -----------------------------------------------------------------------
 
-### Chart A
+### Confirmed COVID-19 Cases in Idaho using Highcharter Package
 
 ```{r}
 # we are going to use the highcharter package to display information
@@ -82,7 +80,7 @@ id_hcmap <- hcmap("countries/us/us-id-all", showInLegend=FALSE) %>%
 id_hcmap
 ```
 
-### Chart B
+### Confirmed COVID-19 Cases in Idaho using Leaflet Package
 
 ```{r leaflet}
 
@@ -116,7 +114,7 @@ This dashboard was created to help explore two different ways of displaying COVI
 
 #load your data - which datasets do you need?
 # I am getting my data from 2019 Novel Coronavirus COVID-19 (2019-nCoV) Data Repository by Johns Hopkins Center for Systems Science and Engineering 
-# I am using two datasets: one for confirmed and one for deaths
+# I am using one data set of confirmed COVID-19 cases
 
 #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
 # The data comes in a time series format-- I need to take the data and create a summation of all cases per county. 
@@ -144,12 +142,10 @@ leaf.time.mb
 ```
 
 ## Show us your final product
-Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
+Check out the front page of this flex dashboard! You will see two interactive charts displaying the up-to-date nubmer of confirmed COVID-19 cases in Idaho. 
 
 ## Reflect
-Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
-
-Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
+These excercise helped me learn how to created an interactive flex dashboard that the public can easily navigate. Further, it showed me how there are several different ways of acheiving the same goal and that is in particular why I chose to explore two mapping packages. While this dashboard is for COVID-19 data, I want to create a dashboard for my own research displaying information about lidar usage in FEMA Region X (Idaho, Oregon, Washington, and Alaska). It will be intended for emergency managers and government officials to assess the current state of lidar use in all four states. I find this to be a workable format and recommend it for others to use!
 
 The data used to build the analysis is taken from the data repository for the 2019 Novel Coronavirus Visual Dashboard, operated by the Johns Hopkins University Center for Systems Science and Engineering (JHU CCSE). Their GitHub repo is linked [here](https://github.com/CSSEGISandData/COVID-19).
 
