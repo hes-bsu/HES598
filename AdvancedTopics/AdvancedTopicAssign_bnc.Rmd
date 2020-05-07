@@ -64,7 +64,7 @@ library(readxl)
 # 
 ```
 
-```{r loadData_Google Drive, include = TRUE}
+```{r loadData_Google Drive, include = FALSE}
 
 #Provide link to data folder on google drive - folder "Brent"
 folder_url <- "https://drive.google.com/open?id=1Mb8LbjqOGrGoWtbD1PXew0698boBJtH0" 
@@ -74,7 +74,6 @@ folder <- drive_get(as_id(folder_url))
 gdrive_files <- drive_ls(folder)
 
 lapply(gdrive_files$id, function(x) drive_download(as_id(x), path = paste0(here::here("datatemp/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
- #replace the path with a folder on your computer outside of the repo directory
 
 file.list <- list.files(pattern = "*.tif, *.shp, *.csv, *.xlsx") #replace the pattern with the appropriate extensions for the files you want to load (e.g., .shp, .csv)
 
@@ -123,34 +122,36 @@ plot(idaho_0, add = TRUE)
 Create each of the artificial locations
 ```{r burrowLocals, include = TRUE}
 ###
-#Add Artificial Burrrows as an attribute to Idaho Elevation map ('elevIdaho')
+#create the artificial burrows as a spatial object
 ###
 
 #read excel data on artificial burrow locations (UTM's) into new data_frame
-artBurrow_utm <- read_excel("Belthoff Burrows - UTMs_revised.xlsx")
+artBurrow_utm <- read_excel("~/library/Mobile Documents/com~apple~CloudDocs/BSU/Graduate - MS Raptor biology/r_Projects/HES598/datatemp/original/Belthoff Burrows - UTMs_revised.xlsx")
 
 #from artificial burrow locaiton data_frame create spatial table 
-artBurrow_spatialTable <- artBurrow_utm %>% st_as_sf(coords = c("NORTHING", "EASTING"), crs = 4326)
+artBurrow_spatialTable <- artBurrow_utm %>% st_as_sf(coords = c("EASTING", "NORTHING"), crs = 4326)
 
-
-artBurrow <- st_geometry(artBurrow_spatialTable) #creates burrow location points based on 'artBurrow_spatialTable'
-#artBurrow <- st_set_crs(artBurrow, 4326)
-#artBurrow_ID <- rasterize(artBurrow, elevIdaho)
+#creates burrow location points based on 'artBurrow_spatialTable'
+artBurrow <- st_geometry(artBurrow_spatialTable) 
+artBurrow <- st_set_crs(artBurrow, 4326)
 plot(artBurrow, cex = 1.5, col = "black")
-
 
 ```
 
 Overlay the artificial burrow locations onto study area
 ```{r burrowMap, include = TRUE}
 ###
-#Incorporate artificial burrow locations onto Idaho Elevation map
+#Add Artificial Burrrows as an attribute to Idaho Elevation map ('elevIdaho')
 ###
-
+#Convert 'sf' spatial data to raster data
+artBurrow_ID <- rasterize(artBurrow_spatialTable, elevIdaho, field = "ABS_NAME", fun = min)
+artBurrow_ID2 <- rasterize(artBurrow_spatialTable, elevIdaho, field = "ABS_NAME", fun = max)
+plot(artBurrow_ID, artBurrow_ID2, cex = 1.0)
 
 plot(elevIdaho, main = "Idaho Elevation (SRTM 90m Res)", xlab = "Longitude", ylab = "Latitude", legend.args = list(text = 'Elevation (m)', side = 4, line = 3.2, font = 2))
 plot(idaho_0, add = TRUE)
-plot(artBurrow, cex = 1.5, col = "black", add = TRUE)
+
+#plot(artBurrow, cex = 1.5, col = "black", add = TRUE)
 ```
 
 ## Introduce the packages
