@@ -1,7 +1,7 @@
 ---
 title: "Advanced Topic - Landscape Metrics and Raster Data"
 author: "Allison Vincent"
-date: "4/3/2020"
+date: "5/7/2020"
 output: html_document
 ---
 
@@ -20,85 +20,81 @@ My thesis research involves using a remote sensing data fusion model to monitor 
 
 To do this, we are using the Spatial and Temporal Adaptive Reflectance Fusion Model (STARFM) to downscale MODIS (low spatial, high temporal resoultion) data to fill in the gaps of Landsat (high spatial, low temporal resolution) data to monitor historical snow-covered area in detail on a daily basis. Landsat data with its 30 meter spatial resolution is useful for detailed monitoring of landscape features. Because it is only available every 7-16 days (depending on location), however, rapidly changing conditions, such as spring snowcover, can be missed. On the other hand, MODIS data is captured on a daily basis, but is too coarse at 250-500 meter spatial resolution to be used to discerne landscape changes at the scale necessary. Downscaling MODIS data is one way to resolve this issue. By using MODIS data to "fll-in" the gaps between days of Landsat acquisition, a dataset can be produced that contains synthetic imagery at a Landsat-like spatial resolution on a daily basis. This is important because snowcover is a landscape characteristic that can change rapidly from day-to-day, especially during times such as the spring snowmelt season.    
 
-Before being used as model input, MODIS and Landsat images are first processed by applying a cloud mask to remove any pixels that are classified as cloud or cloud shadow. The normalized difference snow index (NDSI) is then calculated for the remaining pixels covering the area of interest. Once an NDSI value for each pixel is obtained, both images are converted to the same projection and the MODIS imagery is rescaled to 30x30 meter pixels.
+Before being used as model input, MODIS and Landsat images are first processed by applying a cloud mask to remove any pixels that are classified as cloud or cloud shadow. The normalized difference snow index (NDSI) is then calculated for the remaining pixels covering the area of interest. Once an NDSI value for each pixel is obtained, both images are converted to the same projection and the MODIS imagery is rescaled to 30x30 meter pixels. These steps are all currently being done with Google Earth Engine, as it is easy to preprocess data on a cloud platform without having to pull multiple massive files onto a local machine.
 
-To validate the results of the model, a single Landsat image is excluded from the model input data, and then later is used to compare the synthetic image produced from the model from that same date to see how accurate the model's prediction was. One way in which we quantify the performance of the model is by binary classification. We use the common NDSI threshold of 0.4 to decide whether a pixel is classified as snow or no snow. Any value at 0.4 or above is given the label of "snow" (the positive classification), and any value below is given the label of "no snow" (the negative classification). 
+To validate the results of the model, a single Landsat image is excluded from the model input data, and then layer is used to compare the synthetic image produced from the model from that same date to see how accurate the model's prediction was. One way in which we quantify the performance of the model is by binary classification. We use the common NDSI threshold of 0.4 to decide whether a pixel is classified as snow or no snow. Any value at 0.4 or above is given the label of "snow" (the positive classification), and any value below is given the label of "no snow" (the negative classification). 
 
-Once each pixel is placed into one of these categories, a confusion matrix of true positives, true negatives, false positives, and false negatives is generated. From these values we then calculate metrics such as accuracy, precision, recall, and F-score for each date. These last 3 metrics are used because, as our dates of analysis move further into the spring, snow becomes more scarce in the landscape and the negative, "no-snow", class becomes the majority classifier, which can inflate the accuracy values for even an unskilled model. (add more details and equations for these metrics if necessary)
+Once each pixel is placed into one of these categories, a confusion matrix of true positives, true negatives, false positives, and false negatives is generated. From these values we then calculate metrics such as accuracy, precision, recall, and F-score for each date. These last 3 metrics are used because, as our dates of analysis move further into the spring, snow becomes more scarce in the landscape and the negative, "no-snow", class becomes the majority classifier, which can inflate the accuracy values for even an unskilled model.
 
 In addition to the calculation of the F-score for the model output, it is also important to quantify how well the model is performing against a random distribution of snowcover. This project proposes to do just that. Below is a draft outline of the steps I hope to accomplish in this analysis:
 
-1. Choose a date for analysis that is less than 30% cloud covered. 
-
-2. Calculate the fractional snow-covered area (fSCA) of the Landsat image (the validation image) for that date as the fraction of pixels classified as "snow" (the positive class). 
-
-3. Generate a map of the modeled data from that same date with the same fSCA, but with the snowcover randomly distributed throughout the landscape. 
-
-4. Repeat step 3 multiple times (100-1,000? depending on computing power available and time-burden), producing an ensemble of random binary snow-covered area maps.
-
-5. Calculate the accuracy, precision, recall, and F-score of all above random simulations.
-
-6. Produce a figure that shows how the values from step 5 are different from the true values of the original real/synthetic image pair. This step can include measures of the variance in the values calculated from the random trials from the expected values calculated from the model output.  
-
 
 ## PSUEDOCODE!!
-Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
+
+1. Introduce the code that runs the STARFM model and produces the raster files we will be working with.
+
+2. Use model results from an alalysis date that is in the late spring, since we are primarily interested in how the model predicts patchy snowcover, and load model results for that date. 
+
+3. Calculate the fractional snow-covered area (fSCA) of the STARFM image (the results) for that date as the fraction of pixels classified as "snow". 
+
+4. Create a confustion matrix that compares the classification of snow vs. no-snow between the real data (Landsat) and the prediction data (STARFM) using "snow" as the positive class. Specifically, we are interested in accuracy, precision, recall, and f-score from this step.
+
+5. Generate new rasters with the same fSCA, but with the snowcover randomly distributed throughout the landscape. 
+
+6. Repeat step 3 multiple times (100 was chosen for this analysis based on local computing power), producing an ensemble of random binary snow-covered area rasters.
+
+7. Calculate the mean and standard deviation of the accuracy, precision, recall, and F-score for all runs of the above random simulations.
+
+8. Produce a figure that compares the values from step 7 to the true values of the original real/synthetic image pair.   
+
+
+## Introduce the packages
+
 ```{r}
-#load the libraries - tell us which packages you're using and why
+
+#load the libraries 
 
 library(raster)
-library(rgdal)
-library(zoo)
-library(ggplot2)
-library(fields)
+# contains all the functions for the raster operations needed in this code. Chosen over other packages due to my own familiarity with it, even though other packages that work with rasters are often faster, processing time did not end up being an issue with this project
 library(sp)
+# used to load, project, and display spatial vector data. Specifically used for the watershed shapefile, which is added to raster plots for reference
+library(rgdal)
+# accesses projection information and provides functions for reprojection and transformation of raster and vector data. Works with the "raster" and "sp" packages
+library(fields)
+# contains functions for plotting and working with spatial data as images
 library(spam)
+# required by the "fields" package. Contains functions for sparse matrix algebra
 library(maps)
-library(sf)
+# required by the "fields" package. Assists with displaying spatial data
 library(caret)
+# the package that contains operations for classification analysis (e.g. the confusion matrix)
+library(ggplot2)
+# required by the "caret" package. Generic "plot" function used in this document
 library(stats)
-
-#load your data - which datasets do you need?
-
-modis<- brick()
-landsat<- brick()
-
-#Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
+# required to perform statistics on the results of this project, specifically to calculate means and standard deviations of performance metrics
 
 
 ```
-#Analysis/processing step 1 - Run the STARFM model and save model results 
+
+## Analysis/processing step 1 - Run the STARFM model and save model results 
 
 The code for this section is based on a script originally written by Faye Peters, modified by Megan Gallagher and Jake Graham for use in Megan's M.S. thesis, and then finally further modified by myself for my own research purposes.
 
-#Analysis/processing step 2 - Perform pixel-by-pixel comparison of the raster of the model results vs the raster of the Landsat data. 
+Prior to runing this section, the following needs to be setup separately on a non-Windows machine:
+1. Install the STARFM model, software and download instructions can be found here:                  https://www.ars.usda.gov/research/software/download/?softwareid=432&amp;modecode=80-42-05-10
+2. Set up a folder that contains the Landsat and MODIS files, as well as the starfm.exe and starfmconfig.txt 
+    a. starfmconfig.txt is where model parameters are set
+3. Create a separate folder called "Output" in that folder
 
-Classify anything as 0.4 NDSI or greater as snow, and everything else as no-snow, for both rasters.
-Compare the two rasters and create a confusion matrix to quantify how well the model did at correctly classifying pixels.
-Calculate accuracy, precision, recall, f-score of the model.
-
-#Analysis/processing step 3  - Produce randomized rasters to evaluate model behavior against.
-
-Create a new raster with the same fraction of pixels classified as snow as the model output, but with those pixels randomly placed throughout the raster. Repeat this 100(?) times with a Monte Carlo simulation. Evaluate accuracy, precision, recall, and f-score metrics for each randomized raster.
-
-#Analysis/processing step 4 - Create a figure that will display the variance of the above metrics from the actual metrics of the model results. 
-
-If the model is indeed correctly predicting the location of snow-cover, then the model results should have better accuracy, precision, recall, and f-score than the random matrices. 
-
-
-#Check the outcomes? How will you know if your steps worked?
-
-
-
-
-Processing Step 1:
 ```{r}
 
-# Prior to runing this section, the following needs to be setup separately on a non-Windows machine:
-# 1. Install STARFM, software and download instructions can be found here:                  https://www.ars.usda.gov/research/software/download/?softwareid=432&amp;modecode=80-42-05-10
-# 2. Set up a folder that contains the Landsat and MODIS files, as well as the starfm.exe and starfmconfig.txt 
-    # a. starfmconfig.txt is where model parameters are set
-# 3. Create a separate folder called "Output" in that folder
+# Load the data 
+
+
+# Data not actually loaded here, since these are large files (~40 MB), and the code in the following section does not work without the STARFM model installed locally.  
+
+#modis<-brick("./mod_East_newc_041816_050516.tif")
+#landsat<-brick("./landsat_East_no_042516.tif")
 
 
 perc<- 99
@@ -123,14 +119,14 @@ perc<- 99
  #     "./landsat_sim.tif" fused dataset with landsat and simulated data
 
 
+## NOTE: Below here, the starfm function will not run without the starfm.exe file installed
+
 starfm<-function(modis,landsat,perc, handleNA = TRUE){
   # read the rows and columns in the input vectors and update the config file with this information
   config <- readLines("./StarFM_config.txt")
   config <- gsub("(.*NROWS = ).*$", paste0("\\1", nrow(landsat)),config )
   config <- gsub("(.*NCOLS = ).*$", paste0("\\1", ncol(landsat)),config )
   cat(config, file="./StarFM_config.txt", sep="\n")
-  
-  
 
   if(handleNA){
      # Fix any missing data that enters as zeroes to our NA value. We have to do this by layer as operating on the entire stack may run          into memory issues on larger subsets:
@@ -264,29 +260,35 @@ writeRaster(landsat_sim, filename="./output/2016_East_fusion.tif", bandorder='BS
             datatype='INT2S',format='GTiff', overwrite=TRUE)
 
 ```
-Processing Step 2
+
+## Analysis/processing step 2 - Plot the model and validation data we will be using. Define our "snow" and "no-snow" threshold for classification. Find the fractional snow covered area (fSCA) for the model results we will be analyzing. 
+
+Starting with this section, this code solely my own and should be able to be run on any machine using the files included in the "Data" folder.
+
+**Because the output files produced by STARFM are extremely large (~60 MB), I have taken a single layer from the output raster brick, and a single layer from the Landsat raster brick input file, for analysis.
 
 ```{r}
-
-## Starting with this section, this code should be able to be run on any machine using the links to the data provided in the shared Google drive folder
-
-## Because the output files produced by STARFM are extremely large (~60 MB), I have taken a single layer from the output raster brick, and a single layer from the Landsat raster brick input file, for analysis.
 
 setwd('C:/Users/Allison and Brian/Documents/HES598/Advanced_Topic')
 
 
-landsat_apr25<- raster("./Data/Landsat_testday_042516.tif")
-starfm_apr25<- raster("./Data/STARFM_testday_042516.tif")
-ER<- readOGR("./Data/EastRiver_Project.shp")
+# Load the data
+
+landsat_apr25<- raster("./Data/Landsat_testday_042516.tif") #the validation data
+starfm_apr25<- raster("./Data/STARFM_testday_042516.tif") #the model data
+ER<- readOGR("./Data/EastRiver_Project.shp") #shapefile of the study watershed for reference
+
+# Organize the data
 
 # Check the projections of our inputs
 proj4string(ER)
 proj4string(landsat_apr25)
 proj4string(starfm_apr25)
 
+# Choose a common projection to use (using the raster file projection)
 data_proj<- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-
+# Transform the shapefile into the projection of the raster files
 ER_proj<- spTransform(ER, CRS(data_proj))
 proj4string(ER_proj)
 
@@ -294,41 +296,62 @@ proj4string(ER_proj)
 
 ```{r}
 
-# Make quick plots of the raster inputs to get an idea of the data we're working with
+## Make quick plots of the raster inputs to get an idea of the data we're working with
 ## Landsat 'no data' values are currently set to 0. Creating a mask to change them to -11111, which is the 'no data' value in the model output
-
 
 landsat_masked<- Which(landsat_apr25 == 0, cells = TRUE)
 landsat_apr25[landsat_masked] <- -11111
 
 
-## Reclassify all data values less than or equal to -11111 as NA
+# Reclassify all data values less than or equal to -11111 as NA
 landsat_apr25<- reclassify(landsat_apr25,cbind(-Inf, -11111, NA))
 starfm_apr25<- reclassify(starfm_apr25,cbind(-Inf, -11111, NA))
 
+# Make quick plots of the data to make sure it is formatted correctly
 par(mfrow=c(1,2)) 
+par(mar = c(3,3,3,5.5))
 plot(landsat_apr25, col = rev(cm.colors(40)), main = "NDSI from Landsat")
+mtext("NDSI x 10^4", side=4, line=1)
+mtext("Latitiude", side=1, line=2)
+mtext("Longitude", side=2, line=2)
 plot(ER_proj, border = "black", add = TRUE)
 plot(starfm_apr25, col = rev(cm.colors(40)), main = "NDSI from Model")
+mtext("NDSI x 10^4", side=4, line=1)
+mtext("Latitiude", side=1, line=2)
+mtext("Longitude", side=2, line=2)
 plot(ER_proj, border = "black", add = TRUE)
+
+
+## NOTE: Our NDSI values in our raster are multiplied by 10,000
 
 
 ```
 
 ```{r}
-## Once we know our data is displaying correctly, classify each pixel as "snow" or "no-snow" using a threshold of 0.4 NDSI
+## Once we know our data is displaying correctly, classify each pixel as "snow" or "no-snow" using the commonly accepted threshold of 0.4 NDSI 
 
+
+# Any values in our rasters of below 4000 are given a new value of zero
 landsat_binary<- reclassify(landsat_apr25,cbind(-Inf, 4000, 0))
 starfm_binary<- reclassify(starfm_apr25,cbind(-Inf, 4000, 0))
 
+# Any values in our rasters of 4000 or above are given a new value of 1
 landsat_binary<- reclassify(landsat_binary,cbind(4000, Inf, 1))
 starfm_binary<- reclassify(starfm_binary,cbind(4000, Inf, 1))
 
+# Plot our newly classified data to display where there is snow and where there is not
 par(mfrow=c(1,2)) 
+par(mar = c(3,3,3,5))
 plot(landsat_binary,  col = rev(cm.colors(40)), main = "Snow/No-Snow from Landsat")
+mtext("Latitiude", side=1, line=2)
+mtext("Longitude", side=2, line=2)
 plot(ER_proj, border = "black", add = TRUE)
 plot(starfm_binary, col = rev(cm.colors(40)), main = "Snow/No-Snow from Model")
+mtext("Latitiude", side=1, line=2)
+mtext("Longitude", side=2, line=2)
 plot(ER_proj, border = "black", add = TRUE)
+
+## In the plots shown below, "snow" is displayed in blue with a value of 1, and "no-snow" is displayed in pink with a value of 0
 
 ```
 
@@ -337,21 +360,34 @@ plot(ER_proj, border = "black", add = TRUE)
 ## Find the fSCA for each raster
 
 
+## Since "snow" pixels in our rasters have a value of 1, and all other cells have a value of zero or NA, a simple sum will give us the number of snow-covered pixels. When that value is divided by the total number of pixels in the raster (or the area of the raster), that value will be our fractional snow covered area.
+
+# Perform the process described above on the Landsat validation data
 area_L8<- landsat_apr25@nrows*landsat_apr25@ncols
 
 L8_snow<- as.vector(landsat_binary, mode = 'numeric')
 L8_snow_sum<- sum(L8_snow, na.rm = TRUE)
 
-L8_fsca<- L8_snow_sum/area_L8
+L8_fsca<- L8_snow_sum/area_L8  #Landsat fSCA
 
 
+# Perform the process described above on the STARFM model results
 area_starfm<- starfm_apr25@nrows*starfm_apr25@ncols
 
 starfm_snow<- as.vector(starfm_binary, mode = 'numeric')
 starfm_snow_sum<- sum(starfm_snow, na.rm = TRUE)
 
-starfm_fsca<- starfm_snow_sum/area_starfm
+starfm_fsca<- starfm_snow_sum/area_starfm #STARFM fSCA
 
+```
+
+## Analysis/processing step 3 - Perform pixel-by-pixel comparison of the raster of the model results vs the raster of the Landsat data to determine how well the model does at correctly classifying snow.
+
+Classify anything as 0.4 NDSI or greater as snow, and everything else as no-snow, for both rasters.
+Compare the two rasters and create a confusion matrix to quantify how well the model did at correctly classifying pixels.
+Calculate accuracy, precision, recall, f-score of the model.
+
+```{r}
 
 ## Create a confusion matrix to evaluate the performance of the model against the Landsat data
 
@@ -361,11 +397,12 @@ starfm_factor<- as.factor(starfm_snow)
 
 results<- confusionMatrix(starfm_factor,landsat_factor, positive = "1")
 
-## Save the results in matrices that can easily be viewed for reference
-
+# Save the results in matrices that can easily be viewed for reference
 overall<- as.matrix(results, what = "overall")
 classes<- as.matrix(results, what = "classes")
 
+
+# We want to know the values of the accuracy, precision, recall, and f-score, so we will save these values as their own variable
 acc_model<- overall[[1]]
 prec_model<- classes[[5]]
 recall_model<- classes[[6]]
@@ -374,6 +411,9 @@ f1_model<- classes[[7]]
 
 ```
 
+## Analysis/processing step 3  - Produce randomized rasters to evaluate model behavior against.
+
+Create a new set of rasters with the same fraction of pixels classified as snow as the model output, but with those pixels randomly placed throughout the raster. Do this by randomly resampling the model data 100 times. Evaluate accuracy, precision, recall, and f-score metrics for each randomized raster.
 
 ```{r}
 
@@ -384,14 +424,14 @@ set.seed(123)
 rand<- list()
 
 ## Randomize the model results by resampling them. This will preserve the same amount of 0's, 1's and NA values. Doing this in a list format for ease of computation.
-n<- 10
+n<- 100
 for (i in 1:n) {
  n1<- sample(starfm_binary, replace = FALSE)
  rand[[i]] = n1
 }
 
 
-## Project a single random matrix 
+## Project a single random matrix as a validation test
 test<- rand[[1]]
 dim(test)<- c(1590, 1805)
 test_sum<- sum(test, na.rm = TRUE)
@@ -402,53 +442,61 @@ resol<- 0.0002694946
 res(r)<- resol
 
 
-## Convert the list of the random samples (currently in vector format) into matrices with the correct dimensions
-rand_all<- vector("list", n)
+## Can uncomment lines below to convert the list of the random samples (currently in vector format) into matrices with the correct dimensions (not necessary for analysis, but helpful for visualization or for conversion into raster format)
 
-for (i in 1:length(rand)) {
-  rand_layer<- rand[[i]]
-  dim(rand_layer)<- c(1590, 1805)
-  rand_all[[i]]<- rand_layer
-}  
+# rand_all<- vector("list", n)
+# 
+# for (i in 1:length(rand)) {
+#   rand_layer<- rand[[i]]
+#   dim(rand_layer)<- c(1590, 1805)
+#   rand_all[[i]]<- rand_layer
+# }  
   
   
-## Convert the matrices of the randomly sampled raster values into raster format and project to match the actual data
-r_all<- vector("list", n)
+## Can uncomment lines below to convert the matrices of the randomly sampled values into raster format and project to match the actual data. This only works with a small sample of randomized rasters (e.g. 10), otherwise file is too large. 
 
-for(i in 1:length(rand_all)) {
-  rand_matrix<- raster(rand_all[[i]], crs=data_proj)
-  extent(rand_matrix)<- e
-  res(rand_matrix)<- resol
-  r_all[[i]]<- rand_matrix
-}
+# r_all<- vector("list", n)
+# 
+# for(i in 1:length(rand_all)) {
+#   rand_matrix<- raster(rand_all[[i]], crs=data_proj)
+#   extent(rand_matrix)<- e
+#   res(rand_matrix)<- resol
+#   r_all[[i]]<- rand_matrix
+# }
 
 
-
+# Plot the randomized raster side-by-side with the model data to do a quick visual check on the randomized data
 par(mfrow=c(1,2)) 
+par(mar = c(3,3,3,5))
 plot(starfm_binary, col = rev(cm.colors(40)), main = "Snow/No-Snow from Model")
+mtext("Latitiude", side=1, line=2)
+mtext("Longitude", side=2, line=2)
 plot(ER_proj, border = "black", add = TRUE)
-plot(r_all[[10]], col = rev(cm.colors(40)), main = "Snow/No-Snow from Random Raster")
+plot(r, col = rev(cm.colors(40)), main = "Randomized Snow/No-Snow Raster")
+mtext("Latitiude", side=1, line=2)
+mtext("Longitude", side=2, line=2)
 plot(ER_proj, border = "black", add = TRUE)
+
+## In the same manner as the previous plots, "snow" is displayed in blue with a value of 1, and "no-snow" is displayed in pink with a value of 0
 
 ```
-
-
 
 ```{r}
 ## Run the classification with the randomized matrices and create confusion matrices for each one
 
+# If randomized results have been converted to raster or matrix format, uncomment the lines below to convert them back to vector format for confusion matrix analysis
 
-r_all_vec<- vector("list", n)
-
-for (i in 1:length(r_all)) {
- r_all_to_vec<- r_all[[i]]
- r_all_vec[[i]]<- as.vector(r_all_to_vec, mode = 'numeric')
-} 
+# r_all_vec<- vector("list", n)
+# 
+# for (i in 1:length(r_all)) {
+#  r_all_to_vec<- r_all[[i]]
+#  r_all_vec[[i]]<- as.vector(r_all_to_vec, mode = 'numeric')
+# } 
  
 rand_results<- vector("list", n)
 
-for (i in 1:length(r_all_vec)) { 
- vec_to_fac<- r_all_vec[[i]]
+for (i in 1:length(rand)) { 
+ vec_to_fac<- rand[[i]]
  rand_factor<- as.factor(vec_to_fac)
  rand_results_layer<- confusionMatrix(rand_factor,landsat_factor, positive = "1")
  rand_results[[i]] = rand_results_layer
@@ -508,6 +556,9 @@ for (i in 1:length(classes_total)) {
 
 ```
 
+## Checking the outcome. Create a figure that will display the variance of the above metrics from the actual metrics of the model results. 
+If the model is indeed correctly predicting the location of snow-cover, then the model results should have better accuracy, precision, recall, and f-score than the random matrices. 
+
 ```{r}
 
 ## Create figures to display the statistical values from the model results to those from the random matrices
@@ -530,7 +581,7 @@ f1_vec<- as.vector(f1_all, mode = 'numeric')
 mean_f1<- mean(f1_vec)
 sd_f1<- sd(f1_vec)
 
-
+## Create bar plots to show the values of the model statistics vs the random raster statistics
 
 model_vals<- c(acc_model, prec_model, recall_model, f1_model)
 labels<- c("Accuracy","Precision","Recall","F-Score")
@@ -544,12 +595,8 @@ barplot(means, names.arg=labels, main="Metrics from Randomized Rasters", ylab="M
 arrows(x0=mid, y0=means-sds, x1=mid, y1=means+sds, code=3, angle=90, length=0.1)
 
 
-
-
 ```
 
-## Introduce the packages
-Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
 
 ## Evaluate your choices
 Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
@@ -561,3 +608,8 @@ Did you make a map? Let's see it. Did you plot some data that you extracted with
 Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
 
 Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
+
+## References
+
+
+
