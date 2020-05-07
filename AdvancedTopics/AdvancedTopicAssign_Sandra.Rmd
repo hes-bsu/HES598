@@ -117,6 +117,7 @@ plot(elev, col=myCol)
 points(pixels$Long, pixels$Lat, cex = 0.5)
 
 
+
 #Analysis/processing step 2 - what are you hoping to do here, why? 
 
 ##Step2: I use extract funtion to get elevation data from the raster image.
@@ -238,25 +239,33 @@ coordnt <- st_as_sf(df_spat, df_spat = c("x", "y"),
 class(coordnt)
 
 coordnt
-coordnt$ID_pixel
-coordnt$ID_veg
+class(coordnt)
+
+has_rownames(coordnt)
+sort()
 
 
+arrange(coordnt, ID_)
 
-coord=coordnt
-coord <- st_set_geometry(coord,NULL)
-colnames(coord)
+arrange()
 
-myvars <- c("East", "North")
-coord_new <- coord[myvars]
-colnames(coord_new)
+#coordnt$ID_pixel
+#coordnt$ID_veg
 
-as.matrix(sapply(coord_new, as.numeric))  
+#coord=coordnt
+#coord <- st_set_geometry(coord,NULL)
+#colnames(coord)
 
-id <- c("ID_veg", "ID_pixel")
-coord_id <- coord[id]
+#myvars <- c("East", "North")
+#coord_new <- coord[myvars]
+#colnames(coord_new)
 
-as.matrix(sapply(coord_id, as.numeric))  
+#as.matrix(sapply(coord_new, as.numeric))  
+
+#id <- c("ID_veg", "ID_pixel")
+#coord_id <- coord[id]
+
+#as.matrix(sapply(coord_id, as.numeric))  
 
 
 ##############################################################
@@ -300,6 +309,8 @@ adj <- adjacent(elev_utm, cells=1:ncell(elev_utm), pairs=TRUE, directions=8)
 speed <- hd
 speed[adj] <- 6 * exp(-3.5 * abs(slope[adj] + 0.05))
 
+plot(raster(speed))
+
 conductance <- geoCorrection(speed)
 
 str(conductance)
@@ -309,16 +320,32 @@ str(conductance)
 
 # coords <- st_as_sf(coords, coords = c("longitude", "latitude"),                    crs = 4326, stringsAsFactors = FALSE) %>%          st_transform(crs = 32619)
 
+coordnt
 
 dist2 <- costDistance(conductance,
                       fromCoords = as(as_Spatial(coordnt[1,]), "SpatialPoints"),
                       toCoords = as(as_Spatial(coordnt), "SpatialPoints"))
 
+
 dist2
-colnames(dist2) <- coordnt$ID_pixel
-dist2
-colnames(dist2) <- coordnt$ID_veg
-dist2
+
+#names(dist2) <- coordnt$ID_pixel
+#dist2
+
+#dist2_df <- data.frame(ID = names(dist2), values = as.vector(dist2))
+#head(dist2_df)
+
+
+#dist2_fn <- dist2_df %>% left_join(. , coordnt[,c("ID_pixel", "ID_veg")], by = c("ID" = "ID_veg"))
+#dist2_fn
+
+coord_df <- st_drop_geometry(coordnt)
+coord_df
+
+dist2_fn <- dist2_df %>% left_join(. , coord_df[,c("ID_pixel", "ID_veg")], by = c("ID" = "ID_pixel"))
+head(dist2_fn)
+
+dim(dist2_fn)
 
 ##############################################
 ##############################################################
@@ -347,6 +374,7 @@ library(usethis)
 library (sf)
 library(sp)
 
+
 class(df)
 colnames(df)
 
@@ -372,7 +400,11 @@ coordnt <- coordnt %>% rename(GEOMETRY=geometry)
 coordnt
 class(coordnt)
 
+##### arrange
 
+library(dplyr)
+
+class(coordnt)
 
 
 ### Convert raster to polygon###
@@ -425,6 +457,9 @@ E(gr)$weight <- 50
 hex_pixels <- as.numeric(st_intersects(coordnt, hex_elev_utm_shape))
 hex_pixels
 
+hex_pixels <- unique(as.numeric(st_intersects(coordnt, hex_elev_utm_shape)))
+hex_pixels
+
 dist3 <- distances(gr, hex_pixels[1], hex_pixels[-1])
 
 dist3_df <- data.frame(dist3, row.names = "Distance from init:")
@@ -454,7 +489,6 @@ microbenchmark
 dist.fx=function(x1,x2,y1,y2){
   sqrt((x1-x2)^2+(y1-y2)^2)
 }
-
 
 
 #pix=read.csv("pixelelev.csv")
