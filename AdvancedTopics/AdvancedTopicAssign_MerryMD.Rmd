@@ -23,32 +23,7 @@ Bigger picture: This inforation will be used in a statistical generalized linear
 
 
 ## PSUEDOCODE:
-#load the libraries - tell us which packages you're using and why
-##Both raster packages to help format my 2 rasters  
-## library(rgdal)
-## library(raster)
 
-
-#load your data - which datasets do you need?
-##Dadanawa raster file Landsat 7, year 2015 greenest pixel composite image "DADYR15"
-#DADYR15 <- raster()
-##The SUA classification of year 2015 "SUADAD15"
-#SUADAD15 <- raster()
-##GPS points to get SUA totals for "DADPTS"
-#DADPTS <- read.csv("C:/Users/Nessa/Desktop/BSU/RESEARCH/GUYresearch/Camera_trap/DAD1/DadAnalysisDAD1_GPSPoints.csv")
-
-
-#Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
-##Make sure the two rasters stack up
-
-#Analysis/processing step 1 - what are you hoping to do here, why? 
-#Quantify the metrics by landcover type: water, forest, bareground and quantify the amount of patches per class
-
-#Analysis/processing step 2 - what are you hoping to do here, why? 
-#Are there differences in SUA values between the points? 9 out of the 13 points have been classified as bush island habitats. Is there more resolution or variability using SUA values instead of the catergorical habitat description?
-
-#Check the outcomes? How will you know if your steps worked?
-#If I have a SUA value for 13 points I will know I did it correctly.
 
 ```{r}
 #load the libraries - tell us which packages you're using and why
@@ -89,18 +64,30 @@ library(googledrive)
 ## library(raster)
 
 #Actual code:
-#Load data
-#folder_url <- "https://drive.google.com/open?id=1Co7q8ggqr1CjbdUcbN0-9LtnHygshKkq"
+Load data
 
-#folder <- drive_get(as_id(folder_url))
+```{r}
+#for loading in the data
+
+install.packages("help")
+
+folder_url <- "https://drive.google.com/open?id=1Co7q8ggqr1CjbdUcbN0-9LtnHygshKkq"
+
+folder <- drive_get(as_id(folder_url))
 
 #files <- drive_ls(folder)
+#library(help)
+#lapply(files$id, function(x) drive_download(as_id(x), path = paste0(here::here("datatemp/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
-#lapply(files$id, function(x) drive_download(as_id(x), path = "/path/to/your/local/directory/not/class repo/" overwrite = TRUE)) #replace the path with a folder on your computer outside of the repo directory
+#"/path/to/your/local/directory/not/class repo/" overwrite = TRUE)) #replace the path with a folder on your computer outside of the repo directory
 
-file.list <- list.files((pattern = "*.tif") #replace the pattern with the appropriate extensions for the files you want to load (e.g., .shp, .csv)
+###file.list <- list.files((pattern = "*.tif") #replace the pattern with the appropriate extensions for the files you want to load (e.g., .shp, .csv)
 
-rstrs <- lapply(file.list raster) #Then read in the file using the appropriate read command (e.g., raster, read_sf, read.csv)
+###rstrs <- lapply(file.list raster) #Then read in the file using the appropriate read command (e.g., raster, read_sf, read.csv)
+
+```
+
+
 
 
 ## Evaluate your choices
