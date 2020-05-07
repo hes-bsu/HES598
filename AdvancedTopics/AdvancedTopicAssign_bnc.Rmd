@@ -42,6 +42,7 @@ library(sf)
 library(rgdal)
 library(raster)
 library(readxl)
+library(gdistance)
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
 
@@ -112,7 +113,7 @@ elevIdaho <- crop(elevID_mosaic, idaho_0)
 idaho_counties <- readOGR("~/library/Mobile Documents/com~apple~CloudDocs/BSU/Graduate - MS Raptor biology/r_Projects/HES598/datatemp/original/idaho_cty.shp")
 
 #create separate map of Ada & Elmore counties
-counties_AE <- subset(idaho_counties, NAME == "Ada" | NAME == "Elmore") #creates seperate map of just "Ada" and "Elmore" counties
+counties_AE <- subset(idaho_counties, NAME == "Ada" | NAME == "Elmore")
 
 #plot map with elevations, Idaho, and counties of interest
 plot(elevIdaho, main = "Idaho Elevation (SRTM 90m Res)", xlab = "Longitude", ylab = "Latitude", legend.args = list(text = 'Elevation (m)', side = 4, line = 3, font = 2))
@@ -145,7 +146,7 @@ Create each of the artificial locations
 #read excel data on artificial burrow locations (Lat & Long) into new data_frame
 artBurrow_latlong <- read_excel("~/library/Mobile Documents/com~apple~CloudDocs/BSU/Graduate - MS Raptor biology/r_Projects/HES598/datatemp/original/Belthoff Burrows - latlong_revised.xlsx")
 
-#from artificial burrow locaiton data_frame create spatial table 
+#from artificial burrow location data_frame create spatial table 
 #artBurrow_spatialTable <- artBurrow_utm %>% st_as_sf(coords = c("EASTING", "NORTHING"), crs = 4326)
 artBurrow_spatialTable <- artBurrow_latlong %>% st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
 
@@ -167,6 +168,56 @@ plot(elevCounties, main = "'ABS' locations - Ada & Elmore County Elevation (SRTM
 plot(counties_AE, add = TRUE)
 plot(artBurrow, cex = 0.8, col = "black", add = TRUE)
 ```
+```{r spatialPoints, include = TRUE}
+#remove 'ABS_NAME' column from 'artBurrow_latlong' data frame
+artBurrow_latlong_noNames <- subset(artBurrow_latlong, select = -c(ABS_NAME))
+
+#create object for coordinates
+longLat <- artBurrow_latlong_noNames[,c(1,2)]
+
+#createa a SpatialPointsDataframe()
+artBurrow_spdf <- SpatialPointsDataFrame(coords = longLat, data = artBurrow_latlong, proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0 "))
+```
+
+Create raster from 'counties_AE' spatial object
+```{r counties_AE to raster, include = TRUE}
+#read in Idaho counties shape file
+counties <- st_read("~/library/Mobile Documents/com~apple~CloudDocs/BSU/Graduate - MS Raptor biology/r_Projects/HES598/datatemp/original/idaho_cty.shp") %>% st_transform(crs = 32619)
+
+#isolate Ada & Elmore counties pologons from Idaho county shape file
+studyCounties <- subset(idaho_counties, NAME == "Ada" | NAME == "Elmore")
+
+#bring in spatial coordiantes of 'ABS' locals
+coords <- artBurrow_spatialTable
+
+#set 'ABS' spatial coordinates from lat long to UTM 19N
+coords <- st_as_sf(coords, coords = c("Longitude", "Latitude"), crs = 4326, stringAsFactors = FALSE) %>% st_transform(crs = 32619)
+
+#create raster of 'studyCounties' spatial object
+studyCounties_ras <- raster(x = extent(studyCounties), nrow = 250, ncol = 250)
+studyCounties_ras <- rasterize(x = studyCounties, y = studyCounties_ras, field = 1)
+
+
+```
+
+
+Convert 'studyCounties_ras' raster into a TransitionLayer with 'gdistance' package
+```{r convertRaster_TransitionLayer, include = TRUE}
+#create an object of the Transition class
+studyCounties_ras_tr <- transition(studyCounties_ras, transitionFunction = mean, 8)
+
+#Geo correct transition object
+studyCounties_ras_tr <- geoCorrection(studyCounties_ras_tr, type = "c")
+
+```
+
+
+```{r gdistance_costDistance, include = TRUE}
+elevCounties_leastCost <- costDistance(elevCounties_tran_geocorr, artBurrow_spdf)
+
+
+```
+
 
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
