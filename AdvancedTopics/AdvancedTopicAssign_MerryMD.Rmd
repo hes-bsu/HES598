@@ -114,14 +114,17 @@ plot(SUADAD15)
 ```
 
 
-#Making 100m buffers around points
-https://www.maths.lancs.ac.uk/~rowlings/Teaching/UseR2012/cheatsheet.html
+#Make 100m buffers around the points
+
 ```{r}
-#Turn GPS points into spatial dataframe
+library("rgdal")
+library("rgeos")
+library("sp")
+library("raster")
 
-
-#First transform lat/long to UTM
-
+library("rgeos")#for the buffer function, gBuffer()
+buffDADPTS <- gBuffer(DADPTS,byid=T,width=100) #width is in meter
+plot(buffDADPTS)#visually check
 ```
 
 #Make buffers around the points 
