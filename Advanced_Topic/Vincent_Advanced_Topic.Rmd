@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 ```
 
 
@@ -255,7 +256,7 @@ starfm<-function(modis,landsat,perc, handleNA = TRUE){
 #### here we actually run the function
 
 # if first time running
-landsat_sim<-starfm(modis,landsat,perc)
+##landsat_sim<-starfm(modis,landsat,perc)
 
 # if re-running and NAs are already converted (mosty for debugging), uncomment line below
 #landsat_sim<-starfm(modis,landsat,perc, handleNA = F)
@@ -263,8 +264,8 @@ landsat_sim<-starfm(modis,landsat,perc)
 
 #### Raster output for saving
 
-writeRaster(landsat_sim, filename="./output/2016_East_fusion.tif", bandorder='BSQ', 
-            datatype='INT2S',format='GTiff', overwrite=TRUE)
+#writeRaster(landsat_sim, filename="./output/2016_East_fusion.tif", bandorder='BSQ', 
+#            datatype='INT2S',format='GTiff', overwrite=TRUE)
 
 ```
 
@@ -275,9 +276,6 @@ Starting with this section, this code solely my own and should be able to be run
 **Because the output files produced by STARFM are extremely large (~60 MB), I have taken a single layer from the output raster brick, and a single layer from the Landsat raster brick input file, for analysis.
 
 ```{r}
-
-setwd('C:/Users/Allison and Brian/Documents/HES598/Advanced_Topic')
-
 
 # Load the data
 
