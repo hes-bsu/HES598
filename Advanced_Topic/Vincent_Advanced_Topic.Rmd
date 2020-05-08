@@ -1,7 +1,7 @@
 ---
 title: "Advanced Topic - Landscape Metrics and Raster Data"
 author: "Allison Vincent"
-date: "5/7/2020"
+date: "5/8/2020"
 output: html_document
 ---
 
@@ -18,15 +18,22 @@ My thesis research involves using a remote sensing data fusion model to monitor 
 
 2. Can we create a high spatiotemporal resolution dataset to monitor snow covered area in a mountain watershed over a ~20 year period?
 
-To do this, we are using the Spatial and Temporal Adaptive Reflectance Fusion Model (STARFM) to downscale MODIS (low spatial, high temporal resoultion) data to fill in the gaps of Landsat (high spatial, low temporal resolution) data to monitor historical snow-covered area in detail on a daily basis. Landsat data with its 30 meter spatial resolution is useful for detailed monitoring of landscape features. Because it is only available every 7-16 days (depending on location), however, rapidly changing conditions, such as spring snowcover, can be missed. On the other hand, MODIS data is captured on a daily basis, but is too coarse at 250-500 meter spatial resolution to be used to discerne landscape changes at the scale necessary. Downscaling MODIS data is one way to resolve this issue. By using MODIS data to "fll-in" the gaps between days of Landsat acquisition, a dataset can be produced that contains synthetic imagery at a Landsat-like spatial resolution on a daily basis. This is important because snowcover is a landscape characteristic that can change rapidly from day-to-day, especially during times such as the spring snowmelt season.    
+To do this, we are using the Spatial and Temporal Adaptive Reflectance Fusion Model (STARFM) (Gao et al., 2006) to downscale MODIS (low spatial, high temporal resoultion) data to fill in the gaps of Landsat (high spatial, low temporal resolution) data to monitor historical snow-covered area in detail on a daily basis. Landsat data with its 30 meter spatial resolution is useful for detailed monitoring of landscape features. Because it is only available every 7-16 days (depending on location), however, rapidly changing conditions, such as spring snowcover, can be missed. On the other hand, MODIS data is captured on a daily basis, but is too coarse at 250-500 meter spatial resolution to be used to discerne landscape changes at the scale necessary. Downscaling MODIS data is one way to resolve this issue. By using MODIS data to "fll-in" the gaps between days of Landsat acquisition, a dataset can be produced that contains synthetic imagery at a Landsat-like spatial resolution on a daily basis. This is important because snowcover is a landscape characteristic that can change rapidly from day-to-day, especially during times such as the spring snowmelt season.    
 
 Before being used as model input, MODIS and Landsat images are first processed by applying a cloud mask to remove any pixels that are classified as cloud or cloud shadow. The normalized difference snow index (NDSI) is then calculated for the remaining pixels covering the area of interest. Once an NDSI value for each pixel is obtained, both images are converted to the same projection and the MODIS imagery is rescaled to 30x30 meter pixels. These steps are all currently being done with Google Earth Engine, as it is easy to preprocess data on a cloud platform without having to pull multiple massive files onto a local machine.
 
-To validate the results of the model, a single Landsat image is excluded from the model input data, and then layer is used to compare the synthetic image produced from the model from that same date to see how accurate the model's prediction was. One way in which we quantify the performance of the model is by binary classification. We use the common NDSI threshold of 0.4 to decide whether a pixel is classified as snow or no snow. Any value at 0.4 or above is given the label of "snow" (the positive classification), and any value below is given the label of "no snow" (the negative classification). 
+To validate the results of the model, a single Landsat image is excluded from the model input data, and then layer is used to compare the synthetic image produced from the model from that same date to see how accurate the model's prediction was. One way in which we quantify the performance of the model is by binary classification. We use the common NDSI threshold of 0.4 (Hall et al., 1995) to decide whether a pixel is classified as snow or no snow. Any value at 0.4 or above is given the label of "snow" (the positive classification), and any value below is given the label of "no snow" (the negative classification). 
 
-Once each pixel is placed into one of these categories, a confusion matrix of true positives, true negatives, false positives, and false negatives is generated. From these values we then calculate metrics such as accuracy, precision, recall, and F-score for each date. These last 3 metrics are used because, as our dates of analysis move further into the spring, snow becomes more scarce in the landscape and the negative, "no-snow", class becomes the majority classifier, which can inflate the accuracy values for even an unskilled model.
+Once each pixel is placed into one of these categories, a confusion matrix of true positives, true negatives, false positives, and false negatives is generated. From these values we then calculate the following metrics to answer the questions:
 
-In addition to the calculation of the F-score for the model output, it is also important to quantify how well the model is performing against a random distribution of snowcover. This project proposes to do just that. Below is a draft outline of the steps I hope to accomplish in this analysis:
+accuracy - What fraction of pixels (snow and no-snow) does the model classify correctly?
+precision - What fraction of classified "snow" was actually snow?
+recall - What fraction of actual snow (the positive class) did the model catch? How good is the model at predicting snow? 
+F-score - What is the accuracy of the model regarding its performance on identifying the positive (snow) class?
+
+These last 3 metrics are used because, as our dates of analysis move further into the spring, snow becomes more scarce in the landscape and the negative, "no-snow", class becomes the majority classifier, which can inflate the accuracy values for even an unskilled model.
+
+In addition to the calculation of the F-score for the model output, it is also important to quantify how well the model is performing against a random distribution of snowcover (Walters, 2013). This project proposes to do just that. Below is a draft outline of the steps I hope to accomplish in this analysis:
 
 
 ## PSUEDOCODE!!
@@ -78,7 +85,9 @@ library(stats)
 
 ## Analysis/processing step 1 - Run the STARFM model and save model results 
 
-The code for this section is based on a script originally written by Faye Peters, modified by Megan Gallagher and Jake Graham for use in Megan's M.S. thesis, and then finally further modified by myself for my own research purposes.
+## NOTE: Below here, the starfm function will not run without the starfm.exe file installed
+
+The code for this section is based on a script originally written by Faye Peters (Peters, 2016), modified by Megan Gallagher and Jake Graham for use in Megan's M.S. thesis (Gallagher, 2018), and then finally further modified by myself for my own research purposes.
 
 Prior to runing this section, the following needs to be setup separately on a non-Windows machine:
 1. Install the STARFM model, software and download instructions can be found here:                  https://www.ars.usda.gov/research/software/download/?softwareid=432&amp;modecode=80-42-05-10
@@ -118,8 +127,6 @@ perc<- 99
  #     "./landsat_t2_sim.envi" simulated data for non-landsat dates
  #     "./landsat_sim.tif" fused dataset with landsat and simulated data
 
-
-## NOTE: Below here, the starfm function will not run without the starfm.exe file installed
 
 starfm<-function(modis,landsat,perc, handleNA = TRUE){
   # read the rows and columns in the input vectors and update the config file with this information
@@ -594,22 +601,30 @@ barplot(model_vals, names.arg=labels, main="Metrics from Model Results", ylab="V
 barplot(means, names.arg=labels, main="Metrics from Randomized Rasters", ylab="Mean Value", las=2, ylim=range(pretty(c(0, model_vals))))
 arrows(x0=mid, y0=means-sds, x1=mid, y1=means+sds, code=3, angle=90, length=0.1)
 
+## The lines on the top of the bars in the right boxplot (the randomized results) are the standard deviations of each metric. These values ended up being so small that they are almost not worth putting on the graph (and aren't even able to be seen for the f-score), but in the interest of being thorough, I decided to go ahead and include them anyways. 
 
 ```
 
-
-## Evaluate your choices
-Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
-
-## Show us your final product
-Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
-
 ## Reflect
-Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
 
-Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
+I found this exercise to be beneficial in several ways. First, I was able to convert some of the functions I had been using in my research up to this point, specifically the creation of the matrices of 0s and 1s for classification and the generation of the confusion matrices for model vs validation data, from Matlab scripts that I had largely pieced together by hand into a single, much more efficient R script. Second, I am pleased that I was able to accomplish the goal I had for this project. I was able to randomize a single matrix multiple times, calculate classification statistics for each one, and display the results of those statistics against the model data. On top of all of that, the final numbers showed what I had hoped they would, that my model does do better at predicting snow than the random distribution. 
+
+I feel that my general skill and comfort level with coding in R has improved quite a bit. The part of the code I struggled the most with was converting a list of matrices back into a list of rasters with the correct extent, resolution, and projection. In working on this problem, I gained a much better understanding of how R deals with raster data, and what is involved with getting it ready to be used for analysis. 
+
+I was a little surprised that the variance in the metrics calculated from the randomized rasters was so small. I am pretty confident that by using the sample() function, the rasters I analyzed were legitimately randomized. I need to do some further looking into this, however, so see if this is common in other studies that have used this same analysis. 
+
+My next steps will be to expand this process to be able to analyze more than one date of results from my model. I think my biggest challenge will be to move this code onto a platform like R2, where I can process bigger files and more data than what my local machine can handle. 
 
 ## References
 
+Gallagher, M. (2018). "Utilizing satellite fusion methods to assess vegetation phenology in a semi-arid ecosystem." [Boise, Idaho] : Boise   State University, 2018. BSU Albertsons Library ebook -- Online LD458.8.G5 G355 2018eb
+  http://catalog.boisestate.edu/cgi-bin/Pwebrecon.cgi?LANGUAGE=English&DB=local&BBID=1295025
+  
+Gao, F., Masek, J., Schwaller, M., & Hall, F. (2006). "On the blending of the landsat and MODIS surface reflectance: Predicting daily       landsat surface reflectance." IEEE Transactions on Geoscience and Remote Sensing, 44(8), 2207–2218.                                       https://doi.org/10.1109/TGRS.2006.872081
 
+Hall, D. K., Riggs, G. A., & Salomonson, V. V. (1995). "Development of methods for mapping global snow cover using moderate resolution      imaging spectroradiometer data." Remote Sensing of Environment, 54 (2), 127–140. https://doi.org/10.1016/0034-4257(95)00137-P
+
+Peters, F. (2016). "Analyzing the phenologic dynamics of kudzu (Pueraria montana) infestations using remote sensing and the normalized      difference vegetation index." (2016). Electronic Theses and Dissertations. Paper 2437. https://doi.org/10.18297/etd/2437
+
+Walters, R. (2013). "Transfer of snow information across the macro-to-hillslope-scale gap using a physiographic downscaling approach:      implications for hydrologic modeling in semiarid, seasonally snow-dominated watersheds." (dissertation). Boise State University.
 
