@@ -1,7 +1,7 @@
 ---
-title: "Advanced Topic Instructions: Connectivity"
+title: "Advanced Topic: Landscape Connectivity"
 author: "Brent Clark"
-date: "05/07/2020"
+date: "05/08/2020"
 output: html_document
 ---
 
@@ -9,30 +9,52 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+#Landscape Connectivity and burrowing owl artificial burrow system locations
 
-SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
+## Research introduction and areas of interest
+My research focuses primarily on pedigree analyses to help understand population dynamics in a burrowing owl population that has been monitored for approximately 20 years. Thus, my research will combine field work that comprises the trapping, banding, and and obtaining different physiological metrics of a wild burrowing owl population during the next couple of breeding seasons with pedigree analysis of a long-term dataset to understand aspects of kin structuring and reproductive success within that population.  
 
-## Introduce your problem
+I am interested in how kin relationships are structured spatially and temporally in a populationm, quantifying lifetime reproductve success and examining if and how production of offspring and recruitement into the breeding population differs by landscape type, and what are the patterns in burrow occupancy as it relates to nestling production and recruitement.  
+## Problem to be solved
+The study area is located in the Morley Nelson Snake River Birds of Prey National Conservation Area and within the study area there have been more than 350 different artificial burrow systems (ABS) constructed and installed throughout the landscape with the intent that the burrowing owl population that migrate to the area during the breeding system will utilize the ABS as their breeding site. The majority of the study area is comprised of sage steppe and agriculture with rolling hills. As human peturbation (agriculture, recreation, etc.) and encroachment of invasive plant species increases potentially limiting future habitat, how is the connectivity between ABS affected.      
 
-Give a brief introduction to your research and identify how your "Advanced Topic" plays into what you are hoping to do. For example, if you are just starting out on your project and your topic is "Study Design" you might be interested in developing a spatially informed sampling/stratification scheme.Or maybe your work is going to have a big public outreach component that you'd like to support with some nice interactive maps. Give us a sense for what "success" would look like - what is your ideal end product for the analysis/approach you're testing out. This will help us figure out if the tools you tried were successful.
+## Psuedocode
+Steps lining out how the problem will be addressed
+```{r psuedocode, include = TRUE}
 
-# Research introduction and areas of interest
-My research will use a variety of pedigree analyses to help understand population dynamics in a burrowing owl population that has been monitored for approximately 20 years. Thus, my research will combine field work during the next couple of breeding seasons with analysis of a long-term dataset to understand aspects of kin structuring and reproductive success in the population.  
+#Analysis/processing step 1: 
+##Provide a map detailing the Burrowing Owl population study area in southwestern Idaho
+###-create raster of Idaho
+###-create polygon's of Idaho and Ada and Elmore counties
+###-crop raster to only include Ada and Elmore counties
+###-insert geographic points of all burrowing owl locations
+###-combine all of the above into a single map
 
-I am interested in how kin relationships are structured spatially and temporally in a populationm quantifying lifetime reproductve success and examining if and how production of offspring and recruitement may differ by landcover type, and what are the patterns in burrow occupancy as it relates to nestlings produced and recruitement.  
+#Analysis/processing step 2:
+##Calculate the least cost distances (LCD) between every ABS location with the package 'gdistance'
+###-create an empty raster of Ada and Elmore counties and set all cells within that raster so there is unity between each cell (cell value of 1) Do this to eliminate bias
+###-insert ABS coordinates 
+###-calculate LCD of ABS using the 'costDistance' function
+###-Analyze output
 
-# Problem to be solved
-How is recruitement in a semi-colonial raptor species impacted by demographic connectivity?  Understanding the immigration and emmigration within a burrowing owl population can help determine low/high recruitment rates.  It can also help us understand how demographic connectivity of a population increases/decreases colonization of previously occupied/unoccupied burrows. 
+#Analysis/processing step 3:
+##Calculate the least cost distances (LCD) between every ABS location with the package 'igraph'
+###-create a hexagonal grid of Ada and Elmore counties
+###-create a 'igraph' network of cells based on the hexagonal grid
+###-insert ABS coordinates 
+###-calculate LCD of ABS using the 'distances' function
+###-Analyze output
 
-## PSUEDOCODE!!
-Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
+#Profile and Benchmark the two different r packages used 'gdistnace/igraph'
 
+```
+
+Install and Load required packages
 ```{r install and load packages, include = FALSE}
-#load the libraries 
-install.packages("samc")
-install.packages("gdistance")
-install.packages("googledrive")
-install.packages("here")
+
+library(profvis)
+library(microbenchmark)
+library(igraph)
 library(here)
 library(googledrive)
 library(tidyverse)
@@ -44,21 +66,23 @@ library(raster)
 library(readxl)
 library(gdistance)
 
-#Analysis/processing step 1 - what are you hoping to do here, why? 
-
-#attempting to create a heat map of nestingls per nest site to help understand what nest sites have produced the most nestlings for the last 20+ years
-
-#Analysis/processing step 2 - what are you hoping to do here, why? 
-
-#Connectivity (still working out how best to do this step)
-
-#Check the outcomes? How will you know if your steps worked?
-
-# 
 ```
 
 ```{r loadData_Google Drive, include = FALSE}
 
+# designate project-specific cache
+options(gargle_oauth_cache = ".bncsecrets")
+# check the value of the option, if you like
+gargle::gargle_oauth_cache()
+# trigger auth on purpose --> store a token in the specified cache
+drive_deauth()
+# see your token file in the cache, if you like
+#list.files(".bncsecrets/")
+
+options(
+  gargle_oauth_cache = ".bncsecrets",
+  gargle_oauth_email = TRUE
+)
 #Provide link to data folder on google drive - folder "Brent"
 folder_url <- "https://drive.google.com/open?id=1Mb8LbjqOGrGoWtbD1PXew0698boBJtH0" 
 
@@ -70,11 +94,11 @@ lapply(gdrive_files$id, function(x) drive_download(as_id(x), path = paste0(here:
 
 file.list <- list.files(pattern = "*.tif, *.shp, *.csv, *.xlsx") #replace the pattern with the appropriate extensions for the files you want to load (e.g., .shp, .csv)
 
-
 ```
 
 Introduce the study area (State of Idaho)
 ```{r bnc_studyAreaState,include = TRUE}
+
 ###
 #Create the state of Idaho and elevation Map
 ###
@@ -100,7 +124,7 @@ elevID_2 <- getData('SRTM', lon = -117, lat = 46)
 elevID_3 <- getData("SRTM", lon = -118, lat = 43)
 elevID_4 <- getData("SRTM", lon = -113, lat = 47)
 
-#mosaic the SRTM's so that all of Idaho is covered and the boundries of Idaho is shown
+#mosaic the SRTM's so that all of Idaho is covered with elevation raster
 elevID_mosaic <- mosaic(elevID_1, elevID_2, elevID_3, elevID_4, fun = mean)
 #plot(elevID_mosaic)
 #plot(idaho_0, add = TRUE)
@@ -119,10 +143,12 @@ counties_AE <- subset(idaho_counties, NAME == "Ada" | NAME == "Elmore")
 plot(elevIdaho, main = "Idaho Elevation (SRTM 90m Res)", xlab = "Longitude", ylab = "Latitude", legend.args = list(text = 'Elevation (m)', side = 4, line = 3, font = 2))
 plot(idaho_0, add = TRUE)
 plot(counties_AE, add = TRUE)
+
 ```
 
 Introduce study area at the county level (Ada & Elmore Counties)
 ```{r studyAreaCounty}
+
 ###
 #create an elvation map of Ada & Elmore counties 
 ###
@@ -137,8 +163,9 @@ plot(counties_AE, add = TRUE)
 ```
 
 
-Create each of the artificial locations
+Create each of the artificial burrow locations based on their geographic coordinates
 ```{r burrowLocals, include = TRUE}
+
 ###
 #create the artificial burrows as a spatial object
 ###
@@ -153,12 +180,13 @@ artBurrow_spatialTable <- artBurrow_latlong %>% st_as_sf(coords = c("Longitude",
 #creates burrow location points based on 'artBurrow_spatialTable'
 artBurrow <- st_geometry(artBurrow_spatialTable) 
 artBurrow <- st_set_crs(artBurrow, 4326)
-plot(artBurrow, cex = 1.5, col = "black")
+plot(artBurrow, main = "ABS Geographic Loacations", cex = 1.5, col = "black")
 
 ```
 
 Overlay the artificial burrow locations onto study area
 ```{r burrowMap, include = TRUE}
+
 ###
 #Overlay 'ABS' locations onto Ada & Elmore county Elevation map ('elevCounties')
 ###
@@ -167,8 +195,12 @@ Overlay the artificial burrow locations onto study area
 plot(elevCounties, main = "'ABS' locations - Ada & Elmore County Elevation (SRTM 90m Res)", xlab = "Longitude", ylab = "Latitude", legend.args = list(text = 'Elevation (m)', side = 4, line = 3, font = 2))
 plot(counties_AE, add = TRUE)
 plot(artBurrow, cex = 0.8, col = "black", add = TRUE)
+
 ```
+
+Create a spatial points data frame of the ABS geographic locations
 ```{r spatialPoints, include = TRUE}
+
 #remove 'ABS_NAME' column from 'artBurrow_latlong' data frame
 artBurrow_latlong_noNames <- subset(artBurrow_latlong, select = -c(ABS_NAME))
 
@@ -177,32 +209,47 @@ longLat <- artBurrow_latlong_noNames[,c(1,2)]
 
 #createa a SpatialPointsDataframe()
 artBurrow_spdf <- SpatialPointsDataFrame(coords = longLat, data = artBurrow_latlong, proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0 "))
+
+#find duplicated points in SpatialPointsDataFrame
+dupPoints <- zerodist(artBurrow_spdf, zero = 0.0)
+#remove duplicated points in SpatialPointsDataFrame
+artBurrow_spdf <- remove.duplicates(artBurrow_spdf, zero = 0.0)
+
 ```
 
-Create raster from 'counties_AE' spatial object
+# Spatial continuity of distances between Artificial Burrow Systems 'ABS'
+## Least Cost Distance (LCD) Calculation with two packages will be used and compared:
+### 1. 'gdistance' package
+### 2. 'igraph' package
+
+## 'gdistance' package using the function 'costDistance' 
+
+Create empty raster from counties shape file
 ```{r counties_AE to raster, include = TRUE}
+
 #read in Idaho counties shape file
 counties <- st_read("~/library/Mobile Documents/com~apple~CloudDocs/BSU/Graduate - MS Raptor biology/r_Projects/HES598/datatemp/original/idaho_cty.shp") %>% st_transform(crs = 32619)
 
-#isolate Ada & Elmore counties pologons from Idaho county shape file
-studyCounties <- subset(idaho_counties, NAME == "Ada" | NAME == "Elmore")
+#isolate Ada & Elmore countie pologons from Idaho county shape file
+studyCounties <- subset(counties, NAME == "Ada" | NAME == "Elmore")
 
 #bring in spatial coordiantes of 'ABS' locals
-coords <- artBurrow_spatialTable
+coords <- artBurrow_spdf
 
 #set 'ABS' spatial coordinates from lat long to UTM 19N
 coords <- st_as_sf(coords, coords = c("Longitude", "Latitude"), crs = 4326, stringAsFactors = FALSE) %>% st_transform(crs = 32619)
 
 #create raster of 'studyCounties' spatial object
 studyCounties_ras <- raster(x = extent(studyCounties), nrow = 250, ncol = 250)
-studyCounties_ras <- rasterize(x = studyCounties, y = studyCounties_ras, field = 1)
 
+#assign all cells to a value of 1 within the raster
+studyCounties_ras <- rasterize(x = studyCounties, y = studyCounties_ras, field = 1)
 
 ```
 
-
 Convert 'studyCounties_ras' raster into a TransitionLayer with 'gdistance' package
 ```{r convertRaster_TransitionLayer, include = TRUE}
+
 #create an object of the Transition class
 studyCounties_ras_tr <- transition(studyCounties_ras, transitionFunction = mean, 8)
 
@@ -211,31 +258,168 @@ studyCounties_ras_tr <- geoCorrection(studyCounties_ras_tr, type = "c")
 
 ```
 
+Least Cost Distance calculation with 'gdistance'
+```{r gdistance_LCD, include = TRUE}
 
-```{r gdistance_costDistance, include = TRUE}
-elevCounties_leastCost <- costDistance(elevCounties_tran_geocorr, artBurrow_spdf)
+#Conduct least cost distance calculation on all 'ABS' locals
+studyCounties_leastCost <- costDistance(studyCounties_ras_tr, fromCoords = as(as_Spatial(coords[1,]), "SpatialPoints"), toCoords = as(as_Spatial(coords[-1,]), "SpatialPoints"))
+#put LCD calculation into data.frame
+studyCounties_leastCost_df <- data.frame(studyCounties_leastCost, row.names = "Dist. from Initial Point (m):")
+head(studyCounties_leastCost_df)
 
+```
+
+'igraph' package using the function 'distances'
+Create a hexagonal grid with 250m between hexagons
+```{r igraph_grid, include = TRUE}
+
+#create a hexagonal grid of Ada and Elmore Counties (takes about 20 minutes to complete)
+#as you increase the resolution (decrease 'cellsize') the less duplicate verticies will be created
+hex_studyCounties <- st_make_grid(studyCounties, cellsize = 250, square = FALSE)
+plot(hex_studyCounties)
+
+```
+
+
+Create an 'igraph' network of neighbor cells
+```{r edgeList & graph, include = TRUE}
+
+##create an 'igraph' network of neighboring cells which has a possiblity of being traveled through
+#Steps to create an 'igraph' network
+#1. create an edgelist - list to ‘from’ and ‘to’ cell id’s that represent neighbors 
+edgeList <- as.matrix(as.data.frame(st_intersects(hex_studyCounties)))
+#2. create graph of edgelist
+edgeList_graph <- graph_from_edgelist(edgeList) #graph only shows the distance between cells (250 meters as defined above 'cellsize = 250')
+#3. set the weight of all edges
+E(edgeList_graph)$weight <- 250 #this could be adjusted by different factors such as elevation, habitat resistance, etc.
+
+##run Least Cost Distance analysis on 'igraph' network
+#orient hexagonal grid to the 'ABS' locals
+orient <- as.numeric(st_intersects(coords, hex_studyCounties))
+#remove any duplicate vertices (the higher the resolution the lower the number of duplicate vertices)
+orient <- unique(x = orient)
+
+```
+
+
+Least Cost Distance calculation with 'gdistance'
+```{r igraph_LCD, include = TRUE}
+
+#run igraph LCD
+studyCounties_leastCost2 <- distances(edgeList_graph, orient[1], orient[-1])
+
+#put LCD calculation into data.frame
+studyCounties_leastCost2_df <- data.frame(studyCounties_leastCost2, row.names = "Dist. from Initial Point (m):")
+head(studyCounties_leastCost2_df)
+
+```
+
+# Benchmarking and Profiling - 'igraph' distances function & 'gdistance' costDistance fucntion
+
+## Benchmarking with the package 'microbenchmark'
+```{r mb, include = TRUE} 
+
+costDistance.time_mb <- microbenchmark(costDistance(studyCounties_ras_tr, fromCoords = as(as_Spatial(coords[1,]), "SpatialPoints"), toCoords = as(as_Spatial(coords[-1,]), "SpatialPoints")), times = 15)
+
+distances.time_mb <- microbenchmark(distances(edgeList_graph, orient[1], orient[-1]), times = 15)
+
+costDistance.time_mb
+
+distances.time_mb
+
+```
+- on average the function costDistance from the 'gdistance' package provided an output approximatly 100 milliseconds faster than the function distances from the 'igraph' package
+
+## Profiling with the package 'profvis'
+```{r profile, include = TRUE}
+
+#perform profiling on 'gdistance' package
+costDistance.prof <- profvis(expr = {
+  #read in Idaho counties shape file
+counties <- st_read("~/library/Mobile Documents/com~apple~CloudDocs/BSU/Graduate - MS Raptor biology/r_Projects/HES598/datatemp/original/idaho_cty.shp") %>% st_transform(crs = 32619)
+
+#isolate Ada & Elmore countie pologons from Idaho county shape file
+studyCounties <- subset(counties, NAME == "Ada" | NAME == "Elmore")
+
+#bring in spatial coordiantes of 'ABS' locals
+coords <- artBurrow_spdf
+
+#set 'ABS' spatial coordinates from lat long to UTM 19N
+coords <- st_as_sf(coords, coords = c("Longitude", "Latitude"), crs = 4326, stringAsFactors = FALSE) %>% st_transform(crs = 32619)
+
+#create raster of 'studyCounties' spatial object
+studyCounties_ras <- raster(x = extent(studyCounties), nrow = 250, ncol = 250)
+
+#assign all cells to a value of 1 within the raster
+studyCounties_ras <- rasterize(x = studyCounties, y = studyCounties_ras, field = 1)
+
+#create an object of the Transition class
+studyCounties_ras_tr <- transition(studyCounties_ras, transitionFunction = mean, 8)
+
+#Geo correct transition object
+studyCounties_ras_tr <- geoCorrection(studyCounties_ras_tr, type = "c")
+
+#Conduct least cost distance calculation on all 'ABS' locals
+studyCounties_leastCost <- costDistance(studyCounties_ras_tr, fromCoords = as(as_Spatial(coords[1,]), "SpatialPoints"), toCoords = as(as_Spatial(coords[-1,]), "SpatialPoints"))
+
+}, interval = 0.01, prof_output = 'fstr-prof')
+
+#perform profiling on 'igraph' package
+distances.prof <- profvis(expr = {
+  #create a hexagonal grid of Ada and Elmore Counties (takes about 20 minutes to complete)
+#as you increase the resolution (decrease 'cellsize') the less duplicate verticies will be created
+hex_studyCounties <- st_make_grid(studyCounties, cellsize = 250, square = FALSE)
+#plot(hex_studyCounties)
+
+##create an 'igraph' network of neighboring cells which has a possiblity of being traveled through
+#Steps to create an 'igraph' network
+#1. create an edgelist - list to ‘from’ and ‘to’ cell id’s that represent neighbors 
+edgeList <- as.matrix(as.data.frame(st_intersects(hex_studyCounties)))
+#2. create graph of edgelist
+edgeList_graph <- graph_from_edgelist(edgeList) #graph only shows the distance between cells (250 meters as defined above 'cellsize = 250')
+#3. set the weight of all edges
+E(edgeList_graph)$weight <- 250 #this could be adjusted by different factors such as elevation, habitat resistance, etc.
+
+##run Least Cost Distance analysis on 'igraph' network
+#orient hexagonal grid to the 'ABS' locals
+orient <- as.numeric(st_intersects(coords, hex_studyCounties))
+#remove any duplicate vertices (the higher the resolution the lower the number of duplicate vertices)
+orient <- unique(x = orient)
+
+studyCounties_leastCost2 <- distances(edgeList_graph, orient[1], orient[-1])
+
+}, interval = 0.01, prof_output = 'fstr-prof')
+
+costDistance.prof
+
+distances.prof
 
 ```
 
 
 ## Introduce the packages
-Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
+The critical step in the analysis is providing the least cost distances between all artificial burrow systems in the study area. Using the packages 'igraph' and 'gdistance' I can evaluate the least cost distance between each burrow geographic location utilizing their least cost distance fucntions ('igraph' - distances & 'gdistance' - costDistance).
 
-# R packages to try
-"sf" - map creation
-"raster" - map creation
-"rgdal" - 
-"samc" - provides long and short-term predictions of landscape connectivity measurements
-"popbio" - would be used to determine population and demographic metrics
+## R packages to try
+"gistance" - Used to calculate distances and routes based on geographical grids.
+"igraph" - Used for network analysis on large graphs with millions of verticies and edges.
+
+## Outcomes
+Both packages provided a comparable LCD's for the ABS location data. The only thing of note is that when running the 'igraph' package it won't allow duplicate verticies.  These verticies must be removed before analysis can begin. It seems as though this can be mitigated by increasing the resolutoion (decreasing the cellsize) of the grid. Since many of the ABS locations are so close togother the lower resolution causes duplicate vertices/edges in the created hexagonal grid increasing the resolution of the grid will dramatically increase the amount of time that this analysis will take.  For a dataset as small of this (>350 ABS locals) the increased processing time doesn't seem appropriate.  
 
 ## Evaluate your choices
-Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
+After benchmarking the 'costDistance' function from the 'gdistance' package the mean run time was approximately 80 - 130ms whereas as benchmarking the 'distances' function of the 'igraph' package provided a mean run time of approximately 200 - 230ms.  
 
-## Show us your final product
-Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
+After profiling the 'gdistance' package and the 'igraph' package there was clearly a winner in efficiency.  The 'igraph' package code script took nearly 280 times longer to run than the 'gdistance package.  The 'igraph' package also used up more available memory than the 'gdistance' package due to the creation of a hexagonal grid which used approximately 300 Mb of memory and took the longest to run to completion. 
+
+There are definitely upsides to using both packages.  The 'gdistance' package is ideal if the dataset (geographic coordinates) is relatively small whereas if the data being dealt with is very large then using the 'igraph' package would be more appropriate even though more time and memory allocaiton is required at the head of the project in order to create the graph. 
+
+As far as ase of use is concerned, the syntax of the 'gdistance' package is more intuitive (for me) and easy to use as there are far less functions available to sift through and use in the package as compared to the 'igraph' package. I learned how   The amount of functions available for use in the 'igraph' packages reflects what the package is designed for, creating spatial networks. Due to the amount of functions avialable for the 'igraph' package it was difficult to keep track of what did what. For the purposes of my evaluation of the two packages, the 'gdistance' package makes more sense as the need for networking and the use of large datasets isn't needed. 
 
 ## Reflect
-Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
+Through this project I was able to learn more about landscape connectivity than I previoiusly knew before which will become more important for my future research of western burrowing owls in the state of Idaho. Even though I didn't go into the complexities of least cost distance that come with an actual landscape, this exercise showed me how and helped me better understand what connectivity is and how it can be used. Before this assignment my experience and skill in the use of the 'r' programming language was very minimal and by working through the different packages I was able to better understand the basic syntax associated with 'r' and how to reseearch the different ways in which to find solutions to the problems that I faced.  
 
-Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
+## Package Links
+- 'gdistance': https://cran.r-project.org/web/packages/gdistance/gdistance.pdf
+- 'igraph':    https://cran.r-project.org/web/packages/igraph/igraph.pdf
+
