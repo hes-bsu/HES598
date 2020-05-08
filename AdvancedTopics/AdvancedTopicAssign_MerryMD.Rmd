@@ -127,7 +127,26 @@ buffDADPTS <- gBuffer(DADPTS,byid=T,width=100) #width is in meter
 plot(buffDADPTS)#visually check
 ```
 
-#Make buffers around the points 
+#Combine Geometry Points with SUA raster data
+```{r}
+#transform raster into UTMs to match the point data
+library(raster)
+#first, check your projections
+proj4string(SUADAD15)  "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+proj4string(buffDADPTS) "+proj=utm +zone=21 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#second, transform
+library(sp)
+library(rgdal)
+utmSUADAD15 <- spTransform(SUADAD15, CRS(projargs = "+proj=utm +zone=21 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+
+
+
+mskbuffDADPTS <- mask(x=SUADAD15,mask=buffDADPTS)#mask function to reduce the raster to buffer object
+plot(mskbuffDADPTS)
+
+```
+
 
 ## Evaluate your choices
 Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
