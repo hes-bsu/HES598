@@ -18,9 +18,9 @@ Give a brief introduction to your research and identify how your "Advanced Topic
 
 This chapter of my dissertation involves detecting and predicting the spread (or really, the range/distribution) of a newly invading macrophyte (Hydrocharis morsus-ranae L; EFB) in Great Lakes wetlands. Because EFB is not yet fully established in all Great Lakes, I am investigating whether we can accurately predict vulnerable wetlands based on EFB's environmental/anthropogenic drivers. The importance of these hypothesized drivers (eg. distance to public boat launch, the presence of an emergent macrophyte, etc.) can be assessed through various species distribution models. A species distribution model can have varying definitions, but I interpret it as a representation of the influence of ecological, climatic, and anthropogenic variables on whether or not a species' presence/abundance is observed across time and space. In other words, understanding which variables are important for EFB occurence at its known locations can help us predict the full potential range or habitat of EFB (based on the similarity of uninvaded wetlands variables to sites of known occurence) if it were to invade the entire GL basin. Overall, these questions are important to address so that managers can properly control/mitigate EFB's spread and priortize protection of vulnerable wetlands to future invasions. Spatio-temporal data play a huge role in answering my questions because predicting EFB's current and potential distribution in its invasive range requires spatial data ideally over decadal timescales.
 
-Specifically for my research, I have a obtained access to a relatively long time-series field dataset, consisting of 8 years of transect vegetaion survey data in Michigan coastal wetlands (2011-2018). It includes plant species occurence/abundance, environmental data (water depth, distance to wave action, water quality, etc.), GPS coordinates of quadrats, and date at which the data was collected. I will also include a distance to boat launch as a proxy for human activity in these wetlands (and perhaps others?). Becuase there is a spatio-temporal component in these data, I hope to use the integrated nested laplace approximation (INLA) to account for inherent spatio-temporal autocorellation in this dataset as an error term (in the model (to account for non-independence of model residuals) and assess its relative importance compared to the othe potential drivers on EFB's distribution. 
+Specifically for my research, I have a obtained access to a relatively long time-series field dataset, consisting of 8 years of transect vegetaion survey data in Michigan coastal wetlands (2011-2018). It includes plant species occurence/abundance, environmental data (water depth, distance to wave action, water quality, etc.), GPS coordinates of quadrats, and date at which the data was collected.
 
-For this advanced topic, I'll consider this exercise a success by cleaning/wrangling the dataset as it was given to me, and then exploring these data in various ways to determine whether or not an INLA framework will be appropriate for modeling EFB's distribution in Michigan wetlands. For example, I will first plot the presence/abundance data against the various predictors to examine which ones may influence EFB in some way (postive, negative, or quadratic). Second, I could then include some geographic attribute of each of these points to understand if there are autocorrelated points in these raw data (I could also do the same he data over time). Once I explore all of my variables of interest, I plan to map the most intresting ones (determined qualitatively) to get an ultimate sense of visualizing EFB distribution in relation to these variables. As an aspiration, I plan to run a preliminary model on some of these predictors on EFB's presence (and/or abundance), at least with a spatial autocorellation term from the INLA package. 
+For this advanced topic, I'll consider this exercise a success by cleaning/wrangling the dataset as it was given to me, and then exploring a few different modeling approaches for predicting EFB's distribution. I will load in a topobathymetry layer from NOAA lidar surveys (proxy for water depth) and then extract values from this raster to the GPS point locations for EFB's occurrence in the study area. I will then plot these models' predictions and assess the validity of the model outputs. 
 
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
@@ -59,7 +59,7 @@ library(viridis)
 #For making my plots looks look pretty with nice color palletes. Might be useful for some of my variables that are on different scales. 
 
 library(dismo)
-# For this exercise, I will use the dismo package to test the applicability of a few its functions to assess and map EFB suitability (in terms of water depth). 
+# For this exercise, I will use the dismo package to test the applicability of a few its functions/models to assess and map EFB suitability (in terms of water depth). 
 
 #library(INLA)
 #library(inlabru)
@@ -188,13 +188,11 @@ topobath <- stack(topobath)
 
 
 # Unfortunately, the raster is in a lambert conical projection in NAD 1983 (with units in feet?!), but we often don't want to reproject a raster as it can skew the cells. Therefore, I make the decision here to project the points layer into the NAD1983 projection of the DEM. 
-
-#crs(UP_data) <-  "+init=epsg:2251 +proj=lcc +lat_1=47.08333333333334 +lat_2=45.48333333333333 +lat_0=44.78333333333333 +lon_0=-87 +x_0=7999999.999968001 +y_0=0 +datum=NAD83 +units=ft +no_defs +ellps=GRS80 +towgs84=0,0,0"
-
+#CRS of topobathymetry layer 
 crs(topobath) <- "+init=epsg:2251 +proj=lcc +lat_1=47.08333333333334 +lat_2=45.48333333333333 +lat_0=44.78333333333333 +lon_0=-87 +x_0=7999999.999968001 +y_0=0 +datum=NAD83 +units=ft +no_defs +ellps=GRS80 +towgs84=0,0,0"
 
 
-#After using the crs() function on the Mcong points dataframe, there was a misalignment between the points and raster when I plotted them. Instead, I tried sptransform() below and achieved the correct alignment in the plot. 
+#After using the crs() function on the UP_data points dataframe, there was a misalignment between the points and raster when I plotted them. Instead, I tried sptransform() below and achieved the correct alignment in the plot. 
 cord.dec <- SpatialPointsDataFrame(UP_data[,11:12], UP_data, proj4string =CRS("+proj=longlat"))
 cord.NAD <- spTransform(cord.dec,CRS("+init=epsg:2251"))
 
@@ -233,8 +231,12 @@ m1 <- glm(hyd_bin~Job534911_2013_2015_usace_huron_dem, data=data.frame(cord.NAD)
 #
 summary(m1)
 
+
 #plot model predictions on entire extent of topobathymetry layer 
 p <- raster::predict(topobath, m1, progress='text')
+#Takes awhile, so let's say I wanted to predict EFB occurence across multiple rasters throughout the state. I'll use microbenchmark to get a rough idea of just how long that could take 
+predict.mb <- microbenchmark(p,times=1)
+#this takes about 2 minutes for a dataset that spans about 25km, so extrapolating this out for the entire state coastlines of ~5300 km, could take 10,600 minutes, or 176 hours! Definitely will need a super comp... 
 
 #map of proability of EFB occurence based on topobathymetry dem 
 plot(p)
@@ -245,8 +247,9 @@ plot(p2, main= "Probability of EFB Occurence across Topobathymetry DEM, Munsucon
 
 #Here, we can see that, on a real numbers scale, the areas with lower elevation (deeper, open water) predict high probability of EFB occurence. We can also see that as the DEM elevation increases onto likely terrestrial areas, the probability of occurence decreases. There is variation in EFB probability of occurence in the areas in between, e.g. the coastal marshes. A major issue to consider is that this topobathymetry is just one variable, while it is likely multiple processes that influence EFB occurence in GL wetlands. 
 ```
+
 ```{r}
-#Given these findings, there are still a few things I should do to assess whether a glm (regression) model or a machine learning model in dismo may be more suitable for predicting EFB occurrence in this region. 
+#Given these findings, there are still a few things I should do to assess whether a glm (regression) model or alternative models (in dismo and beyond) may be more suitable for predicting EFB occurrence, given these datasets, in this region. 
 nrow(cord.NAD_mod)
 which(cord.NAD_mod$hyd_bin == 0)
 #113 absences out of 162 survey points
@@ -259,14 +262,7 @@ abs <- cord.NAD_mod[cord.NAD_mod[,31] == 0, 35]
 
 evaluate(pres,abs,m1)
 
-#usually split data into 5 folds 
-k <- 5 
-group <- kfold(pres,k)
-#should have even representation in each group 
-table(group)
-
-
-  ## split data into a train and test set
+## split data into a train and test set
 index <- 1:nrow(cord.NAD_mod)
 testindex <- sample(index, trunc(length(index)/5))
 testset <- cord.NAD_mod[testindex,]
@@ -278,25 +274,70 @@ pres_test <- testset[which(testset$hyd_bin == 1),]
 abs_train <- trainset[which(trainset$hyd_bin == 0),]
 abs_test <- testset[which(testset$hyd_bin == 0),]
 
-# sb <- ssb(pres_test$hyd_bin,abs_test$hyd_bin,pres_train$hyd_bin)
 
 m2 <- glm(hyd_bin~Job534911_2013_2015_usace_huron_dem, data=trainset, family= binomial(link="logit"))
 evaluate(pres_test,abs_test,m2)
 
+#I should also consider kfold() cross validation, where I train the model on 4/5 of my (spatially blocked) data and test it with 1/5, and cycle thru that multiple times. Further step down the road! 
 
+#While AUC is a controversial metric for evaluating species distribution models (AUC varies with spatial extent of data), I can also assess and remove the spatial sorting bias (difference between distance from testing presence to training presence and distance from testing-abs to training-presence points)
+#ssb only takes two column matrices with long/lat for presence and absesnce points 
 
+p_testsub <- subset(pres_test, select = c("gps_lon","gps_lat"))
+a_testsub <- subset(abs_test, select = c("gps_lon","gps_lat"))
+p_trainsub <- subset(pres_train, select = c("gps_lon","gps_lat"))
+sb <- ssb(p_testsub,a_testsub,p_trainsub)
+sb[,1]/sb[,2]
+#values close to one would indicate no ssb and close to zero would indicate high ssb. Here we have an ssb of 0.022, not great! 
+#No fear, we can use pwdSample() function in dismo to select paris of points from two sets (without replacement) that should have a similar distance to nearest point in another set of points. 
+i <- pwdSample(p_testsub,a_testsub,p_trainsub, n=1, tr=0.1)
+pres_test_pwd <- p_testsub[!is.na(i[,1]), ]
+back_test_pwd <- a_testsub[na.omit(as.vector(i)), ]
+sb2 <- ssb(pres_test_pwd, back_test_pwd, p_trainsub)
+sb2[,1]/ sb2[,2]
+#Now, 1.02, there is no spatial sorting bias! I will apply this approach to a future model. 
 ```
 
+```{r}
+#For this project, I will attempt one more two of modeling appraoch and compare the outcomes to the glm. The rest of the modeling functions in dismo often deal with presence only data, so I will instead use the machine learning randomForest() regression one the presence/absence data that I have.  
+library(randomForest)
+model <- hyd_bin~Job534911_2013_2015_usace_huron_dem
+rf1 <- randomForest(model,data=trainset)
+erf <- evaluate(pres_test,abs_test,rf1)
+#Without spatial blocking, AUC is slightly improved to 0.62. 
+
+#now let's plot RF predictions across the entire raster 
+prf <- raster::predict(topobath, rf1, progress='text')
+plot(prf, main= "Probability of EFB Occurence across Topobathymetry DEM, Munsucong Bay, St. Mary's River, MI")
+```
+
+
+```{r}
+#EFB's habitat suitabillity from rf predictions look quite different from the glm! Lastly, we can plot individual outputs and compare side by side, and also average the model ouputs and plot EFB suitabillity. 
+models <- stack(p2, prf)
+names(models) <- c("GLM", "RF")
+plot(models)
+#Compare side by side
+
+#average predictions 
+m <- mean(models)
+plot(m, main= "Average Score")
+
+```
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
+The critical steps here were to reorganize the dataset into an analyzable format (survey plots as rows, with species occurence/ predictors variables as columns) which I was able to accomplish with tidyr. Also, I needed to subset the entire field dataset to the county where the topobathymetry layer is located, with base r. I then needed to convert this dataset into a SpatialPoints dataframe and assign it's CRS to that of the DEM. Lastly, I needed to extract values from the raster and then use these as predictors for my occurrence points in the models. Lastly, raster::predict allowed me to predict the probability of EFB occruence across all cells of the raster based on the estimates from the model outputs. 
 
 ## Evaluate your choices
 Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
+Chunk 8! 
 
 ## Show us your final product
 Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
+Chunk 7 for extracted topobathymetry values, and Chunks 9-11 for somewhat informative maps!  
 
 ## Reflect
 Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
+I've learned that there are many ways to model and predict the distribution of a species! I've also learned that a spatially unbiased field data set of occurence is likely key for me to most optimally predict the distribution of EFB. Since my dataset and predictors is fairly spatially biased, I have learned that there are ways to reduce those biases in my training and testing datasets to obtain better estimates of predictors in whatever modeling approach I use. I also learn that scale matters. This topobathymetry layer I used for this project is on the scale of feet, whereas EFB's true distribution may vary more on the scale of cm within and across the wetland vegetation zones. Lastly, like in the dismo vignette, there are likely many biophysical and anthropogenic factors that contribute to EFB's distribution in MI! If available, I should consider radar rasters (for emergent vegetation) and other geospatial datasets (e.g. nutrient levels) to incluede in my SDM framework. 
 
 Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
