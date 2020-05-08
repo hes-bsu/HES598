@@ -98,18 +98,31 @@ files <- drive_ls(folder)
 
 lapply(files$id, function(x) drive_download(as_id(x), path = paste0(here::here("datatemp/original/"), files[files$id==x,]$name), overwrite = TRUE))
 
+
+
+##delete below later
+#load in  Year 2015 raster
+#SUADAD15 <- raster("C:/Users/Nessa/Courses/HES598/datatemp/originalYear2015.tif")
+#visualize the rasters
+#plot(DADYR15)
+
+```
+
+#GPS Points
+```{r}
 #load in points (UTM transformed points in a shapefile)
 DADPTS <- readOGR("C:/Users/Nessa/Courses/HES598/datatemp/originalUTMzone21N.shp")
 str(DADPTS)#check the data
 plot(DADPTS)
+```
+
+#SUA Year 2015 raster 
+
+```{r}
 library(rgdal)
-library(raster) #to load rasters
-#load in Year 2015 raster
-DADYR15 <- raster("C:/Users/Nessa/Courses/HES598/datatemp/originalGreenCompositeYear2015_DAD.tif")
+library("raster") #to load rasters
 #load in SUA Year 2015 raster
-SUADAD15 <- raster("C:/Users/Nessa/Courses/HES598/datatemp/originalYear2015.tif")
-#visualize the rasters
-plot(DADYR15)
+SUADAD15 <- raster("C:/Users/Nessa/Courses/HES598/datatemp/originalYear2015_UTMzone21N.tif")
 plot(SUADAD15)
 ```
 
@@ -122,7 +135,7 @@ library("rgeos")
 library("sp")
 library("raster")
 
-library("rgeos")#for the buffer function, gBuffer()
+library("rgeos")#for the buffer function, gBuffer(); ###rgdal workded also..
 buffDADPTS <- gBuffer(DADPTS,byid=T,width=100) #width is in meter
 plot(buffDADPTS)#visually check
 ```
