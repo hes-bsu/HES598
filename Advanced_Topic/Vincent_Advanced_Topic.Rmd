@@ -281,9 +281,9 @@ setwd('C:/Users/Allison and Brian/Documents/HES598/Advanced_Topic')
 
 # Load the data
 
-landsat_apr25<- raster("./Data/Landsat_testday_042516.tif") #the validation data
-starfm_apr25<- raster("./Data/STARFM_testday_042516.tif") #the model data
-ER<- readOGR("./Data/EastRiver_Project.shp") #shapefile of the study watershed for reference
+landsat_apr25<- raster("./Vincent_Data/Landsat_testday_042516.tif") #the validation data
+starfm_apr25<- raster("./Vincent_Data/STARFM_testday_042516.tif") #the model data
+ER<- readOGR("./Vincent_Data/EastRiver_Project.shp") #shapefile of the study watershed for reference
 
 # Organize the data
 
