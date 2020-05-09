@@ -30,7 +30,6 @@ Before you get started programming all of the potential things you could do duri
 #  sp
 #  gdal
 
-
 library(data.table)  
 library(sp)
 library(maptools)
@@ -52,9 +51,6 @@ library(dplyr)
 library(RColorBrewer)
 library(ggplot2)
 library(microbenchmark)
-
-#vignette(package="spdep")
-#vignette(package="here")
 
 
 #load your data - which datasets do you need?
@@ -117,7 +113,6 @@ plot(elev, col=myCol)
 points(pixels$Long, pixels$Lat, cex = 0.5)
 
 
-
 #Analysis/processing step 2 - what are you hoping to do here, why? 
 
 ##Step2: I use extract funtion to get elevation data from the raster image.
@@ -156,8 +151,8 @@ str(pixelelev)
 ######### transform coordinates from lat long to UTM for measuring distance in raster files.
 
 pixelelev
-dplyr::glimpse(pixelelev)
 
+dplyr::glimpse(pixelelev)
 
 LongLatToUTM<-function(x,y,ID,zone){
  xy <- data.frame(ID = ID, X = x, Y = y)
@@ -167,10 +162,8 @@ LongLatToUTM<-function(x,y,ID,zone){
  return(as.data.frame(res))
 }
 
-
 ##Run the function
 x=LongLatToUTM(pixelelev$Long,pixelelev$Lat,ID=pixelelev$ID_pixel,17)
-
 x$ID_pixel=x$ID
 
 ### Merge the new UTM coordinates to the locations dataframe.
@@ -187,6 +180,21 @@ names(df)=c("ID_pixel","Long","Lat","ID_veg","loc","ndvi","ID.x","z","ID.y","x",
 names(df)
 str(df)
 
+class(df)
+df
+
+############ arrange according ID_veg
+
+df <- df[order(df$ID_veg),]
+df
+
+
+#library(plyr)
+#count(df, "ID_veg")
+#df
+#  ID_veg freq
+# 1   fern   56
+# 2 forest   40
 
 ################### reproject raster from lat long into UTM
 
@@ -197,7 +205,7 @@ CRS("+init=epsg:32717")
 
 sr <- "+proj=utm +south +zone=17 +ellps=WGS84 +units=m +no_defs +towgs84=0,0,0"
 
-# Project Raster
+# Reproject Raster
 elev_utm <- projectRaster(elev, crs = sr)
 
 # Write the RasterLayer to disk (See datatype documentation for other formats)
@@ -212,9 +220,6 @@ plot(elev_utm)
 plot(elev_utm, main="elev", xlab="East", ylab="North")
 
 myCol <- terrain.colors(6)
-plot(elev_utm, col=myCol)
-points(df$x, df$y, main="elev", xlab="East", ylab="North", cex = 0.5)
-
 
 
 #############coord
@@ -225,6 +230,7 @@ library(Rfast)
 library(sp)
 library(sf)
 
+
 df$East=df$x
 df$North=df$y
 colnames(df)
@@ -234,38 +240,17 @@ class(df)
 df_spat=st_as_sf(df, coords = c("x", "y"), crs = ("+init=epsg:32717"))
 df_spat
 
+
 coordnt <- st_as_sf(df_spat, df_spat = c("x", "y"),
-                   crs = 32717, stringsAsFactors = FALSE)
+                 crs = ("+init=epsg:32717"), stringsAsFactors = FALSE)
+
+
 class(coordnt)
+
+colnames(coordnt)
 
 coordnt
-class(coordnt)
 
-has_rownames(coordnt)
-sort()
-
-
-arrange(coordnt, ID_)
-
-arrange()
-
-#coordnt$ID_pixel
-#coordnt$ID_veg
-
-#coord=coordnt
-#coord <- st_set_geometry(coord,NULL)
-#colnames(coord)
-
-#myvars <- c("East", "North")
-#coord_new <- coord[myvars]
-#colnames(coord_new)
-
-#as.matrix(sapply(coord_new, as.numeric))  
-
-#id <- c("ID_veg", "ID_pixel")
-#coord_id <- coord[id]
-
-#as.matrix(sapply(coord_id, as.numeric))  
 
 
 ##############################################################
@@ -295,7 +280,7 @@ str(hd)
 plot(raster(hd), sub="slope (height diff / distance)", cex=0.8)
 
 
-#Then we use the function geoCorrection to divide by the distance between cells.
+#Then we use the function geoCorrection to divide by the distance between cells. Values in the matrix has distortion, West-East connections are longer at the equator and become shorter towards the poles, as the meridians approach each other. Type "c" can correct both types of distortion.
 
 slope <- geoCorrection(hd, scl=FALSE)
 
@@ -315,37 +300,93 @@ conductance <- geoCorrection(speed)
 
 str(conductance)
 
+conductance
 
 ## now calculate distance using the least cost path
 
 # coords <- st_as_sf(coords, coords = c("longitude", "latitude"),                    crs = 4326, stringsAsFactors = FALSE) %>%          st_transform(crs = 32619)
 
+str(coordnt)
 coordnt
 
 dist2 <- costDistance(conductance,
-                      fromCoords = as(as_Spatial(coordnt[1,]), "SpatialPoints"),
-                      toCoords = as(as_Spatial(coordnt), "SpatialPoints"))
+                      fromCoords = as(as_Spatial(coordnt[1:56,]), "SpatialPoints"),
+                      toCoords = as(as_Spatial(coordnt[-(1:56),]), "SpatialPoints"))
 
+class(dist2)
+# [1] "matrix" "array" 
 
-dist2
+dim(dist2)
 
-#names(dist2) <- coordnt$ID_pixel
-#dist2
-
-#dist2_df <- data.frame(ID = names(dist2), values = as.vector(dist2))
-#head(dist2_df)
-
-
-#dist2_fn <- dist2_df %>% left_join(. , coordnt[,c("ID_pixel", "ID_veg")], by = c("ID" = "ID_veg"))
-#dist2_fn
+##drop geometry
 
 coord_df <- st_drop_geometry(coordnt)
+class(coord_df)
+# [1] "data.frame"
 coord_df
 
-dist2_fn <- dist2_df %>% left_join(. , coord_df[,c("ID_pixel", "ID_veg")], by = c("ID" = "ID_pixel"))
-head(dist2_fn)
+### Subset columns from datafrane coordnt
 
-dim(dist2_fn)
+ID_pixels<-coord_df[, 1]
+ID_pixels
+
+### Assign ID names to row and columns of dist2 matrix
+
+rownames(dist2) <- ID_pixels[1:56]
+rownames(dist2)
+dist2
+
+colnames(dist2) <- ID_pixels[57:96]
+colnames(dist2)
+class(dist2)
+dist2
+class(dist2)
+
+# Convert dist2 matrix into dataframe using reshape2 package
+
+library(reshape2)
+
+#rename heads of columns of dist2 matrix
+dist2_id <- melt(as.matrix(dist2), varnames = c("fern", "forest"))
+
+dist2_id
+class(dist2_id)
+
+
+### convert into dataframe
+dist2_id[dist2_id$fern > dist2_id$forest,]
+head(dist2_id)
+class(dist2_id)
+
+dist2_id
+#   fern  forest    value
+#  AG01_B1 AG01_F1 136.2446
+
+
+### Select minimun distance values.
+
+library(dplyr)
+#library(tidyr)
+#library(tibble)
+
+summ_fern_value<- dist2_id %>% 
+  group_by(fern) %>% 
+  summarise(min = min(value, na.rm = TRUE))
+
+class(summ_fern_value)
+summ_fern_value
+
+library(dplyr)
+#rename heads of columns of dist2 matrix
+
+fernvalue<- summ_fern_value %>% rename(value = min)
+
+fernvalue
+
+## select forest pixel that match pixel of fern and values
+
+
+
 
 ##############################################
 ##############################################################
@@ -426,7 +467,7 @@ class(elev_utm_shape)
 
 
 ###create an hexagonal grid
-hex_elev_utm_shape <- st_make_grid(elev_utm_shape, cellsize = 50, square = FALSE)
+hex_elev_utm_shape <- st_make_grid(elev_utm_shape, cellsize = 10, square = FALSE)
 hex_elev_utm_shape
 
 plot(hex_elev_utm_shape,axes=TRUE,col="green",pch=19,cex=.5,xlab="East", ylab="North")
@@ -448,7 +489,7 @@ gr <- graph_from_edgelist(edgelist, directed=TRUE)
 
 #### distance between each neighbouring cell is 50m since we defined this when we created the grid
 
-E(gr)$weight <- 50
+E(gr)$weight <- 10
 
 
 ## We just need to figure out where the stations are relative to the hexagonal grid.
@@ -460,7 +501,9 @@ hex_pixels
 hex_pixels <- unique(as.numeric(st_intersects(coordnt, hex_elev_utm_shape)))
 hex_pixels
 
-dist3 <- distances(gr, hex_pixels[1], hex_pixels[-1])
+dist3 <- distances(gr, hex_pixels[(1:56)], hex_pixels[-(1:56)])
+dim(dist3)
+
 
 dist3_df <- data.frame(dist3, row.names = "Distance from init:")
 
@@ -480,8 +523,6 @@ colnames(dist3_df)<- c(coordnt$ID_veg)
 
 ###################### measure distance #######################
 
-microbenchmark 
-
 
  distxyz.fx=function(x1,x2,y1,y2,z1,z2){
   sqrt((x1-x2)^2+(y1-y2)^2+(z1-z2)^2)
@@ -490,7 +531,7 @@ dist.fx=function(x1,x2,y1,y2){
   sqrt((x1-x2)^2+(y1-y2)^2)
 }
 
-
+df
 #pix=read.csv("pixelelev.csv")
 #df=read.csv("df.csv")
 df_forest=df[df$ID_veg=="forest",]
@@ -504,6 +545,8 @@ for(i in 1:nrow(df_fern)){
   #                     df_fern$y[i],df_forest$y)
 }
 # distmat is now a distnace matrix containing pairwise distances between fern patches and forest patches
+distmat
+
 # now we need to select the nearest forest patch for each fern patch
 nearest_forest_id=rep(NA, nrow(df_fern))
 nearest_forest_dist=rep(NA, nrow(df_fern))
@@ -513,6 +556,10 @@ for(i in 1:length(nearest_forest_id)){
 }
 df_fern$nearForestID=nearest_forest_id
 df_fern$nearForestDist=nearest_forest_dist
+
+df_fern$nearForestDist
+##plot distance
+
 plot(df$x,df$y,cex=.001)
 points(df_fern$x,df_fern$y,col="black",pch=19,cex=.5)
 points(df_forest$x[df_fern$nearForestID],
