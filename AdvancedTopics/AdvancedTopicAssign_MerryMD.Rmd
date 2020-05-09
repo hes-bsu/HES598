@@ -7,8 +7,13 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(rgdal)
-library(raster)
+library(googledrive) #for loading in the data
+library(curl) #called for Google Drive data access
+library(here) #called for Google Drive data access (be srue to make a temp folder for downloads
+library(raster) #to load and augment rasters
+library(rgdal) #to load and augment spatial shape files
+
+######THINK AOBUT THIS: PUT ALL THE LIBRARIES HERE OR IN THE PACKAGES INTRO? DO I NEED THINGS HERE?
 ```
 
 
@@ -70,7 +75,7 @@ Load data
 #for loading in the data
 
 
-library(googledrive) #for loading in the data
+#library(googledrive) #for loading in the data
 #authenticating google drive
 options(
   gargle_oauth_cache = ".merrymd",
@@ -78,8 +83,8 @@ options(
 )
 
 
-library(curl) #called for Google Drive data access
-library(here) #called for Google Drive data access (be srue to make a temp folder for downloads)
+#library(curl) #called for Google Drive data access
+#library(here) #called for Google Drive data access (be srue to make a temp folder for downloads)
 
 
 folder_url <- "https://drive.google.com/open?id=1Co7q8ggqr1CjbdUcbN0-9LtnHygshKkq"
@@ -111,7 +116,7 @@ plot(DADPTS)
 #SUA Year 2015 raster 
 
 ```{r}
-library(rgdal)
+#library(rgdal)
 library("raster") #to load rasters
 #load in SUA Year 2015 raster
 SUADAD15 <- raster("C:/Users/Nessa/Courses/HES598/datatemp/originalYear2015_UTMzone21N.tif")
@@ -161,13 +166,17 @@ trap_id_raster
 
 ```
 
-## Stack the 2 rasters
+## Stack the 2 rasters and data
 ```{r}
+#stack the rasters
 PTSUA_raster <- stack(x=trap_id_raster,y=SUADAD15)
 PTSUA_raster
-plot(PTSUA_raster)
+#stack the data
+stack_dat<-rasterToPoints(PTSUA_raster)
+head(stack_dat)
 ```
 
+##Lastly (final product), get SUA vali
 ## Evaluate your choices
 Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
 
