@@ -64,7 +64,7 @@ plot(HappyTrails, main = "Boise area trails",
 After you've made your study area map, trying plotting some attributes of your data. Remember, there's a lot of functionality that we haven't explored yet so be sure to checkout the package documentation and reference webpages if you're having trouble figuring out how to render the data you'd like to display.
 
 ```{r attributeplot}
-HappyTrails@data #checking out this data. The trail system name seems like a fun thing to plot. I'll try to make each trail system a different color. 
+#HappyTrails@data #checking out this data. The trail system name seems like a fun thing to plot. I'll try to make each trail system a different color. 
 
 HappyFRAME<-fortify(HappyTrails) #turn the shapefile into a data frame, so that ggplot can read it. sf could have read it as is.
 
@@ -89,7 +89,8 @@ Throughout this course I will be encouraging you to plot your data in ways that 
 
 hist(HappyTrails$Shape__Len, breaks= 300, xlab="Trail Length", ylab="Number of Trails", main="Boise Area Trail Lengths")
 
-str(HappyTrails)
+#str(HappyTrails)
+
 ```
 
 ## What did you learn?
