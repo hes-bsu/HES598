@@ -144,12 +144,28 @@ plot(mskbuffDADPTS)
 
 ```
 
-## Rasterize buffer layer
+##Add points to buffer data frame
 ```{r}
 head(buffDADPTS@data)
 #add a Point ID to buffer raster
 buffDADPTS@data$ID<-as.numeric(buffDADPTS@data$Trap.Site)
 head(buffDADPTS@data)
+```
+
+## Rasterize buffer layer 
+```{r}
+
+#rasterize()turns buffer layer shapefile into raster
+trap_id_raster<-rasterize(x=buffDADPTS,y=SUADAD15,field="ID")  
+trap_id_raster
+
+```
+
+## Stack the 2 rasters
+```{r}
+PTSUA_raster <- stack(x=trap_id_raster,y=SUADAD15)
+PTSUA_raster
+plot(PTSUA_raster)
 ```
 
 ## Evaluate your choices
