@@ -18,16 +18,6 @@ library(ggplot2)
 
 setwd("~/Dropbox/Coursework/Spring_2020/Spatial_Data_in_R/Various_Files")
 ```
-
-## Introduction
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. R Markdown can do the majority of things a typical word processing program (e.g., Microsoft Word), but requires a bit of knowledge about how the syntax works. There's a lot of help online, but the things I tended to use most when I first started were the RMarkdown Cheat Sheet and Reference guide (got to Help > Cheatsheets inside RStudio) and the [Markdown syntax page](https://daringfireball.net/projects/markdown/syntax).
-
-For this exercise, I want you to get comfortable using Rmarkdown to generate blogpost-style html pages that describe your project and help introduce some of the plotting techniques we learned in class. As a bonus, you'll get to see some of the benefits of being able to write and code in one place. We'll play with some additional approaches for producing publication-quality documents later in the semester. 
-
-**Important: Please save your file into the "MarkdownAssignment" folder in our git project using: MarkdownAssignment_YOURNAME.Rmd as the filename. If you don't you risk overwriting other people's work.**
-
 ## Introduce your dissertation or thesis
 
 Broadly speaking I am studying biodiversity loss and extinction events. My project focuses around rare endemic plants in Idaho (specifically Mulford's milkvetch right now, and probably a suite of others as this project grows), and trying to piece together which cumulative impacts are most responsible for their declines. One type of impact that has a lot of data gaps is recreation. Because of this, part of my work focuses on filling data needs and information gaps regarding the where, when, how much, and why questions of recreation impacts on the landscape. 
@@ -35,25 +25,17 @@ Broadly speaking I am studying biodiversity loss and extinction events. My proje
 
 ## Study Area
 
-Tell me a little bit about your study area. Where is it located (state, country). Why is it a good place for your study? Use a code chunk like the one below to generate a map of your study area. You can insert new code chunks by pushing the green "Insert" button at the top of the text editor in RStudio.
 
 My study area is centered around the three areas with known Mulford's milkvetch popultations: The Boise foothills, the Owyhee Front, and the area around Weiser, ID. The most complete existing recreation data that exists between these three areas is in the Boise Foothills, in large part thanks to efforts by the Ridge to Rivers organization. Below is a map of the existing trail networks for this area. 
 
-**IMPORTANT: You'll need to make sure that any necessary packages are loaded in the first code chunk (called `setup` in this document) or explicitly reference them using `::` as each time you press the `knit` button initiaties a fresh R session outside of your current environment.**
-
 ```{r studyarea}
-#HappyTrails <- readOGR("./SHAPEFILES/Urban_and_Foothill_Ridge_to_River_Trails.shp")
-
-
-#HappyTrails <- readOGR("/Users/Clara/Dropbox/Coursework/Spring_2020/Spatial_Data_in_R/Various_Files/SHAPEFILES/Urban_and_Foothill_Ridge_to_River_Trails/Urban_and_Foothill_Ridge_to_River_Trails.shp")
 
 HappyTrails <- readOGR("/Users/Clara/Dropbox/Coursework/Spring_2020/Spatial_Data_in_R/Various_Files/MarkdownAssignment/Urban_and_Foothill_Ridge_to_River_Trails.shp")
 
-
-plot(HappyTrails, main = "Boise area trails", 
+plot(HappyTrails, main = "Boise Area Trails: Ridge to Rivers Trail System", 
      sub="", 
      col="blue",
-     bg="orange")
+     bg="yellow")
 
 
 
@@ -61,13 +43,11 @@ plot(HappyTrails, main = "Boise area trails",
 
 ## Map an attribute of your data
 
-After you've made your study area map, trying plotting some attributes of your data. Remember, there's a lot of functionality that we haven't explored yet so be sure to checkout the package documentation and reference webpages if you're having trouble figuring out how to render the data you'd like to display.
-
 ```{r attributeplot}
-#HappyTrails@data #checking out this data. The trail system name seems like a fun thing to plot. I'll try to make each trail system a different color. 
+#HappyTrails@data 
+#checking out this data. The trail system name seems like a fun thing to plot. I'll try to make each trail system a different color. 
 
 HappyFRAME<-fortify(HappyTrails) #turn the shapefile into a data frame, so that ggplot can read it. sf could have read it as is.
-
 
 #This is porbably not  the best way to make this happen, but this shows the different
 #kinds of trails that exist in the Ridge to Rivers system
@@ -80,14 +60,13 @@ for(i in 2:length(systems)){
 }
 ```
 
-## Plot your data a differnt way
+## Plot your data a different way
 
-Throughout this course I will be encouraging you to plot your data in ways that don't require you to generate a map. This might help you see patterns that a map might make hard to detect. It might also help you recognize that your _is_ specifically tied to the spatial arrangement of your data (making maps and spatial analysis a critical component of your project). I use `ggplot2` as the primary means for generating these plots. There's a cheatsheet available for `ggplot2` as well (got to Help > Cheatsheets inside RStudio). I also recommend [Data Visualization: A Practical Introduction by Kieran Healy](https://socviz.co). His website has the code for building the plots in his book.
 
 ```{r}
 #I'd like to see the distribution of trail lengths. This could be a potentially informative thing to look at, and I wonder if once I eventually add the informal trails in if this would change. My guess is we would see a big spike in very short trails. 
 
-hist(HappyTrails$Shape__Len, breaks= 300, xlab="Trail Length", ylab="Number of Trails", main="Boise Area Trail Lengths")
+hist(HappyTrails$Shape__Len, breaks= 300, xlab="Trail Length (ft)", ylab="Number of Trails", main="Boise Area Trail Lengths")
 
 #str(HappyTrails)
 
@@ -95,10 +74,5 @@ hist(HappyTrails$Shape__Len, breaks= 300, xlab="Trail Length", ylab="Number of T
 
 ## What did you learn?
 
-Tell me a little bit about how plotting your data spatially versus as a more traditional plot affects your thinking. Did you notice anything interesting about the spatial arrangment of the data? Are there trends in the data that the map makes hard to see? What about interactions. This doesn't have to be exhaustive, I just want you to reflect a little bit on how data visualtizaiton can help clarify your research questions.
-
 I think it was interesting to think of spatial data outside of a spatial context. Putting trail lengths into a histogram was a very simple operation, but definitley made me think differently about my data. I didn't realize how such a grand majority of the trails would all be within the same length range. I wonder why that is? And I wonder if that differs between different areas and trail designations. Ultimately trail length may not be the most interesting feature to look at this way, but it was quite accessible with the data I'm currently exploring here. But I can imagine other variables (even trail width, which has some correspondence to maintenence) being especially informative when looked at this way. Overall the idea that one should always be considering whether the thing we need from our data is inherently spatial is a good thing to keep in mind, and something I hadn't considered before. 
 
-**Remember, you can use ? to at the prompt to learn more about a command (e.g., ?plot will tell you about the usage of the plot command). Send me questions if you need help!! Good luck.**
-
-**Once you've gotten everything in the Rmakrdown document, press the `knit` button and you'll see your work rendered as a webpage**
