@@ -1,0 +1,300 @@
+---
+title: "Benchmarking, functions, and repetitive operations"
+author: "Matt Williamson"
+date: "2/23/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(microbenchmark)
+library(profvis)
+library(tidyverse)
+library(sf)
+library(raster)
+library(fasterize)
+library(tidycensus)
+library(velox)
+library(sp)
+#load data for use later
+census_api_key("90b94953d2f24e81e890229e0128174f5ba80d3f")
+
+idaho.cent <- "+proj=tmerc +lat_0=41.66666666666666 +lon_0=-114 +k=0.9999473679999999 +x_0=500000.0001016001 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs " 
+
+income.tct.sf <- get_acs(geography = "tract", 
+              variables = "B19013_001",
+              state = "ID", 
+              year = 2018, geometry = TRUE) %>% 
+  st_transform(., idaho.cent)
+```
+
+## Today's Objectives
+
+- Introduce profiling and microbenchmarking to evaluate efficiency
+
+- Introduce functional programming for repetitive tasks
+
+- Combine functional programming with mosaics to speed up processing
+
+## What is efficiency?
+
+## What is efficiency?
+ 
+ - Algorithmic efficiency
+ 
+ - Programmer efficiency
+
+  - Goal: _Fast enough_  computationally, _fast as possible_ for the programmer
+
+## Benchmarking vs. Profiling
+
+- **Benchmarking**: tests the performance of specific operations repeatedly
+
+- **Profiling**: evaluates many lines of code to find "bottlenecks"
+
+## Benchmarking
+
+- easiest way is using `system.time()`
+
+```{r syst}
+income.tct.sp <- income.tct.sf %>% as(., "Spatial")
+elev <- raster("./data/id_elev.tif")
+elev.p <- projectRaster(elev,crs=idaho.cent)
+
+raster.time <- system.time(rasterize(x=income.tct.sp, 
+                                     y=elev.p, 
+                                     field = "estimate"))
+
+
+faster.time <- system.time(fasterize(sf=income.tct.sf, 
+                                     raster=elev.p, 
+                                     field = "estimate"))
+raster.time
+faster.time
+```
+
+## Benchmarking with `microbenchmark`
+ 
+ - `system.time` provides a sample
+ 
+ - `microbenchmark` generates multiple (default is 100) samples
+
+```{r mb}
+raster.time.mb <- microbenchmark(rasterize(x=income.tct.sp, 
+                                           y=elev.p, 
+                                           field = "estimate"),
+                                 times=15)
+
+faster.time.mb <- microbenchmark(fasterize(sf=income.tct.sf,
+                                           raster=elev.p,
+                                           field = "estimate"), 
+                                 times=15)
+```
+
+## Microbenchmark results for `rasterize`
+
+- Note that results are in _milliseconds_
+
+- One thousand function calls per second
+
+- Takes roughly 1 second per call
+
+```{r mbraster}
+raster.time.mb
+```
+
+## Microbenchmark results for `fasterize`
+
+- Note that results are in _milliseconds_
+
+- `fasterize` is `r floor(median(raster.time.mb$time)/median(faster.time.mb$time))` times faster than `raster`
+
+```{r mbfaster}
+faster.time.mb
+```
+
+## Profiling
+
+- Designed to locate bottle necks in large chunks of code
+
+- Pinpoint which parts of your script or function takes the longes to run
+
+- *Important:* _working code first, profile code second_ 
+
+## Profile example
+
+```{r rprof}
+rasterize.prof <- profvis(expr = {
+  #load packages
+  library(raster)
+  library(tidycensus)
+  library(tidyverse)
+  #download data and convert to Spatial
+  income.tct.sp <- get_acs(geography = "tract", 
+              variables = "B19013_001",
+              state = "ID", 
+              year = 2018, geometry = TRUE) %>% 
+    st_transform(. , idaho.cent) %>% 
+    as(., "Spatial")
+  
+  elev <- raster("./data/id_elev.tif")
+  #process into raster
+  income.tct.rst <- rasterize(x=income.tct.sp,
+                                           y=elev.p,
+                                           field = "estimate")
+}, interval = 0.01, prof_output = 'fstr-prof' )
+```
+
+## Profile results
+
+```{r rprofres}
+rasterize.prof
+```
+
+## Fixing bottlenecks
+
+1. Look for existing solutions (`fasterize`)
+2. Do less work
+3. Parallelize (next week)
+4. Avoid copies
+
+_Remember programmer efficiency!_
+
+## Building your own functions
+
+- Automate common tasks
+
+- Makes code easier to understand
+
+- Update code in one place
+
+- Eliminate incidental cut-and-paste mistakes
+
+## Repetitive actions
+
+- Lots of spatial analysis involves repeating the same operation across different geographies
+
+_ Imagine needing to crop a raster to make a problem smaller
+
+```{r b1}
+#create a 500km cropbox
+crop.box1 <- raster(xmn = 744169.7,xmx=1244169.7, 
+                   ymn=103365.6, ymx = 603365.6, res = 100,
+                   crs=crs(elev.p))
+elev.crop1 <- crop(elev.p, crop.box1)
+idaho.inc.crop1 <- crop(income.tct.sp, crop.box1)
+elev.crop.vx1 <- velox::velox(elev.crop1)
+elev.ext1 <- elev.crop.vx1$extract(sp=idaho.inc.crop1, 
+                                  fun = function(x) 
+                                    mean(x, na.rm = TRUE))
+
+```
+
+## Repetitive actions
+- Easy to mess this up
+- Clutters workspace full of intermediate objects
+```{r b2}
+crop.box2 <- raster(xmn = 1244169.7,xmx=1744169.7, 
+                   ymn=603365.6, ymx = 11003365.6, res = 100,
+                   crs=crs(elev.p))
+elev.crop2 <- crop(elev.p, crop.box2)
+idaho.inc.crop2 <- crop(income.tct.sp, crop.box2)
+elev.crop.vx2 <- velox::velox(elev.crop2)
+elev.ext2 <- elev.crop.vx2$extract(sp=idaho.inc.crop2, 
+                                  fun = function(x) 
+                                    mean(x, na.rm = TRUE))
+
+```
+
+## From cut-and-paste to functions
+- Psuedo-code to identify the key parts of the task
+
+- Track which variables are created 'inside' function versus which need to be arguments
+
+- Place the body of the function inside `{}`
+
+- Check the timing AND results
+
+## Key parts of our task
+1. Make a grid of boxes
+2. Crop the inputs to the appropriate grid box
+3. Extract
+
+## Make the grid
+
+```{r bxmake}
+raster.boxes <- raster(xmn = xmin(elev.p),
+                       xmx=xmax(elev.p),
+                       ymn = ymin(elev.p),
+                       ymx = ymax(elev.p),
+                       res=500000, crs=elev.p)
+values(raster.boxes) <- 1:ncell(raster.boxes)
+```
+
+## Plot the new sample grid
+
+```{r bxplot}
+plot(raster.boxes)
+```
+
+## Create the extraction function
+
+```{r extfun}
+small_extract <- function(rstr,counter, crprstr,vec){
+  flt.rst <- crprstr == counter
+  rst.crp <- crop(rstr,flt.rst)
+  vec.crp <- crop(vec, rst.crp)
+  vx.rst <- velox(rst.crp)
+  rst.extract <- vx.rst$extract(sp=vec.crp, 
+                                  fun = function(x) 
+                                    mean(x, na.rm = TRUE))
+}
+```
+
+## Put them together
+
+```{r combine}
+elev.mns <- lapply(values(raster.boxes), 
+                   function(x) small_extract(rstr=elev.p,
+                                             counter=x,
+                                          crprstr = raster.boxes,
+                                          income.tct.sp))
+```
+
+## Using `raster` extract
+
+```{r}
+small_extract_rst <- function(rstr,counter, crprstr,vec){
+  flt.rst <- crprstr == counter
+  rst.crp <- crop(rstr,flt.rst)
+  vec.crp <- crop(vec, rst.crp)
+  rst.extract <-raster::extract(rst.crp, vec.crp, fun=mean)
+}
+```
+
+## Compare the timing
+
+```{r funtime}
+vx.timing <- microbenchmark(small_extract(rstr=elev.p,
+                                             counter=1,
+                                          crprstr = raster.boxes,
+                                          income.tct.sp), 
+                   times = 10)
+rs.timing <- microbenchmark(small_extract_rst(rstr=elev.p,
+                                             counter=1,
+                                          crprstr = raster.boxes,
+                                          income.tct.sp), 
+                   times = 10)
+
+```
+
+## Compare the timing
+
+- `velox` is `r floor(median(rs.timing$time)/median(vx.timing$time))` time faster
+
+```{r}
+vx.timing
+
+rs.timing
+```
+
