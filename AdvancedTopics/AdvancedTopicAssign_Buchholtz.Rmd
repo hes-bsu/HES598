@@ -16,19 +16,20 @@ SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
 
 Advanced topics focus: Spatial Stats, Point Patterns, Nearest Neighbors
 
-My current research is focused on recreation disturbance patterns, and the greater ecological implications they can have for an ecosystem. I am working with the BLM Bruneau Field office to map baseline disturbance levels near subpopulations of Mulford's Milkvetch, a special status plant and a conservation priority for the region. These sites are ideal for study because the subpopulations have been monitored for decades, and long term data on their status, as well as nearby plant, human, and animal disturbances exist.  
+My current research is focused on biodiversity loss, and understanding how cumulative impacts (often a combination of life history and external environmental factors) can cause local extinctions. My project centers around a local threatened endemic plant, Mulford's milkvetch (Astragalus mulfordiae). This plant has a limited range, and is only known to grow in three areas: the Boise Foothills, the Owyhee Front, and Washington County Idaho near Weiser. The known threats to A. mulfordiae include grazing, increasing fire frequency, agriculture and urbanization, invasive annual grasses, and motorized recreation. With the growing population in the Treasure Valley, recreation levels (especially OHV use) have increased, but very little data exists on the patterns and spatial extent of the impacts. In an effort to fill this knowledge gap, part of my research includes working with the BLM Bruneau Field office to map baseline recreation disturbance levels near subpopulations of Mulford's milkevetch. These sites are ideal for further study of recreation impacts because the milkvetch populations have been monitored for decades, and long term data on their status, as well as other nearby plant, human, and animal disturbances exist.  
 
 The goal of my collaboration with the BLM will be to produce actionable products, such as maps and datasets that can inform management decisions. One of the ways a point pattern analysis could be used to this end would be to identify clusters of disturbance points, and use this to examine if something can explain why such a clustering might exist. 
 
-Because I don't have point data yet, I will use this project to develop code that can test my future data. For this project I will use stand-in data that I've made in Google Earth, and converted to a shapefile. The shapefile is of points along official roads and trails where an unofficial trail starts, and represents an area within 0.25mi^2 distance of one of the subpopulations. This is the kind of point data I hope to have in the future, and I'll explore what it might look like here. I will also use this as an opportunity to practice simulating spatial data, and will explore the tests I run on simulated data as well. 
+Because I don't have point data yet, I will use this project to develop code that can test my future data. I will use a combination of simulated data as well as stand-in data that I've made in Google Earth, and converted to a shapefile. The shapefile generated from Google Earth is of points along official roads and trails where an unofficial trail starts, and represents an area within 0.25mi^2 distance of one of the milkvetch subpopulations in the Owyhee Front. This is the kind of point data I hope to have in the future, and I'll explore what it might look like here. 
 
-
-## PSUEDOCODE!!
+## PSUEDOCODE
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
-#Libraries used: spatstat
-#This is a basic spatial stats package with good documentation, and a focus on simulating and analyzing
-#point patterns. A basic list of its functions and capabilities can be found here: https://spatstat.org/resources/spatstatQuickref.pdf
+#Libraries used: The main package I use for analysis in this project is spatstat. This is a basic spatial stats package with good documentation, and a focus on simulating and analyzing point patterns. A basic list of its functions and capabilities can be found here: https://spatstat.org/resources/spatstatQuickref.pdf
+
+#Other packages I make use of include:
+#sf
+
 
 #load your data - which datasets do you need?
 #I'll be working with simulated point data to demonstrate some point pattern analyses. In order
