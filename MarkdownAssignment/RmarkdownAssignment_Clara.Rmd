@@ -1,6 +1,6 @@
 ---
 title: "RMarkdown Assignment"
-author: "Matt Williamson"
+author: "Clara Buchholtz"
 date: "2/5/2020"
 output: html_document
 ---
@@ -30,15 +30,14 @@ For this exercise, I want you to get comfortable using Rmarkdown to generate blo
 
 ## Introduce your dissertation or thesis
 
-I am studying recreational trails in sagebrush landscapes, with a particular focus on how climate change will alter patterns and impacts on the landscape. I hope to produce research and resources that can improve adaptive management.  
+Broadly speaking I am studying biodiversity loss and extinction events. My project focuses around rare endemic plants in Idaho (specifically Mulford's milkvetch right now, and probably a suite of others as this project grows), and trying to piece together which cumulative impacts are most responsible for their declines. One type of impact that has a lot of data gaps is recreation. Because of this, part of my work focuses on filling data needs and information gaps regarding the where, when, how much, and why questions of recreation impacts on the landscape. 
 
-Rmarkdown will allow you to cite pulished works using `BibTex` style citations. You can learn more about how to do that [here](https://www.earthdatascience.org/courses/earth-analytics/document-your-science/add-citations-to-rmarkdown-report/). You can export the BibTex formatted citations from Zotero, Mendeley, or directly from Google Scholar. Use the Rmarkdown cheatsheet to get the syntax for linking to other webpages.
 
 ## Study Area
 
 Tell me a little bit about your study area. Where is it located (state, country). Why is it a good place for your study? Use a code chunk like the one below to generate a map of your study area. You can insert new code chunks by pushing the green "Insert" button at the top of the text editor in RStudio.
 
-My study area is currently focused in the Idaho and Oregon Owyhees, but the specific spatial extent of my research is still to be determined. Two possible sites I am considering focusing on are the Succor Creek State Natural Area and the Oolite Interpretive Trail area near Mountain Home.  Recreation impacts to this region are considered a pressing issue by both agencies such as the BLM and local stakeholders. 
+My study area is centered around the three areas with known Mulford's milkvetch popultations: The Boise foothills, the Owyhee Front, and the area around Weiser, ID. The most complete existing recreation data that exists between these three areas is in the Boise Foothills, in large part thanks to efforts by the Ridge to Rivers organization. Below is a map of the existing trail networks for this area. 
 
 **IMPORTANT: You'll need to make sure that any necessary packages are loaded in the first code chunk (called `setup` in this document) or explicitly reference them using `::` as each time you press the `knit` button initiaties a fresh R session outside of your current environment.**
 
@@ -52,7 +51,7 @@ HappyTrails <- readOGR("/Users/Clara/Dropbox/Coursework/Spring_2020/Spatial_Data
 
 
 plot(HappyTrails, main = "Boise area trails", 
-     sub="Check out the Green Belt", 
+     sub="", 
      col="blue",
      bg="orange")
 
@@ -67,12 +66,11 @@ After you've made your study area map, trying plotting some attributes of your d
 ```{r attributeplot}
 HappyTrails@data #checking out this data. The trail system name seems like a fun thing to plot. I'll try to make each trail system a different color. 
 
-HappyFRAME<-fortify(HappyTrails) #turn the shapefile into a data frame, so that ggplot can read it. it's a picky eater. sf could have read it as is.
+HappyFRAME<-fortify(HappyTrails) #turn the shapefile into a data frame, so that ggplot can read it. sf could have read it as is.
 
-ggplot(HappyFRAME, aes(x=long, y=lat, group=group, color=HappyFRAME$SystemName)) +
-         geom_line()
 
-#some fancy loop fix???
+#This is porbably not  the best way to make this happen, but this shows the different
+#kinds of trails that exist in the Ridge to Rivers system
 systems <- unique(HappyTrails$SystemName)
 color_systems <- c("red", "orange", "blue", "green", "purple", "deeppink4", "darkslateblue", "darkolivegreen", "firebrick", "cornsilk", "seagreen")
 plot(HappyTrails[which(HappyTrails$SystemName == systems[1]),], col = color_systems[1])
@@ -87,9 +85,9 @@ for(i in 2:length(systems)){
 Throughout this course I will be encouraging you to plot your data in ways that don't require you to generate a map. This might help you see patterns that a map might make hard to detect. It might also help you recognize that your _is_ specifically tied to the spatial arrangement of your data (making maps and spatial analysis a critical component of your project). I use `ggplot2` as the primary means for generating these plots. There's a cheatsheet available for `ggplot2` as well (got to Help > Cheatsheets inside RStudio). I also recommend [Data Visualization: A Practical Introduction by Kieran Healy](https://socviz.co). His website has the code for building the plots in his book.
 
 ```{r}
-#I'd like to see the distribution of trail lengths. Seems like that could be informative.
+#I'd like to see the distribution of trail lengths. This could be a potentially informative thing to look at, and I wonder if once I eventually add the informal trails in if this would change. My guess is we would see a big spike in very short trails. 
 
-hist(HappyTrails$Shape__Len, breaks= 20, xlab="Trail Length", ylab="Number of Trails", main="Boise Area Trail Lengths")
+hist(HappyTrails$Shape__Len, breaks= 300, xlab="Trail Length", ylab="Number of Trails", main="Boise Area Trail Lengths")
 
 str(HappyTrails)
 ```
@@ -98,7 +96,7 @@ str(HappyTrails)
 
 Tell me a little bit about how plotting your data spatially versus as a more traditional plot affects your thinking. Did you notice anything interesting about the spatial arrangment of the data? Are there trends in the data that the map makes hard to see? What about interactions. This doesn't have to be exhaustive, I just want you to reflect a little bit on how data visualtizaiton can help clarify your research questions.
 
-I really struggled to color by attribute. I also found that a lot of the data I was looking for was easiest to find in .kmz format, and I'd be grateful to learn more about how to convert between the two formats. 
+I think it was interesting to think of spatial data outside of a spatial context. Putting trail lengths into a histogram was a very simple operation, but definitley made me think differently about my data. I didn't realize how such a grand majority of the trails would all be within the same length range. I wonder why that is? And I wonder if that differs between different areas and trail designations. Ultimately trail length may not be the most interesting feature to look at this way, but it was quite accessible with the data I'm currently exploring here. But I can imagine other variables (even trail width, which has some correspondence to maintenence) being especially informative when looked at this way. Overall the idea that one should always be considering whether the thing we need from our data is inherently spatial is a good thing to keep in mind, and something I hadn't considered before. 
 
 **Remember, you can use ? to at the prompt to learn more about a command (e.g., ?plot will tell you about the usage of the plot command). Send me questions if you need help!! Good luck.**
 
