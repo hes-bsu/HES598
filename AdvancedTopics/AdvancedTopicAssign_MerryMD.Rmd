@@ -12,7 +12,7 @@ library(curl) #called for Google Drive data access
 library(here) #called for Google Drive data access (be srue to make a temp folder for downloads
 library(raster) #to load and augment rasters
 library(rgdal) #to load and augment spatial shape files
-
+library(rgeos) #to use gbuffer function
 ######THINK AOBUT THIS: PUT ALL THE LIBRARIES HERE OR IN THE PACKAGES INTRO? DO I NEED THINGS HERE?
 ```
 
@@ -117,7 +117,7 @@ plot(DADPTS)
 
 ```{r}
 #library(rgdal)
-library("raster") #to load rasters
+#library("raster") #to load rasters
 #load in SUA Year 2015 raster
 SUADAD15 <- raster("C:/Users/Nessa/Courses/HES598/datatemp/originalYear2015_UTMzone21N.tif")
 plot(SUADAD15)
@@ -127,12 +127,12 @@ plot(SUADAD15)
 #Make 100m buffers around the points
 
 ```{r}
-library("rgdal")
-library("rgeos")
-library("sp")
-library("raster")
+#library("rgdal")
+#library("rgeos")
+#library("sp")
+#library("raster")
 
-library("rgeos")#for the buffer function, gBuffer(); ###rgdal workded also..
+#library("rgeos")#for the buffer function, gBuffer(); ###rgdal workded also..
 buffDADPTS <- gBuffer(DADPTS,byid=T,width=100) #width is in meter
 plot(buffDADPTS)#visually check
 ```
@@ -140,8 +140,8 @@ plot(buffDADPTS)#visually check
 #Combine Geometry Points with SUA raster data
 ```{r}
 
-library(sp)
-library(rgdal)
+#library(sp)
+#library(rgdal)
 
 
 mskbuffDADPTS <- mask(x=SUADAD15,mask=buffDADPTS)#mask function to reduce the raster to buffer object
@@ -176,12 +176,18 @@ stack_dat<-rasterToPoints(PTSUA_raster)
 head(stack_dat)
 ```
 
-##Lastly (final product), get SUA vali
-## Evaluate your choices
-Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
+##Lastly (final product), get SUA values for each point
+```{r}
+agg_sua_camera_trap<-aggregate(stack_dat,by=list("cam_trap_ID"=stack_dat[,3]),FUN=mean,na.rm=T)
+agg_sua_camera_trap
+```
 
-## Show us your final product
-Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
+##Lastly (final product), get stadard deviation of SUA values for each point
+```{r}
+sd.agg_sua_camera_trap<-aggregate(stack_dat,by=list("cam_trap_ID"=stack_dat[,3]),FUN=sd,na.rm=T)
+sd.agg_sua_camera_trap
+```
+
 
 ## Reflect
 Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
