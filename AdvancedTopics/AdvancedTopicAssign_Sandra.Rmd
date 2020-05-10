@@ -23,16 +23,9 @@ An expected result is that the configuration of Bracken fern patches will determ
 ## PSUEDOCODE!!
 Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
+#load the libraries
 
-
-#load the libraries - tell us which packages you're using and why
-#Packages:
-#  sp
-#  gdal
-
-library(data.table)  
-library(sp)
-library(maptools)
+#library(maptools)
 library(googledrive)# I used this package to download files from googledrive into Rmarkdonw
 options(
   gargle_oauth_cache = ".secrets",
@@ -40,22 +33,24 @@ options(
 )
 
 library(here)# It was used to define file paths.
-library(raster)# I used it to work with a raster file
-library(rasterVis)
+library(raster)# I used it for raster file
+#library(rasterVis)
 library(rgdal)# This package allowed to project and transform spatial data.
-library(viridis)
-library(scales)
-library(maptools)
-library(rgeos)
-library(dplyr)
-library(RColorBrewer)
-library(ggplot2)
-library(microbenchmark)
+#library(viridis)
+#library(scales)
+#library(maptools)
+#library(rgeos)
+
+library(sp)# Used for shapefiles
+library(sf)# Used for dataframe
+library(dplyr)# Used for organize dataframe
+#library(data.table)  
+library(RColorBrewer)# Used to add color for plotting maps
+#library(ggplot2)
+#library(microbenchmark)
 
 
-#load your data - which datasets do you need?
-
-
+#Donwloading files from googledrive:
 folder_url <- "https://drive.google.com/drive/folders/1r8XsNTTKWCiWHSxR_ldISpLHzZJbla3o"
 
 folder <- drive_get(as_id(folder_url))
@@ -63,128 +58,85 @@ gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("datatemp/original/"), "/",gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
-
-#options(stringsAsFactors=FALSE)
-
+#Uploading files from directory
 pixels <- read.csv(here::here("datatemp/original/data_sample.csv"), stringsAsFactors = FALSE)
 str(pixels)
 
 elev=raster::raster(here::here("datatemp/original/raster.tif"))
 elev
 
-
-#Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
-
-pixels
-
+#Check the data: pixels file
 class(pixels)
-head(pixels)
-names(pixels)
-colnames(pixels)
-rownames(pixels)
 dim(pixels)
-
-
-ncell(elev)
+colnames(pixels)
 ncol(elev)
 nrow(elev)
 
-
-
-
-#Analysis/processing step 1 - what are you hoping to do here, why? 
-
-###Step1: I used crs function from sp package to project the pixels dataframe.
-
-pixels
-
+######## Step1: Extract elevation data from raster file
+## Project pixels dataframe using elev raster projection
 crs
 elev@crs
 pixels_spdf <- SpatialPointsDataFrame(
-  pixels[,1:2],proj4string=elev@crs, pixels)
+              pixels[,1:2],proj4string=elev@crs, pixels)
+class(pixels)
 
-pixels
-str(pixels)
-# Then I plot pixels in raster
-
-plot(elev)
-myCol <- terrain.colors(6)
-plot(elev, col=myCol)
-points(pixels$Long, pixels$Lat, cex = 0.5)
-
-
-#Analysis/processing step 2 - what are you hoping to do here, why? 
-
-##Step2: I use extract funtion to get elevation data from the raster image.
-
+## I used extract funtion to get elevation data from the raster image.
 pixel_elev <- raster::extract(elev, # raster layer
-    pixels_spdf,   # SPDF with pixels
-    df=TRUE)         # return a dataframe
+              pixels_spdf,   # SPDF with pixels
+              df=TRUE)         # return a dataframe
 pixel_elev
-str(pixel_elev)
 
-
-### Then I grab the name of the ID_pixel from the pixels_spdf
-
+## Then I grabbed the name of the ID_pixel from the pixels_spdf
 pixel_elev$pix_id<- pixels_spdf$ID_pixel
 pixel_elev$pix_id
 
-
-#fix the column names
+## Fix the column names
 names(pixel_elev) <- c('ID','elev','pix_id')
 pixel_elev
 
 
-# The pixels and pixel_elev data were merged, using merge function from package base.
-
+## The pixels and pixel_elev data were merged, using merge function from package base.
 pixelelev <- merge(pixels, pixel_elev, by.x = 'ID_pixel', by.y = 'pix_id')
-head(pixelelev)
-
-
 pixelelev
-str(pixelelev)
+
+## Then I plot pixels in raster
+#plot(elev)
+#myCol <- terrain.colors(6)
+#plot(elev, col=myCol)
+#points(pixels$Long, pixels$Lat, cex = 0.5)
 
 
-#Analysis/processing step 2 - what are you hoping to do here, why? 
-##Step3: 
+######## Step2: Assign the UTM projection to pixelelev and to raster file to measure distance using different package.
 
 ######### transform coordinates from lat long to UTM for measuring distance in raster files.
 
-pixelelev
+CRS("+init=epsg:32717")
+#crs = " +init=epsg:32717 +proj=utm +zone=17 +south +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-dplyr::glimpse(pixelelev)
-
+## Use projection to reproject pixelelev to UTM.
 LongLatToUTM<-function(x,y,ID,zone){
- xy <- data.frame(ID = ID, X = x, Y = y)
- coordinates(xy) <- c("X", "Y")
- proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")  ## for example
- res <- spTransform(xy, CRS(paste("+proj=utm +south +zone=",zone," +ellps=WGS84 +units=m +no_defs +towgs84=0,0,0", sep='')))
- return(as.data.frame(res))
-}
+          xy <- data.frame(ID = ID, x = x, y = y)
+          coordinates(xy) <- c("x", "y")
+          proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")
+          res <- spTransform(xy, CRS(paste("+proj=utm +south +zone=",zone," +ellps=WGS84 +units=m +no_defs +towgs84=0,0,0", sep='')))
+          return(as.data.frame(res))
+          }
 
-##Run the function
+##Assign the UTM zone and run the function
 x=LongLatToUTM(pixelelev$Long,pixelelev$Lat,ID=pixelelev$ID_pixel,17)
+
+## Merge the new UTM coordinates to the locations dataframe.
 x$ID_pixel=x$ID
-
-### Merge the new UTM coordinates to the locations dataframe.
-
 pixelelev= merge(pixelelev,x,by="ID_pixel")
 head(pixelelev)
 
-
-#####change names of variables in dataframe #######
-
+##change names of variables in dataframe #######
 names(pixelelev)
 df=pixelelev
 names(df)=c("ID_pixel","Long","Lat","ID_veg","loc","ndvi","ID.x","z","ID.y","x","y")
 names(df)
-str(df)
 
-class(df)
-df
-
-############ arrange according ID_veg
-
+## Arrange according ID_veg
 df <- df[order(df$ID_veg),]
 df
 
@@ -196,217 +148,134 @@ df
 # 1   fern   56
 # 2 forest   40
 
-################### reproject raster from lat long into UTM
-
-# Define the Proj.4 spatial reference 
-
+##Define the rpjection to reproject the raster file from lat long into UTM
 CRS("+init=epsg:32717")
-
-
 sr <- "+proj=utm +south +zone=17 +ellps=WGS84 +units=m +no_defs +towgs84=0,0,0"
 
-# Reproject Raster
+##Reproject Raster
 elev_utm <- projectRaster(elev, crs = sr)
 
-# Write the RasterLayer to disk (See datatype documentation for other formats)
-
-writeRaster(elev_utm, filename="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/original/elev_utm.tif", overwrite=TRUE)
-
+# Write the RasterLayer to directory
+#writeRaster(elev_utm, filename="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/elev_utm.tif", overwrite=TRUE)
 
 ### plot raster
-
-plot(elev_utm)
-
-plot(elev_utm, main="elev", xlab="East", ylab="North")
-
-myCol <- terrain.colors(6)
+#plot(elev_utm)
+#plot(elev_utm, main="elev", xlab="East", ylab="North")
+#myCol <- terrain.colors(6)
 
 
 #############coord
 
-library(dplyr)
-library(tidyverse)
-library(Rfast)
-library(sp)
-library(sf)
+#library(dplyr)
+#library(tidyverse)
+#library(Rfast)
+#library(sp)
+#library(sf)
 
 
-df$East=df$x
-df$North=df$y
-colnames(df)
-class(df)
+#df$East=df$x
+#df$North=df$y
+#colnames(df)
+#class(df)
 
-
-df_spat=st_as_sf(df, coords = c("x", "y"), crs = ("+init=epsg:32717"))
-df_spat
-
-
-coordnt <- st_as_sf(df_spat, df_spat = c("x", "y"),
-                 crs = ("+init=epsg:32717"), stringsAsFactors = FALSE)
-
-
+##Transform df dataframe into sf object and assign geometry.
+coordnt=st_as_sf(df, coords = c("x", "y"), crs = ("+init=epsg:32717"),stringsAsFactors = FALSE)
 class(coordnt)
-
-colnames(coordnt)
-
 coordnt
+#coordnt <- st_as_sf(df_spat, df_spat = c("x", "y"),
+ #                crs = ("+init=epsg:32717"), stringsAsFactors = FALSE)
+#class(coordnt)
+#colnames(coordnt)
 
-
-
 ##############################################################
+################  Gdistance package #####$####################
 ##############################################################
-##############################################################
-############    gdistance package #####$####################
-##############################################################
-##############################################################
-
 
 library(gdistance)# This package is used to measure distance using spatial data.
 library(Matrix)# This package allow getting distance matrix
-library(igraph)
+library(igraph)# Used to plot
 
-
-# create a transition matrix from the original
-
-
-### 2) define altitude difference function and create a transition matrix from the original
-
+######## Step2: Create a transition matrix from the elev_utm raster file
 ### The units of height and distance should be identical.
 ### slope = differenceinheight/distancetravelled
-
 altDiff <- function(x){x[2] - x[1]}
 hd <- transition(elev_utm, altDiff, 8, symm=FALSE)
 str(hd)
 plot(raster(hd), sub="slope (height diff / distance)", cex=0.8)
 
-
-#Then we use the function geoCorrection to divide by the distance between cells. Values in the matrix has distortion, West-East connections are longer at the equator and become shorter towards the poles, as the meridians approach each other. Type "c" can correct both types of distortion.
-
+##Then we use the function geoCorrection to divide by the distance between cells.
 slope <- geoCorrection(hd, scl=FALSE)
 
-# inspect a transition matrix for slope, for example
+# inspect a transition matrix for slope
 round(transitionMatrix(slope),3)
 
-
-## write.table(hd,file="hd.csv", append=FALSE, sep= ",", row.names = FALSE, col.names=TRUE)
-
+## Restrict the calculaton of speed to adjacent cells
 adj <- adjacent(elev_utm, cells=1:ncell(elev_utm), pairs=TRUE, directions=8)
 speed <- hd
+##Ajust the distance using the slope(diagonal distance)
 speed[adj] <- 6 * exp(-3.5 * abs(slope[adj] + 0.05))
-
+##Plot raster speed
 plot(raster(speed))
-
+##Geocorrect again for distance to create a time matrix.
 conductance <- geoCorrection(speed)
-
-str(conductance)
-
-conductance
+class(conductance)
 
 ## now calculate distance using the least cost path
-
-# coords <- st_as_sf(coords, coords = c("longitude", "latitude"),                    crs = 4326, stringsAsFactors = FALSE) %>%          st_transform(crs = 32619)
-
-str(coordnt)
-coordnt
-
 dist2 <- costDistance(conductance,
                       fromCoords = as(as_Spatial(coordnt[1:56,]), "SpatialPoints"),
                       toCoords = as(as_Spatial(coordnt[-(1:56),]), "SpatialPoints"))
 
-class(dist2)
-# [1] "matrix" "array" 
-
-dim(dist2)
-
 ##drop geometry
-
 coord_df <- st_drop_geometry(coordnt)
-class(coord_df)
-# [1] "data.frame"
-coord_df
 
 ### Subset columns from datafrane coordnt
-
 ID_pixels<-coord_df[, 1]
 ID_pixels
 
 ### Assign ID names to row and columns of dist2 matrix
-
 rownames(dist2) <- ID_pixels[1:56]
-rownames(dist2)
 dist2
-
 colnames(dist2) <- ID_pixels[57:96]
-colnames(dist2)
-class(dist2)
 dist2
-class(dist2)
 
-# Convert dist2 matrix into dataframe using reshape2 package
-
+## Convert dist2 matrix into dataframe using reshape2 package
 library(reshape2)
-
 #rename heads of columns of dist2 matrix
 dist2_id <- melt(as.matrix(dist2), varnames = c("fern", "forest"))
 
-dist2_id
-class(dist2_id)
-
-
-### convert into dataframe
+## convert into dataframe
 dist2_id[dist2_id$fern > dist2_id$forest,]
-head(dist2_id)
 class(dist2_id)
 
-dist2_id
-#   fern  forest    value
-#  AG01_B1 AG01_F1 136.2446
-
-
-### Select minimun distance values.
-
+## Select minimun distance values.
 library(dplyr)
-#library(tidyr)
-#library(tibble)
-
 summ_fern_value<- dist2_id %>% 
   group_by(fern) %>% 
   summarise(min = min(value, na.rm = TRUE))
-
-class(summ_fern_value)
 summ_fern_value
 
-library(dplyr)
-#rename heads of columns of dist2 matrix
-
+##Rename heads of columns of dist2 matrix
 fernvalue<- summ_fern_value %>% rename(value = min)
-
 fernvalue
 
 ## select forest pixel that match pixel of fern and values
+neardistance <- right_join(dist2_id,fernvalue, by=c("value","fern"))
+neardistance
 
-
-
-
-##############################################
 ##############################################################
+################  Igraph package #############################
 ##############################################################
-############   igraph package #####$####################
-##############################################################
-##############################################################
-
 
 library(igraph)
 library(sf)
 library(rgdal)
 
-
 ########## extract coords
 
-library(tidyverse)
-library(tibble)
-library(devtools)
-library(usethis)
+#library(tidyverse)
+#library(tibble)
+#library(devtools)
+#library(usethis)
 
 
 
@@ -416,61 +285,84 @@ library (sf)
 library(sp)
 
 
-class(df)
-colnames(df)
+#class(df)
+#colnames(df)
 
 # [1] "ID_pixel" "Long"     "Lat"      "ID_veg"   "loc"      "ndvi"     "ID.x"    
 # [8] "z"        "ID.y"     "x"        "y"
 
-df$East=df$x
-df$North=df$y
-colnames(df)
-class(df)
+#df$East=df$x
+#df$North=df$y
+#colnames(df)
+#class(df)
 
 
-df_spat=st_as_sf(df, coords = c("x", "y"), crs = ("+init=epsg:32717"))
-df_spat
+#df_spat=st_as_sf(df, coords = c("x", "y"), crs = ("+init=epsg:32717"))
+#df_spat
 
-coordnt <- st_as_sf(df_spat, df_spat = c("x", "y"),
-                   crs = 32717, stringsAsFactors = FALSE)
-class(coordnt)
+#coordnt <- st_as_sf(df_spat, df_spat = c("x", "y"),
+ #                  crs = 32717, stringsAsFactors = FALSE)
+#class(coordnt)
 
-colnames(coordnt)
-class(coordnt)
-coordnt <- coordnt %>% rename(GEOMETRY=geometry)
-coordnt
-class(coordnt)
+#colnames(coordnt)
+#class(coordnt)
+#coordnt <- coordnt %>% rename(GEOMETRY=geometry)
+#coordnt
+#class(coordnt)
 
 ##### arrange
 
-library(dplyr)
+#library(dplyr)
 
-class(coordnt)
+#class(coordnt)
 
 
 ### Convert raster to polygon###
 
-elev_utm
+#elev_utm
 
-elev_utm_poly = rasterToPolygons(elev_utm,na.rm=TRUE)
+#elev_utm_poly = rasterToPolygons(elev_utm,na.rm=TRUE)
 
-class(elev_utm_poly)
+#class(elev_utm_poly)
+
+elev
+
+elev_poly = rasterToPolygons(elev,na.rm=TRUE)
+class(elev_poly)
+
+
 
 ## save shapefile elev_utm_poly in folder
-writeOGR(elev_utm_poly,"elev_utm_shape", dsn="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp", driver="ESRI Shapefile",overwrite=TRUE)
+#writeOGR(elev_utm_poly,"elev_utm_shape", dsn="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp", driver="ESRI Shapefile",overwrite=TRUE)
+
+
+writeOGR(elev_poly,"elev_shape", dsn="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp", driver="ESRI Shapefile",overwrite=TRUE)
+
+
 
 ## call shapefile elev_utm_shape and transform into sf file
-elev_utm_shape <- st_read("elev_utm_shape.shp")%>%
-       st_transform(crs = 32717)
-class(elev_utm_shape)
+#elev_utm_shape <- st_read("elev_utm_shape.shp")%>%
+ #      st_transform(crs = 32717)
+#class(elev_utm_shape)
 
+
+elev_shape <- st_read("C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/elev_shape.shp")%>%
+       st_transform(crs = 32717)
+class(elev_shape)
 
 
 ###create an hexagonal grid
-hex_elev_utm_shape <- st_make_grid(elev_utm_shape, cellsize = 10, square = FALSE)
-hex_elev_utm_shape
+#hex_elev_utm_shape <- st_make_grid(elev_utm_shape, cellsize = 10, square = FALSE)
+#hex_elev_utm_shape
 
-plot(hex_elev_utm_shape,axes=TRUE,col="green",pch=19,cex=.5,xlab="East", ylab="North")
+#plot(hex_elev_utm_shape,axes=TRUE,col="green",pch=19,cex=.5,xlab="East", ylab="North")
+
+
+hex_elev_shape <- st_make_grid(elev_shape, cellsize = 8, square = FALSE)
+hex_elev_shape
+
+plot(hex_elev_shape,axes=TRUE,col="green",pch=19,cex=.5,xlab="East", ylab="North")
+
 
 
 ############ Create an igraph network, it will represent neighbouring cells
@@ -479,7 +371,7 @@ plot(hex_elev_utm_shape,axes=TRUE,col="green",pch=19,cex=.5,xlab="East", ylab="N
 ## we need to create an igraph network.
 ## We must first create an edgelist (i.e. list to ‘from’ and ‘to’ cell id’s that represent neighbours), then convert into a network.
 
-edgelist <- as.matrix(as.data.frame(st_intersects(hex_elev_utm_shape)))
+edgelist <- as.matrix(as.data.frame(st_intersects(hex_elev_shape)))
 
   # yes, the as.matrix and as.data.frame is a bit silly, but required to have the right format
 edgelist
@@ -488,42 +380,67 @@ edgelist
 gr <- graph_from_edgelist(edgelist, directed=TRUE)
 
 #### distance between each neighbouring cell is 50m since we defined this when we created the grid
-
-E(gr)$weight <- 10
+E(gr)$weight <- 8
 
 
 ## We just need to figure out where the stations are relative to the hexagonal grid.
-
-
-hex_pixels <- as.numeric(st_intersects(coordnt, hex_elev_utm_shape))
+hex_pixels <- as.numeric(st_intersects(coordnt, hex_elev_shape))
 hex_pixels
 
-hex_pixels <- unique(as.numeric(st_intersects(coordnt, hex_elev_utm_shape)))
+hex_pixels <- unique(as.numeric(st_intersects(coordnt, hex_elev_shape)))
 hex_pixels
 
 dist3 <- distances(gr, hex_pixels[(1:56)], hex_pixels[-(1:56)])
 dim(dist3)
+class(dist3)
+
+#dist3_df <- data.frame(dist3, row.names = "ID_veg")
+
+##drop geometry
+coord_df <- st_drop_geometry(coordnt)
+
+### Subset columns from datafrane coordnt
+ID_pixels<-coord_df[, 1]
+ID_pixels
+
+### Assign ID names to row and columns of dist2 matrix
+rownames(dist3) <- ID_pixels[1:56]
+dist3
+colnames(dist3) <- ID_pixels[57:96]
+dist3
+
+# Convert dist3 matrix into dataframe using reshape2 package
+library(reshape2)
+
+#rename heads of columns of dist2 matrix
+dist3_id <- melt(as.matrix(dist3), varnames = c("fern", "forest"))
+dist3_id
+
+### convert into dataframe
+dist3_id[dist3_id$fern > dist3_id$forest,]
+view(dist3_id)
+
+### Select minimun distance values.
+library(dplyr)
+
+igraph_fern_value<- dist3_id %>% 
+  group_by(fern) %>% 
+  summarise(min = min(value, na.rm = TRUE))
+
+## Rename heads of columns of dist3 matrix
+igraphfernvalue<- igraph_fern_value %>% rename(value = min)
+view(igraphfernvalue)
+
+## Select forest pixel that match pixel of fern and values
+igraphneardistance <-right_join(dist3_id,igraphfernvalue, by=c("value","fern"))
+view(igraphneardistance)
 
 
-dist3_df <- data.frame(dist3, row.names = "Distance from init:")
-
-
-coordnt$ID_veg
-colnames(dist3_df)<- c(coordnt$ID_veg)
-
-
-
-
-
-############################################################
-############################################################
-################## EUCLIDEAN DISTANCE  #####################
-############################################################
-############################################################
+##############################################################
+################ Euclidean function #############################
+##############################################################
 
 ###################### measure distance #######################
-
-
  distxyz.fx=function(x1,x2,y1,y2,z1,z2){
   sqrt((x1-x2)^2+(y1-y2)^2+(z1-z2)^2)
 }
