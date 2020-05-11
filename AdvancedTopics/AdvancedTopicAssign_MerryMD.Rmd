@@ -82,21 +82,13 @@ library(rgdal) #to load and augment spatial shape files
 library(rgeos) #to use gBuffer function
 ```
 
-
+#For loading data
 ```{r include=FALSE}
-#for loading in the data
 
-
-#library(googledrive) #for loading in the data
-#authenticating google drive
 options(
   gargle_oauth_cache = ".merrymd",
   gargle_oauth_email = TRUE
 )
-
-
-#library(curl) #called for Google Drive data access
-#library(here) #called for Google Drive data access (be srue to make a temp folder for downloads)
 
 
 folder_url <- "https://drive.google.com/open?id=1Co7q8ggqr1CjbdUcbN0-9LtnHygshKkq"
@@ -121,8 +113,7 @@ plot(DADPTS)
 #SUA Year 2015 raster 
 
 ```{r}
-#library(rgdal)
-#library("raster") #to load rasters
+
 #load in SUA Year 2015 raster
 SUADAD15 <- raster("C:/Users/Nessa/Courses/HES598/datatemp/originalYear2015_UTMzone21N.tif")
 plot(SUADAD15)
@@ -132,22 +123,12 @@ plot(SUADAD15)
 #Make 100m buffers around the points
 
 ```{r}
-#library("rgdal")
-#library("rgeos")
-#library("sp")
-#library("raster")
-
-#library("rgeos")#for the buffer function, gBuffer(); ###rgdal workded also..
 buffDADPTS <- gBuffer(DADPTS,byid=T,width=100) #width is in meter
 plot(buffDADPTS)#visually check
 ```
 
 #Combine Geometry Points with SUA raster data
 ```{r}
-
-#library(sp)
-#library(rgdal)
-
 
 mskbuffDADPTS <- mask(x=SUADAD15,mask=buffDADPTS)#mask function to reduce the raster to buffer object
 plot(mskbuffDADPTS)
@@ -159,7 +140,7 @@ plot(mskbuffDADPTS)
 head(buffDADPTS@data)
 #add a Point ID to buffer raster
 buffDADPTS@data$ID<-as.numeric(buffDADPTS@data$Trap.Site)
-head(buffDADPTS@data)
+head(buffDADPTS@data) #check that it worked
 ```
 
 ## Rasterize buffer layer 
