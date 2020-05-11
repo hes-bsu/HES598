@@ -22,7 +22,7 @@ The goal of my collaboration with the BLM will be to produce actionable products
 Because I don't have point data yet, I will use this project to develop code that can test my future data. I will use a combination of simulated data as well as stand-in data that I've made in Google Earth, and converted to a shapefile. The shapefile generated from Google Earth is of points along official roads and trails where an unofficial trail starts, and represents an area within 0.25mi^2 distance of one of the milkvetch subpopulations in the Owyhee Front. This is the kind of point data I hope to have in the future, and I'll explore what it might look like here. 
 
 ## PSUEDOCODE
-```{r, echo=FALSE}
+```{r, message=FALSE, results='hide'}
 #First, load in the libraries used: 
 library(spatstat)
 library(sf)
