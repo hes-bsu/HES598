@@ -24,13 +24,26 @@ Because I don't have point data yet, I will use this project to develop code tha
 
 ## PSUEDOCODE
 ```{r, echo=FALSE}
-#Libraries used: 
+#First, load in the libraries used: 
 library(spatstat)
 library(sf)
 library(rgdal)
 library(rgeos)
 library(ggplot2)
 library(maptools)
+library(profvis)
+library(tidyverse)
+library(here)
+library(googledrive)
+library(curl)
+
+
+##Connect to Google Drive
+folder_url <- "https://drive.google.com/drive/folders/1aahpoWXewhoVEdng8alreewHg81Ms3p7?usp=sharing"
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("datatemp/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 ```
 ###Loading in data: Simulated Data
 I'll be working with simulated point data to demonstrate some point pattern analyses. In order to do this, I'll create a plot with points within it, and then use spatial tests to investigate point patterns. 
@@ -76,7 +89,7 @@ I'll also bring in and test sample data I've made in Google Earth of points wher
 #a shapefile called 'DeviationPoints', and will represent points where informal trails deviate from established roads and trails. 
 
 #Read in data
-InfTrailsAll <- st_read("/Users/Clara/Dropbox/Coursework/Spring_2020/Spatial_Data_in_R/InfTrailPoints_SpatR.shp") 
+InfTrailsAll <- st_read("/Users/Clara/Dropbox/Coursework/Spring_2020/Spatial_Data_in_R/Clara_HES598/datatemp/original/InfTrailPoints_SpatR.shp")
 
 #Subset to look at one set of points
 InfTrails<-InfTrailsAll[,1]
@@ -95,7 +108,44 @@ In the context of informal trail origin points, I would probably expect a cluste
 
 ```{r}
 
-# 
+```
+
+Quadrat test on simulated clustered data
+```{r}
+#Run a quadrat test, and set the alternative hypothesis to be that the points are clustered
+quadrat.test(p_cluster, alternative = "clustered")
+#p value is <<.01, so we reject the null hypothesis and conclude the data shows evidence of clustering
+```
+
+Quadrat test on simulated regular data
+```{r}
+#Run a quadrat test, and set the alternative hypothesis to be that the points are regularly distributed
+quadrat.test(p_regular, alternative = "regular")
+```
+Quadrat test on sample data
+
+```{r}
+quadrat.test(InfTrails.ppp, alternative = "clustered")
+#p values is <<.001; there's strong evidence for clustering in the data
+quadrat.test(InfTrails.ppp, alternative = "regular")
+#p value = 1; there doesn't appear to be evidence of regular spacing 
+```
+Ripley's K test on the clustered simulated data
+
+```{r}
+K_cluster_env.clustered <- envelope(p_cluster, Kest, correction = "border")
+```
+
+Ripley's K test on the regular simulated data
+```{r}
+K_cluster_env.regular <- envelope(p_regular, Kest, correction = "border")
+
+```
+
+Ripley's K test on the sample data
+```{r}
+K_cluster_env.sample <- envelope(InfTrails.ppp, Kest, correction = "border")
+
 ```
 
 ## Introduce the packages
@@ -104,90 +154,76 @@ The main package I use for analysis in this project is spatstat. This is a basic
 
 ```
 
-## Evaluate your choices
-Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
-```{r}
+## Evaluate your choices: Benchmarking
+The analyses I'm doing are pretty straightforward and not too data heavy on the points I'm using right now. But that may not always be the case. I'll test using a Ripley's K vs using a quadrat test to see if one is faster. These tests tell me slightly different things, but if one is way faster than the other and all I need to know is if something is clustered or not, that could be useful to know if I ever try to run these test on a huge dataset. 
 
+```{r, include=FALSE}
+Ripley.time <- system.time(envelope(InfTrails.ppp, Kest, correction = "border"))
+Quadrat.time <-system.time(quadrat.test(InfTrails.ppp, alternative = "clustered"))
+```
+It looks like the quadrat test can tell us whether clustering exists in the data considerably faster than the Ripley's K. 
+
+```{r}
+print(Ripley.time)
+print(Quadrat.time)
+```
+###Profiling
+```{r, eval=FALSE}
+rasterize.prof <- profvis(expr = {
+  #load packages
+  library(spatstat)
+  library(sf)
+  library(rgdal)
+  library(rgeos)
+  library(ggplot2)
+  library(maptools)
+  #Prep data
+#Subset to look at one set of points
+InfTrails<-InfTrailsAll[,1]
+#Visualize the data
+plot(InfTrails, main="Informal Trails Origin Points")
+
+#Add a projection
+InfTrails_proj <- st_transform(InfTrails, "+proj=utm +zone=11 +ellps=GRS80")
+#convert to a planar point pattern (ppp) so spatstat can analyze the points
+InfTrails.ppp <- as.ppp(InfTrails_proj)
+  
+#Run analysis
+K_cluster_env <- envelope(InfTrails.ppp, Kest, correction = "border")
+#plot analysis
+plot(K_cluster_env, .-pi*r^2 ~ r) 
+
+}, interval = 0.01, prof_output = 'fstr-prof' )
+```
+
+From the results of the profiling I can see that the Ripley's K test takes the most time and memory, and this is definitely a consideration for the future if I end up using it on a really large dataset. 
+```{r, eval=FALSE}
+rasterize.prof
 ```
 
 ## Show us your final product
 Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
 ```{r}
+plot(K_cluster_env.clustered, .-pi*r^2 ~ r)
+plot(K_cluster_env.regular, .-pi*r^2 ~ r)
+plot(K_cluster_env.sample, .-pi*r^2 ~ r)
+```
 
-#-----generating x number of random points in a circle-------#
-#plot circle with random points in it
-# Load the spatstat package
-library(spatstat)
 
-# Create this many points, in a circle of this radius
-n_points <- 300
-radius <- 10
+```{r}
 
-# Generate uniform random numbers up to radius-squared
-r_squared <- runif(n_points, 0, radius^2)
-angle <- runif(n_points, 0, 2*pi)
+```
+In this case, solid black line on the graphs indicates no clustering when it is close to zero, and more clusteing the further from zero it is. Along the x axis we see r, the radius of the spatial extent being tested. For the clustered simulation data, we see evidence of clustering, especially at a larger spatial extent. In the regular data, we see a largely flat line close to zero, indicating little clustering (as expected.) In the sample data, we see substatial clustering at most spatial scales. 
 
-# Take the square root of the values to get a uniform spatial distribution
-xx <- sqrt(r_squared)* cos(angle)
-yy <- sqrt(r_squared) * sin(angle)
-
-plot(disc(radius)); points(xx, yy)
-
-#Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
-
-####I'll list simulated data in different forms here, and then demonstrate a test :
-#random 
-#clustered 
-#inhibitory/regular
-
-#Analysis/processing step 1 - what are you hoping to do here, why? 
-
-#I'm going to do a basic test for uniformity of points. This is a simple point pattern analysis to try, and a good thing to screen point data for. 
-
-#Testing for uniformity of points in a circle
-# Define variables
-#variables here are sourced from the simularted data, but needed for this analysis are:
-#x - the, x coordinate
-#y, the y coordinate
-#window, the planar extent
-
-# Set coordinates and window
-ppxy <- ppp(x = xx, y = yy, window = disc(radius))
-
-# Test the point pattern
-qt <- quadrat.test(ppxy)
-
-# View the results
-plot(qt)
-print(qt)
-
-### Simulating clustered and regular point distributions
-### Will use a function for a Thomas process for the clustered points, and a function for a 
-### Straus process for the regular distribution
-
-# Create a disc of radius 10, for the window space
-disc10 <- disc(10)
-
-# Generate clustered points from a Thomas process
-set.seed(123)
-p_cluster <- rThomas(kappa = 0.35, scale = 1, mu = 3, win = disc10)
-plot(p_cluster)
-
-# Run a quadrat test -- and this time test against an alt. hypothesis that the points are
-#clustered
-quadrat.test(p_cluster, alternative = "clustered")
-
-# Regular points from a Strauss process
-set.seed(123)
-p_regular <- rStrauss(beta = 2.9, gamma = 0.025, R = .5, W = disc10)
-plot(p_regular)
-
-# Run a quadrat test, and in this case set the alternative hypothesis to specifically be 
-#that the points are regularly distributed
-quadrat.test(p_regular, alternative = "regular")
+```{r}
 ```
 
 ## Reflect
-Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
+This was my first time trying any kind of spatial analysis in R, so I definitely learned quite a bit. As someone who has worked mostly with ESRI products, it was interesting to compare the strengths and weakenesses of the two platforms. R definitely has more flexibility, but some things that are quite simple in ArcMap, such as projections, were a little more challenging to wrangle in R. Using simulated data was a nice proof of concept for the clustering analysis tests, and learning to do benchmarking will be useful when I have to run analyses on larger datasets. 
 
-Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
+
+
+
+
+
+
