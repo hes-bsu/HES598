@@ -2,17 +2,16 @@
 title: "Advanced Topic Assignment"
 author: "Clara Buchholtz"
 date: "3/29/2020"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
-
-## Introduce your problem
+## Introduction
 
 Advanced topics focus: Spatial Stats, Point Patterns, Nearest Neighbors
 
@@ -47,10 +46,10 @@ lapply(gdrive_files$id, function(x) drive_download(as_id(x),
 ```
 ###Loading in data: Simulated Data
 I'll be working with simulated point data to demonstrate some point pattern analyses. In order to do this, I'll create a plot with points within it, and then use spatial tests to investigate point patterns. 
-```{r}
-###############################
+```{r, message=FALSE}
+
 #-------Simulated Data--------#
-###############################
+
 #-----generating x number of RANDOM points in a circle-------#
 # Create n points in a circle of a chosen radius:
 n_points <- 300
@@ -74,20 +73,17 @@ disc10 <- disc(10)
 # Generate clustered points from a Thomas process
 set.seed(123)
 p_cluster <- rThomas(kappa = 0.35, scale = 1, mu = 3, win = disc10)
-plot(p_cluster)
+plot(p_cluster, main= "Simularted Points: Clustered Spacing")
 
-#-----generating x number of REGULAR points in a circle-------#
+#-----generating x number of REGULAR points (aka a repulsive point pattern) in a circle-------#
 set.seed(123)
 p_regular <- rStrauss(beta = 2.9, gamma = 0.025, R = .5, W = disc10)
-plot(p_regular)
+plot(p_regular, main="Simulated Points: Regular Spacing")
 ```
 ### Loading in Data: Sample Data
-I'll also bring in and test sample data I've made in Google Earth of points where informal trails branch off of established trails and roads. These points are from an area within a 1 mile radius of one of the Mulford's milkvetch populations in the Owyhee Front. 
+I'll also bring in and test sample data I've made in Google Earth (and then converted to a shapefile) of points where informal trails branch off of established trails and roads. These points are from an area within a 1 mile radius of one of the Mulford's milkvetch populations in the Owyhee Front. 
 
 ```{r}
-###The sample data will be:
-#a shapefile called 'DeviationPoints', and will represent points where informal trails deviate from established roads and trails. 
-
 #Read in data
 InfTrailsAll <- st_read("/Users/Clara/Dropbox/Coursework/Spring_2020/Spatial_Data_in_R/Clara_HES598/datatemp/original/InfTrailPoints_SpatR.shp")
 
@@ -121,6 +117,7 @@ Quadrat test on simulated regular data
 ```{r}
 #Run a quadrat test, and set the alternative hypothesis to be that the points are regularly distributed
 quadrat.test(p_regular, alternative = "regular")
+# The p value is <.01, and there appears to be evidence of uniform spacing. 
 ```
 Quadrat test on sample data
 
@@ -201,29 +198,24 @@ From the results of the profiling I can see that the Ripley's K test takes the m
 rasterize.prof
 ```
 
-## Show us your final product
-Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
+##Final product
+Graphs of the Ripley's K test show a solid black line, which indicates clustering when it deviates from zero, and more clusteing the further from zero it is. Along the x axis we see r, the radius of the spatial extent being tested. For the clustered simulation data, we see evidence of clustering, especially at a larger spatial extent. In the regular simulated data data, we see a largely flat line close to zero, indicating little clustering (as expected.) In the sample data, we see substatial clustering at most spatial scales. 
 ```{r}
-plot(K_cluster_env.clustered, .-pi*r^2 ~ r)
-plot(K_cluster_env.regular, .-pi*r^2 ~ r)
-plot(K_cluster_env.sample, .-pi*r^2 ~ r)
+plot1 <-plot(K_cluster_env.clustered, .-pi*r^2 ~ r)
+
+plot2 <-plot(K_cluster_env.regular, .-pi*r^2 ~ r)
+plot3 <-plot(K_cluster_env.sample, .-pi*r^2 ~ r)
 ```
 
 
 ```{r}
 
-```
-In this case, solid black line on the graphs indicates no clustering when it is close to zero, and more clusteing the further from zero it is. Along the x axis we see r, the radius of the spatial extent being tested. For the clustered simulation data, we see evidence of clustering, especially at a larger spatial extent. In the regular data, we see a largely flat line close to zero, indicating little clustering (as expected.) In the sample data, we see substatial clustering at most spatial scales. 
-
-```{r}
 ```
 
 ## Reflect
 This was my first time trying any kind of spatial analysis in R, so I definitely learned quite a bit. As someone who has worked mostly with ESRI products, it was interesting to compare the strengths and weakenesses of the two platforms. R definitely has more flexibility, but some things that are quite simple in ArcMap, such as projections, were a little more challenging to wrangle in R. Using simulated data was a nice proof of concept for the clustering analysis tests, and learning to do benchmarking will be useful when I have to run analyses on larger datasets. 
-
-
-
-
+```{r}
+```
 
 
 
