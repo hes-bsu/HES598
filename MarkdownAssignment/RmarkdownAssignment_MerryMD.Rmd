@@ -128,6 +128,8 @@ hist(landcover, main="Distribution of pixel values-",
 
 ## What did you learn?
 
-This was interesting to see the differences between my raster that didn't have a classification (landcover raster) vs the mask layer treated by greenest pixel NDVI function (DAD1 raster). Attribute tables: I noticed that there was a difference between min values by raster. Histogram plot:There was more variation in pixel distribution in the landcover raster compared to the more "normal distribution" in the DAD1 raster. I don't think I would have noticed this difference if I didn't plot via a histogram! Glad I did this!
+This was interesting to see the differences between my raster that didn't have a classification (landcover raster) vs the mask layer treated by greenest pixel NDVI function (DAD1 raster). Attribute tables: I noticed that there was a difference between min values by raster. Histogram plot:There was more variation in pixel distribution in the landcover raster compared to the more "normal distribution" in the DAD1 raster. I don't think I would have noticed this difference if I didn't plot via a histogram! 
 
-Comparing the variation of DAD1 and the histogram was interesting as wel
+##Reflection
+
+Comparing the variation of DAD1 and the histogram was interesting as well. Cool to learn by doing and seeing. I really learned more about the rasters via the histogrmal though. Glad I did this!
