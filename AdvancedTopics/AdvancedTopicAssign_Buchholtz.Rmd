@@ -21,7 +21,7 @@ The goal of my collaboration with the BLM will be to produce actionable products
 
 Because I don't have point data yet, I will use this project to develop code that can test my future data. I will use a combination of simulated data as well as stand-in data that I've made in Google Earth, and converted to a shapefile. The shapefile generated from Google Earth is of points along official roads and trails where an unofficial trail starts, and represents an area within 0.25mi^2 distance of one of the milkvetch subpopulations in the Owyhee Front. This is the kind of point data I hope to have in the future, and I'll explore what it might look like here. 
 
-## PSUEDOCODE
+## Pseudocode
 ```{r, message=FALSE, results='hide'}
 #First, load in the libraries used: 
 library(spatstat)
@@ -37,20 +37,20 @@ library(googledrive)
 library(curl)
 
 
-##Connect to Google Drive
+#Connect to Google Drive
 folder_url <- "https://drive.google.com/drive/folders/1aahpoWXewhoVEdng8alreewHg81Ms3p7?usp=sharing"
 folder <- drive_get(as_id(folder_url))
 gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("datatemp/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 ```
-###Loading in data: Simulated Data
+## Loading in data: Simulated Data
 I'll be working with simulated point data to demonstrate some point pattern analyses. In order to do this, I'll create a plot with points within it, and then use spatial tests to investigate point patterns. 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 
 #-------Simulated Data--------#
 
-#-----generating x number of RANDOM points in a circle-------#
+#enerating x number of RANDOM points in a circle
 # Create n points in a circle of a chosen radius:
 n_points <- 300
 radius <- 10
@@ -66,23 +66,26 @@ yy <- sqrt(r_squared) * sin(angle)
 #View the output:
 #plot(disc(radius)); points(xx, yy)
 
-#-----generating x number of CLUSTERED points in a circle-------#
+#generating x number of CLUSTERED points in a circle
 # Create a disc of radius 10, for the window space
 disc10 <- disc(10)
 
 # Generate clustered points from a Thomas process
 set.seed(123)
 p_cluster <- rThomas(kappa = 0.35, scale = 1, mu = 3, win = disc10)
-plot(p_cluster, main= "Simularted Points: Clustered Spacing")
+plot(p_cluster, main= "Simulated Points: Clustered Spacing")
 
-#-----generating x number of REGULAR points (aka a repulsive point pattern) in a circle-------#
+#generating x number of REGULAR points (aka a repulsive point pattern) in a circle
 set.seed(123)
 p_regular <- rStrauss(beta = 2.9, gamma = 0.025, R = .5, W = disc10)
 plot(p_regular, main="Simulated Points: Regular Spacing")
 ```
-### Loading in Data: Sample Data
-I'll also bring in and test sample data I've made in Google Earth (and then converted to a shapefile) of points where informal trails branch off of established trails and roads. These points are from an area within a 1 mile radius of one of the Mulford's milkvetch populations in the Owyhee Front. 
 
+```{r}
+
+```
+## Loading in data: Sample Data
+I'll also bring in and test sample data I've made in Google Earth (and then converted to a shapefile) of points where informal trails branch off of established trails and roads. These points are from an area within a 1 mile radius of one of the Mulford's milkvetch populations in the Owyhee Front.
 ```{r}
 #Read in data
 InfTrailsAll <- st_read("/Users/Clara/Dropbox/Coursework/Spring_2020/Spatial_Data_in_R/Clara_HES598/datatemp/original/InfTrailPoints_SpatR.shp")
@@ -97,7 +100,7 @@ InfTrails_proj <- st_transform(InfTrails, "+proj=utm +zone=11 +ellps=GRS80")
 #convert to a planar point pattern (ppp) so spatstat can analyze the points
 InfTrails.ppp <- as.ppp(InfTrails_proj)
 ```
-##Analysis/processing & Checking Outcomes
+## Analysis/processing & Checking Outcomes
 I will test both the simulated data and the sample data to see if it is clustered or regularly spaced. I will use a quadrat test, which will test the data against a null hypothesis of being either clustered or regular. Then I will use a Ripley's K test, which will give me an idea of how clustered the points are over a set of spatial ranges. 
 
 In the context of informal trail origin points, I would probably expect a clustering pattern, because trails probably originate around a place of interest. I would be pretty surprised to see a regular distribution of origin points, because I can't imagine what kind of underlying reason would cause trails to be less likely to start near other trails with enough regularity to make that happen. However, being able to screen for this could be useful later on, particularly with the milkvetch plants. Mulford's milkvetch is not a good competitor, and it seems to thrive away from other plants. Checking to see what kind of distribution pattern the plants have, and at what scales they might be clustered or perhaps regularly spaced will be of interest. Eventually, I will hope to develop this code further to be able to identify the boundaries of clusters of points, probably using some kind of moving window analysis. I will check the outcomes of my analyses by plotting points to have a visual reference, as well as looking at the outputs (p values, etc) of the tests I run.
@@ -107,21 +110,21 @@ In the context of informal trail origin points, I would probably expect a cluste
 ```
 
 Quadrat test on simulated clustered data
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #Run a quadrat test, and set the alternative hypothesis to be that the points are clustered
 quadrat.test(p_cluster, alternative = "clustered")
 #p value is <<.01, so we reject the null hypothesis and conclude the data shows evidence of clustering
 ```
 
 Quadrat test on simulated regular data
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #Run a quadrat test, and set the alternative hypothesis to be that the points are regularly distributed
 quadrat.test(p_regular, alternative = "regular")
 # The p value is <.01, and there appears to be evidence of uniform spacing. 
 ```
 Quadrat test on sample data
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 quadrat.test(InfTrails.ppp, alternative = "clustered")
 #p values is <<.001; there's strong evidence for clustering in the data
 quadrat.test(InfTrails.ppp, alternative = "regular")
@@ -145,14 +148,16 @@ K_cluster_env.sample <- envelope(InfTrails.ppp, Kest, correction = "border")
 
 ```
 
-## Introduce the packages
+## Packages
 The main package I use for analysis in this project is spatstat. This is a basic spatial stats package with good documentation, and a focus on simulating and analyzing point patterns. A basic list of its functions and capabilities can be found here: https://spatstat.org/resources/spatstatQuickref.pdf
+
+The other main package associated with the spatial analysis done here (mainly dealing with the sample data I brought in, and adding a projection to it) is sf. Sf is a workhorse spatial analysis package with extensive documentation. More information can be found about it here: https://www.rdocumentation.org/packages/sf/versions/0.9-2
 ```{r}
 
 ```
 
-## Evaluate your choices: Benchmarking
-The analyses I'm doing are pretty straightforward and not too data heavy on the points I'm using right now. But that may not always be the case. I'll test using a Ripley's K vs using a quadrat test to see if one is faster. These tests tell me slightly different things, but if one is way faster than the other and all I need to know is if something is clustered or not, that could be useful to know if I ever try to run these test on a huge dataset. 
+## Benchmarking
+The analyses I'm doing are pretty straightforward and not too data heavy on the points I'm using right now. But that may not always be the case. I'll test using a Ripley's K vs using a quadrat test to see if one is faster. These tests tell me slightly different things, but if one is way faster than the other and all I need to know is if something is clustered or not, that could be useful to know if I ever try to run these tests on a huge dataset. 
 
 ```{r, include=FALSE}
 Ripley.time <- system.time(envelope(InfTrails.ppp, Kest, correction = "border"))
@@ -164,7 +169,7 @@ It looks like the quadrat test can tell us whether clustering exists in the data
 print(Ripley.time)
 print(Quadrat.time)
 ```
-###Profiling
+## Profiling
 ```{r, eval=FALSE}
 rasterize.prof <- profvis(expr = {
   #load packages
@@ -198,7 +203,7 @@ From the results of the profiling I can see that the Ripley's K test takes the m
 rasterize.prof
 ```
 
-##Final product
+## Final product
 Graphs of the Ripley's K test show a solid black line, which indicates clustering when it deviates from zero, and more clusteing the further from zero it is. Along the x axis we see r, the radius of the spatial extent being tested. For the clustered simulation data, we see evidence of clustering, especially at a larger spatial extent. In the regular simulated data data, we see a largely flat line close to zero, indicating little clustering (as expected.) In the sample data, we see substatial clustering at most spatial scales. 
 ```{r}
 plot1 <-plot(K_cluster_env.clustered, .-pi*r^2 ~ r)
@@ -212,7 +217,7 @@ plot3 <-plot(K_cluster_env.sample, .-pi*r^2 ~ r)
 
 ```
 
-## Reflect
+## Reflection
 This was my first time trying any kind of spatial analysis in R, so I definitely learned quite a bit. As someone who has worked mostly with ESRI products, it was interesting to compare the strengths and weakenesses of the two platforms. R definitely has more flexibility, but some things that are quite simple in ArcMap, such as projections, were a little more challenging to wrangle in R. Using simulated data was a nice proof of concept for the clustering analysis tests, and learning to do benchmarking will be useful when I have to run analyses on larger datasets. 
 ```{r}
 ```
