@@ -5,6 +5,7 @@ date: "4/6/2020"
 output: html_document
 ---
 
+
 ## Introduction:
 My thesis research aims to quantify the degree of change on the landscape and the effects of habitat on the wildlife community. The study site of interest is the Rupununi savanna-forest boundary located on the Southwest portion of Guyana (South America). To quantify change, I used Landsat derived satellite images to generate rasters using Spectral Unmixing Analysis classification (from this point on-SUA). This classification identifies the fractional component for each pixel based on user-generated classes or end members. For my SUA, I used the following classes: forest, bare ground, grass, and water.
 My chosen Advanced Topic for this course is Landscape Metrics and Raster Data. 
