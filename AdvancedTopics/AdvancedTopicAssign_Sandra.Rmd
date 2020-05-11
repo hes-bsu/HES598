@@ -1,7 +1,7 @@
 ---
 title: "Advanced Topic Instructions"
 author: "Sandra Velazco"
-date: "4/13/2020"
+date: "5/11/2020"
 output: html_document
 ---
 
@@ -9,19 +9,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
-
 ## Introduce your problem
 
 In the tropical Andes, bracken fern due to its vigor and rapid colonization inhibits the establishment of the native plants, delaying the recovery of the montane forest. My study investigate whether the distance and shape of Bracken fern-dominated patches from the forest affect natural regeneration in these patches in the north of Peru between 2014 and 2019. Satellite imagery of the Sentinel sensor from the last five years will be used to measure the vegetation index (NDVI) in each patch. Temporal changes in vegetation index within and between patches will be used as a measure of native vegetation recovery in the region.
 
-An expected result is that the configuration of Bracken fern patches will determine natural regeneration in these degraded areas. So, my first step will be to measure the distance from each pixel to the forest edge, applying the nearest neighbor analysis. To accomplish this first step, I will use sample data to test the efficiency of different packages in analyzing the distance of pixels located in the Bracken fern patches to the forest.
+An expected result is that the configuration of Bracken fern patches will determine natural regeneration in these degraded areas. So, my first step to accomplish this goal will be to measure the distance between bracken fern and forest edge pixels, applying the nearest neighbor analysis. To accomplish this first step, I will use sample data to test the efficiency of different packages in analyzing the pairwise distances between fern and forest pixels.
 
+A current challenge to conduct this analysis is to calculate the distance between pixels considering elevation. Given that, the selection of packages and functions that take into account topographic distances is essential to perform a correct spatial analysis. The development of this advanced topic has been useful to explore different tools for measuring geographical distances, considering the heterogeneity of a region. I will continue using this advanced topic to incorporate the analysis of geographical features in my research.
 
+## PSEUDOCODE
 
-## PSUEDOCODE!!
-Before you get started programming all of the potential things you could do during the course of this demo. Lay out the steps you'll need to get there (see below for what I mean). You don't have to actually code these things (yet) just help us see how you're approaching the problem.
 ```{r}
 #load the libraries
 
@@ -33,22 +30,16 @@ options(
 )
 
 library(here)# It was used to define file paths.
-library(raster)# I used it for raster file
-#library(rasterVis)
+library(raster)# Used for raster file
 library(rgdal)# This package allowed to project and transform spatial data.
-#library(viridis)
-#library(scales)
-#library(maptools)
-#library(rgeos)
-
 library(sp)# Used for shapefiles
 library(sf)# Used for dataframe
 library(dplyr)# Used for organize dataframe
-#library(data.table)  
-library(RColorBrewer)# Used to add color for plotting maps
-#library(ggplot2)
-#library(microbenchmark)
-
+library(gdistance)# This package is used to measure distance based on topographic information
+library(Matrix)# This package allow getting distance matrix
+library(igraph)# Used to measure distance based on vertices in the network
+library(reshape2)# Used for dataframe
+library(tibble)# To organize dataframe
 
 #Donwloading files from googledrive:
 folder_url <- "https://drive.google.com/drive/folders/1r8XsNTTKWCiWHSxR_ldISpLHzZJbla3o"
@@ -60,11 +51,7 @@ lapply(gdrive_files$id, function(x) drive_download(as_id(x),
 
 #Uploading files from directory
 pixels <- read.csv(here::here("datatemp/original/data_sample.csv"), stringsAsFactors = FALSE)
-str(pixels)
-
 elev=raster::raster(here::here("datatemp/original/raster.tif"))
-elev
-
 #Check the data: pixels file
 class(pixels)
 dim(pixels)
@@ -73,47 +60,34 @@ ncol(elev)
 nrow(elev)
 
 ######## Step1: Extract elevation data from raster file
+
 ## Project pixels dataframe using elev raster projection
 crs
 elev@crs
 pixels_spdf <- SpatialPointsDataFrame(
               pixels[,1:2],proj4string=elev@crs, pixels)
 class(pixels)
-
 ## I used extract funtion to get elevation data from the raster image.
 pixel_elev <- raster::extract(elev, # raster layer
               pixels_spdf,   # SPDF with pixels
               df=TRUE)         # return a dataframe
 pixel_elev
-
 ## Then I grabbed the name of the ID_pixel from the pixels_spdf
 pixel_elev$pix_id<- pixels_spdf$ID_pixel
 pixel_elev$pix_id
-
 ## Fix the column names
 names(pixel_elev) <- c('ID','elev','pix_id')
 pixel_elev
-
-
 ## The pixels and pixel_elev data were merged, using merge function from package base.
 pixelelev <- merge(pixels, pixel_elev, by.x = 'ID_pixel', by.y = 'pix_id')
 pixelelev
 
-## Then I plot pixels in raster
-#plot(elev)
-#myCol <- terrain.colors(6)
-#plot(elev, col=myCol)
-#points(pixels$Long, pixels$Lat, cex = 0.5)
-
-
 ######## Step2: Assign the UTM projection to pixelelev and to raster file to measure distance using different package.
 
-######### transform coordinates from lat long to UTM for measuring distance in raster files.
-
+## Define the projection to reproject the pixele
 CRS("+init=epsg:32717")
 #crs = " +init=epsg:32717 +proj=utm +zone=17 +south +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
-
-## Use projection to reproject pixelelev to UTM.
+## Assign function for projecting pixelelev to UTM.
 LongLatToUTM<-function(x,y,ID,zone){
           xy <- data.frame(ID = ID, x = x, y = y)
           coordinates(xy) <- c("x", "y")
@@ -121,336 +95,240 @@ LongLatToUTM<-function(x,y,ID,zone){
           res <- spTransform(xy, CRS(paste("+proj=utm +south +zone=",zone," +ellps=WGS84 +units=m +no_defs +towgs84=0,0,0", sep='')))
           return(as.data.frame(res))
           }
-
-##Assign the UTM zone and run the function
+## Assign the UTM zone and run the function
 x=LongLatToUTM(pixelelev$Long,pixelelev$Lat,ID=pixelelev$ID_pixel,17)
-
 ## Merge the new UTM coordinates to the locations dataframe.
 x$ID_pixel=x$ID
 pixelelev= merge(pixelelev,x,by="ID_pixel")
 head(pixelelev)
-
-##change names of variables in dataframe #######
+## Change names of variables in the dataframe
 names(pixelelev)
 df=pixelelev
 names(df)=c("ID_pixel","Long","Lat","ID_veg","loc","ndvi","ID.x","z","ID.y","x","y")
 names(df)
-
 ## Arrange according ID_veg
 df <- df[order(df$ID_veg),]
-df
-
-
-#library(plyr)
-#count(df, "ID_veg")
-#df
-#  ID_veg freq
-# 1   fern   56
-# 2 forest   40
-
-##Define the rpjection to reproject the raster file from lat long into UTM
+## Define the projection to reproject the raster file from lat long into UTM
 CRS("+init=epsg:32717")
 sr <- "+proj=utm +south +zone=17 +ellps=WGS84 +units=m +no_defs +towgs84=0,0,0"
-
-##Reproject Raster
+## Reproject Raster
 elev_utm <- projectRaster(elev, crs = sr)
-
-# Write the RasterLayer to directory
-#writeRaster(elev_utm, filename="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/elev_utm.tif", overwrite=TRUE)
-
-### plot raster
-#plot(elev_utm)
-#plot(elev_utm, main="elev", xlab="East", ylab="North")
-#myCol <- terrain.colors(6)
-
-
-#############coord
-
-#library(dplyr)
-#library(tidyverse)
-#library(Rfast)
-#library(sp)
-#library(sf)
-
-
-#df$East=df$x
-#df$North=df$y
-#colnames(df)
-#class(df)
-
-##Transform df dataframe into sf object and assign geometry.
+## Transform df dataframe into sf object and assign geometry.
 coordnt=st_as_sf(df, coords = c("x", "y"), crs = ("+init=epsg:32717"),stringsAsFactors = FALSE)
 class(coordnt)
 coordnt
-#coordnt <- st_as_sf(df_spat, df_spat = c("x", "y"),
- #                crs = ("+init=epsg:32717"), stringsAsFactors = FALSE)
-#class(coordnt)
-#colnames(coordnt)
 
 ##############################################################
-################  Gdistance package #####$####################
+################  Gdistance package ##########################
 ##############################################################
 
-library(gdistance)# This package is used to measure distance using spatial data.
-library(Matrix)# This package allow getting distance matrix
-library(igraph)# Used to plot
+######## Step1: Creation of a transition matrix from the elev_utm raster file
 
-######## Step2: Create a transition matrix from the elev_utm raster file
-### The units of height and distance should be identical.
-### slope = differenceinheight/distancetravelled
+### The units of height and distance should be identical
+### Set upt a function for elevation 
 altDiff <- function(x){x[2] - x[1]}
+## Run the function to get a transition matrix
 hd <- transition(elev_utm, altDiff, 8, symm=FALSE)
-str(hd)
 plot(raster(hd), sub="slope (height diff / distance)", cex=0.8)
-
-##Then we use the function geoCorrection to divide by the distance between cells.
+## Then we use the function geoCorrection to divide by the distance between cells. Slope = differenceinheight/distancetravelled
 slope <- geoCorrection(hd, scl=FALSE)
-
-# inspect a transition matrix for slope
+## Inspect a transition matrix for the slope
 round(transitionMatrix(slope),3)
-
 ## Restrict the calculaton of speed to adjacent cells
 adj <- adjacent(elev_utm, cells=1:ncell(elev_utm), pairs=TRUE, directions=8)
 speed <- hd
-##Ajust the distance using the slope(diagonal distance)
+## Adjust the distance using the slope(diagonal distance)
 speed[adj] <- 6 * exp(-3.5 * abs(slope[adj] + 0.05))
-##Plot raster speed
-plot(raster(speed))
-##Geocorrect again for distance to create a time matrix.
+## Geocorrect again for distance to create a time matrix.
 conductance <- geoCorrection(speed)
 class(conductance)
-
-## now calculate distance using the least cost path
+## Calculate distance using the least cost distance
 dist2 <- costDistance(conductance,
                       fromCoords = as(as_Spatial(coordnt[1:56,]), "SpatialPoints"),
                       toCoords = as(as_Spatial(coordnt[-(1:56),]), "SpatialPoints"))
 
-##drop geometry
-coord_df <- st_drop_geometry(coordnt)
+######## Step2: The nearest distance selection between fern pixels and forest pixels
 
+## Drop geometry
+coord_df <- st_drop_geometry(coordnt)
 ### Subset columns from datafrane coordnt
 ID_pixels<-coord_df[, 1]
 ID_pixels
-
 ### Assign ID names to row and columns of dist2 matrix
 rownames(dist2) <- ID_pixels[1:56]
 dist2
 colnames(dist2) <- ID_pixels[57:96]
 dist2
-
-## Convert dist2 matrix into dataframe using reshape2 package
-library(reshape2)
-#rename heads of columns of dist2 matrix
+## Rename column names of dist2 matrix
 dist2_id <- melt(as.matrix(dist2), varnames = c("fern", "forest"))
-
-## convert into dataframe
+## Convert matrix into dataframe
 dist2_id[dist2_id$fern > dist2_id$forest,]
 class(dist2_id)
-
-## Select minimun distance values.
-library(dplyr)
+## Find the minimun distance between bracken fern and forest pixels
 summ_fern_value<- dist2_id %>% 
   group_by(fern) %>% 
   summarise(min = min(value, na.rm = TRUE))
 summ_fern_value
-
-##Rename heads of columns of dist2 matrix
+## Rename column name of summ_fern_value dataframe
 fernvalue<- summ_fern_value %>% rename(value = min)
 fernvalue
-
-## select forest pixel that match pixel of fern and values
+## Select forest pixel that match fern pixels and values
 neardistance <- right_join(dist2_id,fernvalue, by=c("value","fern"))
-neardistance
+view(neardistance)
+
+######## Step3: Plot the nearest bracken fern and forest pixels
+
+## Extract fern and forest ID of neardistance dataframe
+nearforest<-neardistance$forest
+nearfern<-neardistance$fern
+## Combine fern and forest factor into one column 
+fern_f<-combine(nearforest,nearfern)
+view(fern_f)
+## Convert factors into dataframe
+fernf <-data.frame(fern_f)
+## Change column name of dataframe
+fernid<- fernf %>% rename(ID_pixel = fern_f)
+view(fernid)
+## Matching using ID_pixel
+near <- right_join(df,fernid, by=c("ID_pixel"))
+view(near)
+## Convert dataframe to tibble dataframe
+dfnear<- as_tibble(near)
+class(dfnear)
+## Removing duplicated rows
+dfpixel <- distinct(dfnear, ID_pixel, .keep_all = TRUE)
+view(dfpixel)
+## Extracting x,y coordinates from df dataframe
+dfern<-df[1:56,10:11]
+dforest<-df[57:96,10:11]
+## Extracting x,y coordinates from dfpixel to plot the nearest forest pixels to bracken fern patches
+dfforest<-dfpixel[1:8,10:11]
+nearforest<-as.data.frame(dfforest)
+## Plot nearest bracken fern and forest pixels
+myCol <- terrain.colors(6)
+plot(elev_utm, main= "Nearest Forest Pixels to Bracken Fern Pixels", xlab="East", ylab="North",col=myCol,cex=.5)
+points(dfern$x,dfern$y,col="black",pch=19,cex=.3)
+points((nearforest$x),
+      (nearforest$y),col="red",pch=19,cex=.6)
+points(dforest$x,dforest$y,col="blue",cex=.5)
 
 ##############################################################
 ################  Igraph package #############################
 ##############################################################
 
-library(igraph)
-library(sf)
-library(rgdal)
+######## Step1: Processing raster file and creation of a hexagonal grid
 
-########## extract coords
-
-#library(tidyverse)
-#library(tibble)
-#library(devtools)
-#library(usethis)
-
-
-
-######### Duplicate and Extract coordinates
-
-library (sf)
-library(sp)
-
-
-#class(df)
-#colnames(df)
-
-# [1] "ID_pixel" "Long"     "Lat"      "ID_veg"   "loc"      "ndvi"     "ID.x"    
-# [8] "z"        "ID.y"     "x"        "y"
-
-#df$East=df$x
-#df$North=df$y
-#colnames(df)
-#class(df)
-
-
-#df_spat=st_as_sf(df, coords = c("x", "y"), crs = ("+init=epsg:32717"))
-#df_spat
-
-#coordnt <- st_as_sf(df_spat, df_spat = c("x", "y"),
- #                  crs = 32717, stringsAsFactors = FALSE)
-#class(coordnt)
-
-#colnames(coordnt)
-#class(coordnt)
-#coordnt <- coordnt %>% rename(GEOMETRY=geometry)
-#coordnt
-#class(coordnt)
-
-##### arrange
-
-#library(dplyr)
-
-#class(coordnt)
-
-
-### Convert raster to polygon###
-
-#elev_utm
-
-#elev_utm_poly = rasterToPolygons(elev_utm,na.rm=TRUE)
-
-#class(elev_utm_poly)
-
-elev
-
-elev_poly = rasterToPolygons(elev,na.rm=TRUE)
-class(elev_poly)
-
-
-
-## save shapefile elev_utm_poly in folder
-#writeOGR(elev_utm_poly,"elev_utm_shape", dsn="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp", driver="ESRI Shapefile",overwrite=TRUE)
-
-
-writeOGR(elev_poly,"elev_shape", dsn="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp", driver="ESRI Shapefile",overwrite=TRUE)
-
-
-
-## call shapefile elev_utm_shape and transform into sf file
-#elev_utm_shape <- st_read("elev_utm_shape.shp")%>%
- #      st_transform(crs = 32717)
-#class(elev_utm_shape)
-
-
+## Transforming raster utm file into shapefile
+elev_utm
+elev_shape = rasterToPolygons(elev_utm,na.rm=TRUE)
+class(elev_shape)
+## Saving shapefile elev_shape in folder
+writeOGR(elev_shape,"elev_shape", dsn="C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp", driver="ESRI Shapefile",overwrite=TRUE)
+## Call shapefile elev_utm_shape and transform into sf file
 elev_shape <- st_read("C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/elev_shape.shp")%>%
        st_transform(crs = 32717)
 class(elev_shape)
-
-
-###create an hexagonal grid
-#hex_elev_utm_shape <- st_make_grid(elev_utm_shape, cellsize = 10, square = FALSE)
-#hex_elev_utm_shape
-
-#plot(hex_elev_utm_shape,axes=TRUE,col="green",pch=19,cex=.5,xlab="East", ylab="North")
-
-
+## Using shapefile to create a hexagonal grid using. Cellsize=8 was chosen to match small grids with the distance between pixel points
 hex_elev_shape <- st_make_grid(elev_shape, cellsize = 8, square = FALSE)
 hex_elev_shape
 
-plot(hex_elev_shape,axes=TRUE,col="green",pch=19,cex=.5,xlab="East", ylab="North")
+######## Step2: Creation of an igraph network and a distance matrix
 
-
-
-############ Create an igraph network, it will represent neighbouring cells
-
-
-## we need to create an igraph network.
-## We must first create an edgelist (i.e. list to ‘from’ and ‘to’ cell id’s that represent neighbours), then convert into a network.
-
+## First create an edgelist (i.e. list to ‘from’ and ‘to’ cell id’s that represent neighbours)
 edgelist <- as.matrix(as.data.frame(st_intersects(hex_elev_shape)))
-
-  # yes, the as.matrix and as.data.frame is a bit silly, but required to have the right format
-edgelist
-
-
+## Then convert into a igraph network, it will represent neighbouring cells
 gr <- graph_from_edgelist(edgelist, directed=TRUE)
-
-#### distance between each neighbouring cell is 50m since we defined this when we created the grid
+## Assign distance value (8m) between each neighbouring cell, this value was defined when the grid was created 
 E(gr)$weight <- 8
-
-
-## We just need to figure out where the stations are relative to the hexagonal grid.
+## Load pixels locations in the hexagonal grid
 hex_pixels <- as.numeric(st_intersects(coordnt, hex_elev_shape))
 hex_pixels
-
+## Deletion of duplicated values in the grid
 hex_pixels <- unique(as.numeric(st_intersects(coordnt, hex_elev_shape)))
 hex_pixels
-
+## Calculating the distance between bracken fern and forest pixels
 dist3 <- distances(gr, hex_pixels[(1:56)], hex_pixels[-(1:56)])
-dim(dist3)
-class(dist3)
+view(dist3)
 
-#dist3_df <- data.frame(dist3, row.names = "ID_veg")
+######## Step2: The nearest distance selection between fern pixels and forest pixels
 
-##drop geometry
+## Drop geometry of coordnt spatial dataframe
 coord_df <- st_drop_geometry(coordnt)
-
-### Subset columns from datafrane coordnt
+## Subset ID_pixels from datafrane coordnt
 ID_pixels<-coord_df[, 1]
-ID_pixels
-
-### Assign ID names to row and columns of dist2 matrix
+view(ID_pixels)
+## Assign ID names to row and columns of dist2 matrix
 rownames(dist3) <- ID_pixels[1:56]
-dist3
 colnames(dist3) <- ID_pixels[57:96]
-dist3
-
-# Convert dist3 matrix into dataframe using reshape2 package
-library(reshape2)
-
-#rename heads of columns of dist2 matrix
+view(dist3)
+## Rename columns of dist2 matrix
 dist3_id <- melt(as.matrix(dist3), varnames = c("fern", "forest"))
-dist3_id
-
-### convert into dataframe
+view(dist3_id)
+## Convert dist3_id into dataframe
 dist3_id[dist3_id$fern > dist3_id$forest,]
 view(dist3_id)
-
-### Select minimun distance values.
-library(dplyr)
-
-igraph_fern_value<- dist3_id %>% 
+## Find the minimun distance between bracken fern and forest pixels
+fern_value<- dist3_id %>% 
   group_by(fern) %>% 
   summarise(min = min(value, na.rm = TRUE))
+## Rename the column of dist3 matrix
+fernvalue<- fern_value %>% rename(value = min)
+view(fernvalue)
+## Select forest pixel that match fern pixels and values
+neardist3 <-right_join(dist3_id,fernvalue, by=c("value","fern"))
+view(neardist3)
 
-## Rename heads of columns of dist3 matrix
-igraphfernvalue<- igraph_fern_value %>% rename(value = min)
-view(igraphfernvalue)
+######## Step3: Plot of the nearest bracken fern and forest pixels
 
-## Select forest pixel that match pixel of fern and values
-igraphneardistance <-right_join(dist3_id,igraphfernvalue, by=c("value","fern"))
-view(igraphneardistance)
+## Extract fern and forest ID of the neardist3 dataframe
+nfo_dist3<-neardist3$forest
+nfe_dist3<-neardist3$fern
+## Combine fern and forest factor into one column 
+fern_fdist3<-combine(nfo_dist3,nfe_dist3)
+fern_fdist3
+## Convert factors into a dataframe
+fernfdist3 <-data.frame(fern_fdist3)
+fernfdist3
+## Change column name of dataframe
+fernidist3<- fernfdist3 %>% rename(ID_pixel = fern_fdist3)
+fernidist3
+## Matching using ID_pixel
+near_dist3 <- right_join(df,fernidist3, by=c("ID_pixel"))
+view(near_dist3)
+## Convert dataframe to tibble
+dfnear_dist3<- as_tibble(near_dist3)
+class(dfnear_dist3)
+## Remove duplicated rows from dfnear_dist3 dataframe
+dfpixel_dist3 <- distinct(dfnear_dist3, ID_pixel, .keep_all = TRUE)
+view(dfpixel_dist3)
+## Extract x,y coordinates of bracken fern and forest from dfpixel_dist3
+dfern_dist3<-df[1:56,10:11]
+dforest_dist3<-df[57:96,10:11]
+## Extracting x,y coordinates from dfpixel_dist3 to plot the nearest forest pixels to bracken fern patches
+dfpixel_dist3
+dffo_dist3<-dfpixel_dist3[1:12,10:11]
+## Plot nearest bracken fern and forest pixels
+myCol <- terrain.colors(6)
+plot(elev_utm, main= "Nearest Forest Pixels to Bracken Fern Pixels", xlab="East", ylab="North", col=myCol,cex=.5)
+points(dfern_dist3$x,dfern_dist3$y, col="black",pch=19,cex=.3)
+points((dffo_dist3$x),
+      (dffo_dist3$y),col="red",pch=19,cex=.6)
+points(dforest_dist3$x,dforest_dist3$y,col="blue",cex=.5)
 
-
-##############################################################
+#################################################################
 ################ Euclidean function #############################
-##############################################################
+#################################################################
 
-###################### measure distance #######################
- distxyz.fx=function(x1,x2,y1,y2,z1,z2){
+######## Step1: Calculating distance matrix
+
+## Set up a function for distance matrix
+distxyz.fx=function(x1,x2,y1,y2,z1,z2){
   sqrt((x1-x2)^2+(y1-y2)^2+(z1-z2)^2)
 }
 dist.fx=function(x1,x2,y1,y2){
   sqrt((x1-x2)^2+(y1-y2)^2)
 }
-
-df
-#pix=read.csv("pixelelev.csv")
-#df=read.csv("df.csv")
+## Run the function and calculate distance matrix containing pairwise distances between fern patches and forest patches
 df_forest=df[df$ID_veg=="forest",]
 df_fern=df[df$ID_veg=="fern",]
 distmat=matrix(NA,nrow=nrow(df_fern),ncol=nrow(df_forest))
@@ -458,13 +336,8 @@ for(i in 1:nrow(df_fern)){
   distmat[i,]=distxyz.fx(df_fern$x[i],df_forest$x,
                          df_fern$y[i],df_forest$y,
                          df_fern$z[i],df_forest$z)
-  # distmat[i,]=dist.fx(df_fern$x[i],df_forest$x,
-  #                     df_fern$y[i],df_forest$y)
-}
-# distmat is now a distnace matrix containing pairwise distances between fern patches and forest patches
-distmat
-
-# now we need to select the nearest forest patch for each fern patch
+  }
+# Select the nearest forest patch for each fern patch
 nearest_forest_id=rep(NA, nrow(df_fern))
 nearest_forest_dist=rep(NA, nrow(df_fern))
 for(i in 1:length(nearest_forest_id)){
@@ -474,67 +347,149 @@ for(i in 1:length(nearest_forest_id)){
 df_fern$nearForestID=nearest_forest_id
 df_fern$nearForestDist=nearest_forest_dist
 
-df_fern$nearForestDist
-##plot distance
+######## Step2: Identifying the nearest forest pixels and bracken pixels 
 
-plot(df$x,df$y,cex=.001)
+### Assign ID to row and columns of distmat matrix
+df_ID_pixels <- df[,1]
+df_ID_pixels
+rownames(distmat) <- df_ID_pixels[1:56]
+distmat
+colnames(distmat) <- df_ID_pixels[57:96]
+distmat
+## Rename column names of distmat matrix
+distmat_id <- melt(as.matrix(distmat), varnames = c("fern", "forest"))
+view(distmat_id)
+## Convert nearest_forest_dist into dataframe
+nearfdist <-data.frame(nearest_forest_dist)
+view(nearfdist)
+## Change column name of the nearfdist dataframe 
+nearfernid<- nearfdist %>% rename(value = nearest_forest_dist)
+view(nearfernid)
+## Matching using ID_pixel
+neardistmat <- right_join(distmat_id,nearfernid, by=c("value"))
+view(neardistmat)
+
+######## Step3: Plot nearest bracken fern pixels and forest pixels
+
+## Plot nearest bracken fern and forest pixels
+plot(elev_utm, main= "Nearest Forest Pixels to Bracken Fern Pixels", xlab="East", ylab="North", col=myCol,cex=.5)
 points(df_fern$x,df_fern$y,col="black",pch=19,cex=.5)
 points(df_forest$x[df_fern$nearForestID],
-       df_forest$y[df_fern$nearForestID],col="green",pch=19,cex=1)
+       df_forest$y[df_fern$nearForestID],col="red",pch=19,cex=1)
 points(df_forest$x,df_forest$y,col="blue",cex=.5)
-
-
-
-#Check the outcomes? How will you know if your steps worked?
-
 # 
 ```
 
-## Introduce the packages
-Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
+## Packages
+For the purpose of calculating the topographic distances, I used gdistance and igraph packages, and the Euclidean function.
 
+The gdistance package was designed to measure distance considering the topographic heterogeneity of any region represented as grids. One requirement of the package is the use of raster files because of their arrangement (rows and columns) and spatial metadata they have, which include information about the extent, dimensions. The gdistance relies on the igraph package because the conversion of the raster into graphs is necessary to generate the distance matrix. An important step of the use of gdistance package is the geocorrection of surface distortion in the transition matrix. In a similar way, the igraph package can be used to measure distance. However, the main difference with the gdistance package is the creation of a hexagonal matrix to generate a graph network. Also, the distance calculation is based on the pairwise shortest path between the set of vertices. While the graphs generate with gdistance connects cell centres to each other. Finally, the igraph does not include a geocorrection function for calculating distance. 
 
-library(here)
-library(raster)
-library(rasterVis)
-library(rgdal)
-library(viridis)
-library(scales)
-library(maptools)
-library(rgeos)
-library(dplyr)
-library(RColorBrewer)
-library(ggplot2)
+The Euclidean function was used to calculate the distance considering the elevation. However, compares to the previous packages, this function does not take into account the geographic features of the surface.
 
+## Evaluation of choices
+The gdistance package had a better approach to computing distance. It was much fastest compared to igraph, the steps associated with the application of this last package took around 30 minutes to complete the computing of distance. The Euclidean function was not considered in the final evaluation due it does not include the spatial heterogeneity of the region.
 
+Benchmarking for gdistance package
 
+st1<-system.time(altDiff <- function(x){x[2] - x[1]})
+st2<-system.time(hd <- transition(elev_utm, altDiff, 8, symm=FALSE))
+st3<-system.time(slope <- geoCorrection(hd, scl=FALSE))
+st4<-system.time(round(transitionMatrix(slope),3))
+st5<-system.time(adj <- adjacent(elev_utm, cells=1:ncell(elev_utm), pairs=TRUE, directions=8))
+st6<-system.time(speed <- hd)
+st7<-system.time(speed[adj] <- 6 * exp(-3.5 * abs(slope[adj] + 0.05)))
+st8<-system.time(conductance <- geoCorrection(speed))
+st9<-system.time(costDistance(conductance,
+                      fromCoords = as(as_Spatial(coordnt[1:56,]), "SpatialPoints"),
+                      toCoords = as(as_Spatial(coordnt[-(1:56),]), "SpatialPoints")))
 
+Benchmarking for igraph package
 
+st_ig1<-system.time(hex_elev_shape <- st_make_grid(elev_shape, cellsize = 8, square = FALSE))
+st_ig2<-system.time(edgelist <- as.matrix(as.data.frame(st_intersects(hex_elev_shape))))
+st_ig3<-system.time(graph_from_edgelist(edgelist, directed=TRUE))
+st_ig4<-system.time(E(gr)$weight <- 8)
+st_ig5<-system.time(as.numeric(st_intersects(coordnt, hex_elev_shape)))
+st_ig6<-system.time(unique(as.numeric(st_intersects(coordnt, hex_elev_shape))))
+st_ig7<-system.time(distances(gr, hex_pixels[(1:56)], hex_pixels[-(1:56)]))
 
-## Evaluate your choices
-Use profiling and benchmarking to evaluate which of your options is likely to be the fastest. How does the syntax and/or ease of use of that function impact your decision of whether or not to use it? (For example, velox is much faster than raster, but it's less well documented and the syntax is strange to get used to).
+## Final product
+I selected as final product distance values I got using the gdistance package because of its accuracy to calculate the topographic distance. Then, I created a plot to show the nearest pairwise of forest pixels and bracken fern pixels.
 
+One concern about this analysis is related to the raster reprojection. To make a comparison about computing distance throw the application of gdistance, graph, and the Euclidean function, it was necessary to transform the Lat/Long projection of the raster file into the UTM projection. Thus, this reprojection could affect the shape of cells in the raster file, which could have a direct effect on the topographic distance. My next step will be computing the distance using the raster file without reprojected it.
 
+gdistance package:
 
+######## Step1: Creation of a transition matrix from the elev_utm raster file
+altDiff <- function(x){x[2] - x[1]}
+hd <- transition(elev_utm, altDiff, 8, symm=FALSE)
+plot(raster(hd), sub="slope (height diff / distance)", cex=0.8)
+slope <- geoCorrection(hd, scl=FALSE)
+round(transitionMatrix(slope),3)
+adj <- adjacent(elev_utm, cells=1:ncell(elev_utm), pairs=TRUE, directions=8)
+speed <- hd
+speed[adj] <- 6 * exp(-3.5 * abs(slope[adj] + 0.05))
+conductance <- geoCorrection(speed)
+class(conductance)
+dist2 <- costDistance(conductance,
+                      fromCoords = as(as_Spatial(coordnt[1:56,]), "SpatialPoints"),
+                      toCoords = as(as_Spatial(coordnt[-(1:56),]), "SpatialPoints"))
 
+######## Step2: Nearest distance selection between fern pixels and forest pixels
+coord_df <- st_drop_geometry(coordnt)
+ID_pixels<-coord_df[, 1]
+ID_pixels
+rownames(dist2) <- ID_pixels[1:56]
+dist2
+colnames(dist2) <- ID_pixels[57:96]
+dist2
+dist2_id <- melt(as.matrix(dist2), varnames = c("fern", "forest"))
+dist2_id[dist2_id$fern > dist2_id$forest,]
+class(dist2_id)
+summ_fern_value<- dist2_id %>% 
+  group_by(fern) %>% 
+  summarise(min = min(value, na.rm = TRUE))
+summ_fern_value
+fernvalue<- summ_fern_value %>% rename(value = min)
+fernvalue
+neardistance <- right_join(dist2_id,fernvalue, by=c("value","fern"))
+view(neardistance)
 
+######## Step3: Plot nearest bracken fern pixels and forest pixels
+nearforest<-neardistance$forest
+nearfern<-neardistance$fern
+fern_f<-combine(nearforest,nearfern)
+view(fern_f)
+fernf <-data.frame(fern_f)
+fernid<- fernf %>% rename(ID_pixel = fern_f)
+view(fernid)
+near <- right_join(df,fernid, by=c("ID_pixel"))
+view(near)
+dfnear<- as_tibble(near)
+class(dfnear)
+dfpixel <- distinct(dfnear, ID_pixel, .keep_all = TRUE)
+view(dfpixel)
+dfern<-df[1:56,10:11]
+dforest<-df[57:96,10:11]
+dfforest<-dfpixel[1:8,10:11]
+nearforest<-as.data.frame(dfforest)
+myCol <- terrain.colors(6)
+plot(elev_utm, main= "Nearest Forest Pixels to Bracken Fern Pixels", xlab="East", ylab="North",col=myCol,cex=.5)
+points(dfern$x,dfern$y,col="black",pch=19,cex=.3)
+points((nearforest$x),
+      (nearforest$y),col="red",pch=19,cex=.6)
+points(dforest$x,dforest$y,col="blue",cex=.5)
 
+## Reflection
+This exercise helped me to explore different ways of computing topographic distances, but also to acquire and improve my skills in spatial analysis. When I started to work in this exercise some weeks ago, my knowledge and skills about the use of the spatial analysis were too limited. However, the trial and error process of running codes and looking for information to fix issues has improved my skills in spatial analysis. Particularly, in the advantages and disadvantages of applying different packages (e.g., sp, sf, rgdal, raster) related to the analysis of geographic features and others related to the organization of my dataset (e.g., dplyr, tibble).
 
+My next step will be learning the process to integrate the Google Earth Engine Platform with R, to download and process satellite images of Sentinel and Landsat sensors.
 
-## Show us your final product
-Did you make a map? Let's see it. Did you plot some data that you extracted with raster? show us that plot. Did you have an idea of how the data should look after you were done processing it? Were you successful? What went wrong
-
-
-plot(df$x,df$y,cex=.001)
-points(df_fern$x,df_fern$y,col="black",pch=19,cex=.5)
-points(df_forest$x[df_fern$nearForestID],
-       df_forest$y[df_fern$nearForestID],col="green",pch=19,cex=1)
-points(df_forest$x,df_forest$y,col="blue",cex=.5)
-
-
-
-
-## Reflect
-Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
-
-Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
+## Resources
+- gdistance: https://mran.microsoft.com/snapshot/2016-08-05/web/packages/gdistance/vignettes/gdistance1.pdf
+- igraph: https://igraph.org/r/
+- Comparison between Euclidean function, gdistance, iggraph: https://insileco.github.io/2019/04/08/r-as-a-ruler-how-to-calculate-distances-between-geographical-objects/#LeastCostDistanceswithgdistance
+- Tibble: https://tibble.tidyverse.org/
+-reshape2: https://cran.r-project.org/web/packages/reshape2/reshape2.pdf
+- dplyr: https://dplyr.tidyverse.org/reference/arrange.html#locales
