@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 library(rgdal)
 library(raster)
 ```
@@ -32,7 +33,7 @@ Bovolo, C.I., Pereira, R., Parkin, G., Kilsby, C., Wagner, T. 2012. Fine-scale r
 
 ## Study Area
 
-My study is specific and the Rupununi savanna-forest boundary in Guyana lends itslef to a landscape time series analysis. This map of my study area includes the country of Guyana with the study area, the boundary with a 70,000 meter buffer around the estimated boundary line. 
+My study is specific and the Rupununi savanna-forest boundary in Guyana lends itslef to a landscape time series analysis. This map of my study area includes the country of Guyana and a subset of the study area. 
 
 ```{r studyarea}
 #shapefule of Guyana, in South America
@@ -53,21 +54,10 @@ plot(landcover)
 After you've made your study area map, trying plotting some attributes of your data. Remember, there's a lot of functionality that we haven't explored yet so be sure to checkout the package documentation and reference webpages if you're having trouble figuring out how to render the data you'd like to display.
 
 ```{r attributeplot}
-
-
-
-tv.income.tct <- get_acs(geography = "tract", 
-              variables = "B19013_001",
-              state = "ID", 
-              year = 2018, geometry = TRUE) %>% 
-  filter(str_detect(NAME, "Ada | Boise | Canyon | Gem | Owyhee") )
-
-
-cty.map <- ggplot() +
-  geom_sf(data = id.census.sf, fill = "gray") +
-  geom_sf(data = tv.income.tct, aes(fill = estimate)) +
-  scale_fill_viridis()
-cty.map
+#Pixel variation of study region
+DAD1 <- raster("C:/Users/Nessa/Desktop/BSU/RESEARCH/GUYresearch/Camera trap/DAD1/DadAnalysis/GreenCompositeYear2015_DAD.tif")
+DAD1
+plot(DAD1)
 ```
 
 ## Plot your data a differnt way
