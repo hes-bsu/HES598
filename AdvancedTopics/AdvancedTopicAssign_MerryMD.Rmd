@@ -19,7 +19,12 @@ https://www.sciencedirect.com/science/article/abs/pii/S0034425718305200
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
+library(googledrive) #for loading in the data
+library(curl) #called for Google Drive data access
+library(here) #called for Google Drive data access (be sure to make a temp folder for downloads)
+library(raster) #to load and augment rasters
+library(rgdal) #to load and augment spatial shape files
+library(rgeos) #to use gBuffer function
 ```
 
 
