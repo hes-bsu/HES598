@@ -1,0 +1,539 @@
+---
+title: "Mapping Occurence Probability of Carnivores in a Grazing System"
+subtitle: "Spatial R Seminar - Human Environment Systems Spring 2020"
+author: "Edward Trout"
+date: "May 8, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries, echo=FALSE, include=FALSE}
+library(googledrive)
+library(curl) 
+library(here)
+library(ggplot2)
+library(unmarked)
+library(rgdal)
+library(raster)
+library(sp)
+library(sf)
+library(rgeos)
+library(microbenchmark)
+library(velox)
+```
+<style>
+p.comment {
+background-color: #DBDBDB;
+padding: 10px;
+border: 1px solid black;
+border-radius: 5px;
+font-style: bold;
+}
+
+</style>
+
+### Important
+
+<p class="comment">
+<strong>In order for the path references in this file to work, please make sure that in your working directory there is a folder named `datatemp`, and then set an object named `path` to that folder.
+In the case of my rendering this document, `path` will be "C:/Users/edwardtrout/Documents/Spatial_R_Seminar/datatemp/"</strong>
+</p>
+
+```{r path, echo = F}
+path <- "C:/Users/edwardtrout/Documents/Spatial_R_Seminar/datatemp/"
+```
+
+
+```{r google_drive_setup, echo = FALSE, message=FALSE, include=FALSE}
+# set project-specific cache key
+options(gargle_oauth_cache = ".etrout")
+# check the value of the option, if you like
+gargle::gargle_oauth_cache()
+# trigger auth on purpose --> store a token in the specified cache
+drive_auth()
+#authenticating google drive
+options(
+  gargle_oauth_cache = ".etrout",
+  gargle_oauth_email = TRUE
+)
+# download assets in google drive folder
+folder_url <- "https://drive.google.com/drive/folders/1DE1yWleTJ3r3f3HtlY0_q7_xrhZ8QbOC"
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("datatemp/original/"),
+                                                                 gdrive_files[gdrive_files$id==x,]$name),
+                                                   overwrite = TRUE))
+```
+## Introduction and Background
+
+### Camera Trapping in the Wood River Valley
+
+As the margin of land that is occupied by both humans and wildlife increases, coexistence becomes more fraught and human-widlife conflict increases. Where pastoral industry meets wild frontier, carnivore-inflicted depredation of livestock presents a serious issue.
+
+Pressure from carnivore activity causes negative outcomes for ranchers and their stock with yearly costs across the U.S. totaling near $119 million in 2010 (NASS 2010a, 2010b). This results in increasing lethal action against infringing carnivores and continuing loss of stock by ranching and herding communities (Ausband 2016, Bradley et al 2015, DeCesare et al 2018, Hanley et al 2018). At the same time, grazing sheep influence the ongoing dynamics of wildlife in these interfaces.  
+
+```{r study_area, echo = F, out.extra='style="float:right; padding:5px"', out.height="25%", out.width="25%", message=FALSE}
+knitr::include_graphics(paste0(path,"originalstudy_deploy_2019.png"))
+```
+
+The questions that my research explores ask how we can leverage ecological analyses and involve system stakeholders to promote human-wildlife coexistence. The challenges of human-wildlife conflict are complex and multifacted: rigorous analyses are only as useful as the informed and decision-mediated action of the stakeholders that inhabit the system.
+
+The montane regions of central Idaho are a formulaic example of this system. A storied tradition of sheep-ranching exists in these areas, and ranchers drive sheep (*Ovis aries*) annually through US Forest Service grazing allotments under the continued pressure of depredation by local carnivore species. These species include [American Black Bears](https://idfg.idaho.gov/species/taxa/15779) (*Ursus americanus*), [Mountain Lions](https://idfg.idaho.gov/species/taxa/16498) (*Puma concolor*), [Coyotes](https://idfg.idaho.gov/species/taxa/17263) (*Canis latrans*), and [Gray Wolves](https://idfg.idaho.gov/species/taxa/19117) (*Canis Lupus*).A better understanding of how these predators use their landscape in both time and space will be useful to inform rancing stakeholders and reduce the likelihood of conflict. 
+
+```{r barplot, echo = F, out.extra='style="float:right; padding:10px"', out.height="42%", out.width="42%", message=FALSE}
+#simple bar graph in ggplot
+pred_finds <- data.frame(species=c("Coyote", "Bear", "Wolf", "Mountain Lion"),
+                         events=c(167, 158, 131, 17)) # manually pulled values
+
+#reorder because ggplot does alphabetically automatically regardless of how data frame was constructed
+pred_finds$species <- factor(pred_finds$species, levels = c("Coyote", "Bear", "Wolf", "Mountain Lion"))
+
+pred_plot <- ggplot(pred_finds, aes(x = species, y = events))+
+  geom_bar(stat = "identity", 
+           fill = c("goldenrod", "chocolate4", "darkslateblue", "darkorange"))+ #manual colors
+  theme_classic()+ # this may be redundant, theme parameters below, but I like redundancy when coding 
+  labs(x = "Species", y = "Detection Events")+
+  theme(
+    panel.background = element_rect(fill = "transparent"), # these parameters allow clear background, 
+    plot.background = element_rect(fill = "transparent", color = NA), # which is nice in .html knits
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12)
+  )
+
+pred_plot
+```
+
+In order to capture the patterns of and analyze these phenomena, I deployed infrared-triggered camera traps in the Wood River Valley in Blaine County Idaho over the summers of 2018 and 2019. For the purpose of this demonstration, I will focus on wildlife activity detected at cameras deployed during the 2019 season. Cameras were deployed at 48 unique sites for a total of 5900 *camera days* (the sum total of the number of days each camera was deployed) between May and November 2019. These cameras gathered 169,000 images that led to 5120 independent detection events, 473 of which were carnivores of interest. 
+
+In addition to wildlife activity, I collected a suite of environmental spatial data for the study area. This includes, for the purpose of this demonstration: elevation, vegetative greenness (NDVI), and distance to stream. These factors will be used to describe and predict occupancy of carnivore species in this landscape.  
+
+### Advanced Topics in Action
+
+The purpose of this exploration of advanced topics is to produce preliminary maps of carnivore occupancy, or occurence, data in my study system. At this point in my project, I am in the final stages of developing analysis and presentation of my thesis. Creating maps of this kind is one of the products I intend to include in the thesis, and so practicing this skill and drafting these maps is pertinent to my current objective. This demonstration will:
+
+1) Gather and sort **wildlife detection data**
+2) Collect and clean **environmental spatial data**
+3) Perform simple **occupancy model** analysis
+4) Create predictive **species occurence maps** based on environmental factors
+
+First simple pseudocode will be written to layout the approach for these tasks, then the packages that will be employed to conduct the analysis will be examined and explained. As the analysis and creation of product is conducted, a simple benchmarking analysis will be used to compare computing speed. Finally the maps for each carnivore species will be displayed along with final reflection, discussion, and remarks.  
+
+## Pseudocode
+
+### Wildlife Detection Data
+
+The wildlife data was taken in raw form as photos with known spatial and temporal information. From there, species were identified visually and sorted into appropriate directories. The package `camtrapR` was used to collate all detection data into a record list of detection events, and then into detection histories for each species. A detection history is a $R \times J$ matrix where $R$ is the number of stations and $J$ is the number of observations. In this case, $R = 48$ (the number of camera sites) and $J = 156$ (the number of days total of the survey). The values of the detection history are $1$ if that species was detected at that camera on that day, $0$ for nondetection, and $NA$ if the camera was inoperable that day. 
+
+```{r pseudo_1, echo = TRUE}
+# import detection histories of all species
+```
+
+### Collecting and Cleaning Environmental Spatial Data
+
+#### Study area Spatial Dimensions
+
+The extent of the study area is defined by several US Forest Service grazing allotments that are part of the protected area of the [Wood River Wolf Project](https://www.woodriverwolfproject.org/), an organization formed to prevent wolf-sheep conflict during the summer grazing months. The study area takes up most of the Big Wood River watershed, excluding urban and private areas, and BLM lands. 
+
+```{r pseudo_2, echo=TRUE}
+
+# import spatial file of WRWP protected area
+
+# evaluate projection
+
+# create buffer to make study area bounds
+```
+
+#### Elevation
+
+Elevation information was accessed by the [Idaho Enterprise Open Data Portal](https://data.gis.idaho.gov/datasets/uidaho::ground-surface-elevation-for-idaho-1-arc-second-30-meter/data?geometry=-142.251%2C39.972%2C-86.749%2C50.732). 
+
+```{r pseudo_3, echo = TRUE}
+
+# import elevation raster file
+
+# evaluate projection
+
+# crop elevation raster to study area bounds
+
+# extract elevation values from raster for camera sites
+```
+
+#### NDVI
+
+NDVI, or Normalized Difference Vegetation Index, is a widely-used measurement for evaluating green-ness and by proxy amount of vegetation of an area. NDVI was accesed by using assets of the [MODIS](https://modis.gsfc.nasa.gov/) program by NASA.  
+
+```{r pseudo_4, echo = TRUE}
+
+# import NDVI files for study season
+
+# combine NDVI rasters into one mean raster for season
+
+# evaluate projection
+
+# crop NDVI raster to study area bounds
+
+# extract NDVI values from mean raster for camera sites
+```
+
+#### Streams
+
+A perennial streams shapefile for the state of Idaho was accesed through the [USGS Water Resources NDSI Node](https://water.usgs.gov/GIS/metadata/usgswrd/XML/ds412_syntheticperennialstreams.xml#stdorder). 
+
+```{r pseudo_5, echo = TRUE}
+
+# import streams shapefile
+
+# evaluate projection
+
+# create distance raster 
+
+# extract distance to stream values from distance raster for camera sites  
+```
+
+### Simple Occupancy Model
+
+Occupancy models use a hierarchical structure evaluating detection to measure the latent variable of occupancy. In this way, an occupancy model accounts for true occupancy that was recorded as negative detection. The package `unmarked` is designed to handle multiple modelling designs using non-marked individuals in a population, and will be used for occupancy models here. The detection histories will be joined with each spatial covariate value for every camera location, along with an observational covariate of date into a `unmarked frame` object that the occupancy model can read. s
+
+```{r pseudo_6, echo = TRUE}
+
+# create matrix to represent pseudo-julian date for each camera site
+
+# for (each species) { 
+   # join detection history with site covariates from environmental spatial data
+   
+   # join detection history with observation covariate of pseudo-julian date
+   
+   # create unmarked occupancy data frame for occupancy analysis
+   
+   # standardize all site covariates, mean = 0, sd = 1
+   
+   # create occupancy model with combined covariates
+#}
+```
+
+### Mapping Occurence
+
+Once I have the coefficients for parameters from the model, I can use them to predict true occupancy, or occurence, in the study area. 
+
+```{r pseudo_7, echo = TRUE}
+
+ # standardize raster values of , mean = sample mean of sites, sd = sample sd of sites
+
+ # combine all rasters of spatial environment factors into one raster stack
+
+   # for (each species) {
+     #  pull coefficient parameter values from occupancy model 
+
+     #  compute species occupancy at each raster pixel using model parameters and raster values
+  
+     #  transform from logit scale
+
+     #  plot map
+  #}
+```
+
+## Performing Analysis
+
+### Gathering and Cleaning Data
+
+#### Wildlife Detection Data
+
+```{r det_hist, echo = T}
+# import detection histories of all species
+  # the four species I am examining
+  spp <- c("Bear", "Coyote", "Mountain_Lion", "Wolf")
+
+  # read in .csv files of binary detection data for every day and every camera location
+  for(i in spp){
+    tmp <- read.csv(paste0(path,"original",i,"_det_hist.csv"))
+    name <- paste0(i,"_det_hist")
+    assign(name, tmp)
+  }
+```
+
+#### Study area Spatial Dimensions
+
+```{r studyarea, echo=TRUE, message=FALSE, include=FALSE}
+# import spatial file of WRWP protected area
+  wrwp <- readOGR(paste0(path,"originalWRWParea.shp"))
+
+# evaluate projection
+  wrwp_cor <- spTransform(wrwp,         #this is the projection I am using 
+                          CRS = "+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+
+# create buffer to make study area bounds
+  wrwp_expand <- gBuffer(wrwp_cor, width = 10000) # 10 km buffer around project area
+  
+# import camera site locations
+  camtraps19 <- read.csv(paste0(path,"originalcamtraps_2019.csv"))
+  camtraps19 <- camtraps19[-(which(camtraps19$Station.1 == "big_witch_24")),2:4] #removes broken camera
+  
+# make spatial points object
+  cams19 <- SpatialPoints(camtraps19[,2:3], proj4string = CRS("+proj=longlat"))
+  
+# evaluate projection
+  cams19 <- spTransform(cams19, CRSobj = proj4string(wrwp_expand))
+```
+
+#### Elevation
+
+```{r elevation, echo = TRUE, message = FALSE}
+
+# import elevation raster file
+elev <- raster(paste0(path,"originalproject_area_utm11_GRS80_30m.tif"))
+
+# evaluate projection
+identicalCRS(elev, wrwp_expand)
+
+# crop elevation raster to study area bounds
+elev_extent <- raster::crop(elev, wrwp_expand)
+elev_raster <- elev_extent
+
+# extract elevation values from raster for camera sites
+elev19_cams <- raster::extract(elev_extent, cams19, buffer = 250, fun = mean)
+```
+
+#### NDVI
+
+```{r ndvi, echo = TRUE, message=FALSE}
+
+# import NDVI files for study season
+stn19 <- list.files(path, pattern = glob2rx("originalmodis*.tif"), full.names = T)
+
+# combine NDVI rasters into one mean raster for season
+stack19 <- stack(stn19)
+ndvi19 <- calc(stack19, fun = mean, na.rm = T)
+
+# evaluate projection
+identicalCRS(ndvi19, wrwp_expand)
+
+# crop NDVI raster to study area bounds
+ndvi19_extent <- raster::crop(ndvi19, wrwp_expand)
+
+# transform NDVI values from MODIS to actual values
+ndvi19_extent_trans <- ndvi19_extent * .0001  # MODIS VegIndices have .0001 scaling factor
+
+# resample raster to 30m resolution
+ndvi19_extent_trans_30m <- resample(ndvi19_extent_trans, elev_extent, method = "bilinear")
+ndvi_raster <- ndvi19_extent_trans_30m
+
+# extract NDVI values from mean raster for camera sites
+ndvi19_cams <- raster::extract(ndvi19_extent_trans_30m, cams19, buffer = 250, fun = mean)
+```
+
+#### Streams
+
+```{r streams, echo = TRUE, eval=FALSE, message = FALSE}
+# import streams shapefile
+streams_project <- readOGR(paste0(path,"originalstreams_utm_grs80_project.shp"))
+
+# evaluate projection
+streams_project <- spTransform(streams_project,
+                                CRS = "+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+
+
+# create distance raster
+  # I am using the elevation raster as a template for a blank raster with same dimensions and projection
+  streams_near_template <- elev_extent
+  streams_near_template[] <- NA
+  
+  # filling in blank template with stream value
+  streams_raster <- raster::rasterize(streams_project, streams_near_template, field = 1)
+  
+  # calculate distance to stream for every cell
+  streams_near <- distance(streams_raster)
+```
+
+Because the rasterize step above takes a very long time to complete, I include the `.tif` file written after the above chunk below as a starting point, and don't evaluate the chunk above. The benchmarking section below is an attempt to correct this issue, however `fasterize` only works for spatial polygons, and I could not make `velox` work in the end. 
+  
+```{r streams_2, echo=TRUE, message = FALSE}
+
+# extract distance to stream values from distance raster for camera sites
+streams_near <- raster(paste0(path,"originalnear_raster_30m_grs80.tif"))
+streams_dist_raster <- streams_near
+stream_dist19 <- raster::extract(streams_near, cams19, buffer = 250, fun = mean)
+```
+
+### Simple Occupancy Model
+
+```{r occu_model, echo = TRUE, message = FALSE, warning=FALSE}
+
+# create matrix to represent pseudo-julian date for each camera site
+scaled_julian19 <- seq(from = 1, to = 156, by = 1)
+scaled_julian19 <- scale(scaled_julian19) # in occupancy model I will need scaled covariates
+
+camera_operation <- read.csv(paste0(path,"originalcamop.csv"))
+camera_operation <- camera_operation[,-(1)]
+
+date_matrix_19 <- matrix(nrow = 48, ncol = 156) #48 cameras, 156 days
+colnames(date_matrix_19) <- seq(from = 1, to  = ncol(date_matrix_19))
+
+for(i in 1:ncol(date_matrix_19)){
+  for(j in 1:nrow(date_matrix_19)){
+    # this will fill inoperable days with an NA for date
+    if(is.na(camera_operation[j,i])){date_matrix_19[j,i] <- NA} 
+    else {date_matrix_19[j,i] <- scaled_julian19[i]}}
+  colnames(date_matrix_19)[i] <- paste0("day", colnames(date_matrix_19)[i])}
+
+for(i in spp){
+    sp_dets <- get(paste0(i, "_det_hist"))
+   # join detection history with date matrix and site covariates from environmental spatial data
+    tmp <- cbind(sp_dets, date_matrix_19, elev19_cams, ndvi19_cams, stream_dist19)
+    
+   # create unmarked occupancy data frame for occupancy analysis
+    tmp_umf <- unmarkedFrameOccu(y = tmp[,1:156],
+                                 siteCovs = tmp[,313:316],
+                                 obsCovs = list(date = tmp[,157:312])
+                                 )
+                                                
+   # standardize all site covariates, mean = 0, sd = 1
+    sc <- scale(siteCovs(tmp_umf))
+    siteCovs(tmp_umf) <- sc
+   
+   # create occupancy model with combined covariates
+    tmp_occu <- occu(~date ~ elev19_cams + ndvi19_cams + stream_dist19,
+                     data = tmp_umf,
+                     starts = c(0,0,0,0,0,0))
+    name <- paste0(i, "_occu")
+    assign(name, tmp_occu)
+}
+```
+
+### Mapping Occurence
+
+```{r mapping, echo = TRUE,out.height="50%" , out.width="50%", fig.pos="hold"}
+
+ # standardize raster values of covariates, mean = sample mean of sites, sd = sample sd of sites
+  # sample mean and sd is still stored in sc object
+    rasters <- c("elev_raster", "ndvi_raster", "streams_dist_raster")    
+
+    for(i in 1:length(rasters)){
+          r <- get(rasters[i])
+          tmp <- (r - attr(sc, "scaled:center")[i+1])/attr(sc, "scaled:scale")[i+1]
+          name <- paste0(rasters[i], "_sc")
+          assign(name, tmp)
+        }
+
+for(i in spp){
+  sp_occu <- get(paste0(i, "_occu"))
+  #  pull coefficient parameter values from occupancy model
+  beta <- coef(sp_occu, type = "state")
+  
+  #  compute species occupancy at each raster pixel using model parameters and raster values
+  occupancy_logit <- 
+    beta[1] + 
+    beta[2]*elev_raster_sc
+  
+  #  transform from logit scale
+  occupancy <- exp(occupancy_logit) / (1 + exp(occupancy_logit))
+  
+  #  plot maps
+  plot(occupancy,
+       main = paste0(i, " Occurence"),
+       col = terrain.colors(100))
+  plot(wrwp_cor, add = T)
+}
+```
+
+## Benchmarking Analysis
+
+Benchmarking is a tool to evaluate the speed of different functions, which is important when handling large file loads. Here I am evaluating the speeds of the rasterize step for the streams shapefile, which allows for the lines spatial object of the streams to become a raster, from which a distance can be drawn for every cell. 
+
+```{r streams_hide, echo = TRUE, message = FALSE, include= F}
+# import streams shapefile
+streams_project <- readOGR(paste0(path,"originalstreams_utm_grs80_project.shp"))
+
+# evaluate projection
+streams_project <- spTransform(streams_project,
+                                CRS = "+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+
+```
+
+```{r benchmarking, echo=TRUE}
+# make 5km clipping polygon at center of streams object
+ex <- bbox(streams_project)
+center_dx <- (ex[1,2] - ex[1,1])/2
+center_dy <- (ex[2,2] - ex[2,1])/2
+x_coord <- c(ex[1,1] + center_dx - 2500,
+             ex[1,1] + center_dx + 2500,
+             ex[1,1] + center_dx + 2500,
+             ex[1,1] + center_dx - 2500)
+
+y_coord <- c(ex[2,2] - center_dy + 2500,
+             ex[2,2] - center_dy + 2500,
+             ex[2,2] - center_dy - 2500,
+             ex[2,2] - center_dy - 2500)
+
+xy_coord <- cbind(x_coord, y_coord)
+p <- Polygon(xy_coord)
+ps <- Polygons(list(p),1)
+sps <- SpatialPolygons(list(ps))
+proj4string(sps) <- CRS("+proj=utm +zone=11 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+
+# clip streams object 
+stream_clip <- rgeos::gIntersection(streams_project, sps, byid = TRUE)
+stream_clip_sf <- st_as_sf(stream_clip)
+stream_clip_sf$ID <- rep(1, times = nrow(stream_clip_sf))
+
+# crop elevation raster by same polygon to use as template
+elev_clip <- raster::crop(elev_extent,sps)
+
+# make blank templates
+streams_near_template_raster <- elev_clip
+streams_near_template_raster[] <- NA
+
+streams_near_template_velox <- elev_clip
+streams_near_template_velox[] <- NA
+streams_near_template_velox <- velox(streams_near_template_velox)
+
+# Comparing rasterize to velox speeds
+bench <- microbenchmark::microbenchmark(
+  rasterize = r <- raster::rasterize(stream_clip, streams_near_template_raster, field = 1),
+  velox = v <- streams_near_template_velox$rasterize(stream_clip_sf, field = "ID", background = 0),
+  unit = "ms",
+  times = 10
+)
+```
+
+```{r benchplot, out.extra='style="float:right; padding:10px"', out.height="42%", out.width="42%", message=FALSE, echo = F}
+benchplot <- ggplot(bench, aes(x = expr, y = time, colour = expr)) +
+  geom_jitter(size = 2, width = 0.125)+
+  geom_point(stat = 'summary', fun.y = 'mean', color = c("darkslateblue", "goldenrod")) +
+  geom_errorbar(stat = 'summary', fun.data = 'mean_se', 
+                width=0, fun.args = list(mult = 1), color = c("darkslateblue", "goldenrod")) +
+  labs(x = "Method", y = "time (ms)")+
+  theme_bw()+
+  theme(
+    legend.position = "none",
+    panel.background = element_rect(fill = "transparent"), 
+    plot.background = element_rect(fill = "transparent", color = NA), 
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12)
+  )
+  
+benchplot
+```
+When comparing the rasterize time to the velox time, the mean computing speed is about `r floor(mean(bench[which(bench$expr == "rasterize"),2])/mean(bench[which(bench$expr == "velox"),2]))` times faster with velox. However, I wasn't able to use the product created by the velox function rasterizing, and therefore for now I still used rasterize. 
+
+## Reflection 
+
+The maps above reference the occurence probability of four carnivore species based on the model I created. However, it is clear that there are some errors in model choice, as the occurence does not seem very fine-tuned to the multiple environmental variables. There are a lot of model construction and selection factors that go into this, including evaluation of correlation between covariates, that I did not perform here due to this being a spatial computation exercise. 
+
+This endeavor has solidified a workflow for myself in producing informative maps of species occurence given known spatial covariates and a chosen model. Working with these functions and workflows will prove useful in allowing myself to make involved and explanatory maps, both for ecological inference and stakeholder benefit. 
+
+## References 
+Ausband, D. E. (2016). Gray wolf harvest in Idaho. Wildlife Society Bulletin, 40(3), 500-505.
+
+Bradley, E. H., Robinson, H. S., Bangs, E. E., Kunkel, K., Jimenez, M. D., Gude, J. A., & Grimm, T. (2015). Effects of wolf removal on livestock depredation recurrence and wolf recovery in Montana, Idaho, and Wyoming. The Journal of Wildlife Management, 79(8), 1337-1346.
+
+DeCesare, N. J., Wilson, S. M., Bradley, E. H., Gude, J. A., Inman, R. M., Lance, N. J., ... & Smucker, T. D. (2018). Wolf‐livestock conflict and the effects of wolf management. The Journal of Wildlife Management, 82(4), 711-722.
+
+Hanley, Z. L., Cooley, H. S., Maletzke, B. T., & Wielgus, R. B. (2018). Cattle depredation risk by gray wolves on grazing allotments in Washington. Global ecology and conservation, 16, e00453.
+
+NASS. 2010a. Sheep and goat death loss: National Agricultural Statistics Service (NASS), Agricultural Statistics Board, U.S. Department of Agriculture. 
+
+NASS. 2010b. Cattle death loss: National Agricultural Statistics Service (NASS), Agricultural Statistics Board, U.S. Department of Agriculture.
