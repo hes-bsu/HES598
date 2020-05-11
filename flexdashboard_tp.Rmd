@@ -1,0 +1,152 @@
+---
+title: "Interactive COVID-19 Chart for Idaho"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(flexdashboard)
+library(leaflet)
+library(highcharter)
+library(data.table)
+library(tidyr)
+library(lubridate)
+library(microbenchmark)
+library(htmltools)
+```
+
+Dashboard
+=====================================
+
+
+```{r load data, message=FALSE, warning=FALSE, include=FALSE}
+#### Load datasets ####
+#these datasets are on github so you can just put the link in to call up the file location on github
+#This is the data forked from the John Hopkins repo at https://github.com/CSSEGISandData/COVID-19.
+FullTimeSer_conf <- fread("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv", header = T)
+
+#Preparing the data read in above by converting to long form and truncating dates
+IdTimeSer_conf <- FullTimeSer_conf[Province_State == "Idaho",]
+IdLong_conf <- as.data.table(gather(data = IdTimeSer_conf, key = Date, value = Cases, 12:ncol(IdTimeSer_conf)))
+IdLong_conf[, Date := as.Date(mdy(Date, tz = "America/Boise"))]
+IdLong_conf <- IdLong_conf[Date == max(Date) & !Admin2 == "Out of ID" & !Admin2 == "Unassigned"]
+
+#Creating cumulative Idaho cases data table
+IdSum_conf <- as.data.table(aggregate(IdLong_conf$Cases~              IdLong_conf$Admin2+IdLong_conf$Lat+IdLong_conf$Long_, FUN = sum))
+setnames(IdSum_conf, c("name","lat","lon", "z"))
+```
+
+
+Column {data-width=300}
+-----------------------------------------------------------------------
+
+**Introduction**
+
+This dashboard is an example for how to show time-series data in an interactive form. Specially, this project is focused on COVID-19 cases in the state of Idaho. A flexdashboard is a helpful tool for displaying this information because it can be used to make data visually appealing and more digestable. 
+
+The goal of this flexdashboard is to compare two different mapping packages and assess the pros/cons to these packages. 
+
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Confirmed COVID-19 Cases in Idaho using Highcharter Package
+
+```{r hc map, echo=FALSE}
+# we are going to use the highcharter package to display information
+
+# let's pull up a map of idaho, at the county level
+#hcmap("countries/us/us-id-all") %>%
+  #hc_title(text = "Idaho")
+
+# lets see what our data looks like
+
+#glimpse(IdSum_conf)
+# need to convert cases to double
+IdSum_conf$z <- as.double(IdSum_conf$z)
+
+# I use glimpse to make sure my data is in the exact format the package needs: columns are "name", "lat", "long
+#glimpse(IdSum_conf)
+
+
+# lets plot our data on the map
+id_hcmap <- hcmap("countries/us/us-id-all", showInLegend=FALSE) %>% 
+  hc_add_series(data = IdSum_conf, type = "mapbubble",
+                name = "Confirmed COVID-19 Cases", maxSize = '10%') %>% 
+  hc_mapNavigation(enabled=TRUE)
+
+id_hcmap
+```
+
+### Confirmed COVID-19 Cases in Idaho using Leaflet Package
+
+```{r leaflet}
+
+# create leaflet map
+
+
+id_confirm_map <- leaflet(IdSum_conf) %>% #this calls up the package
+                  addProviderTiles("CartoDB.Positron") %>% # this load the basemap type
+                  addCircleMarkers(lng=~lon, # this is the specifications for the marker
+                                   lat=~lat,
+                                   popup=~head(paste0(IdSum_conf$name, # this tells is what information to display and how!
+                                                      "<br/>Confirmed Cases:", 
+                                                      IdSum_conf$z)))
+id_confirm_map
+
+```
+
+Workflow
+=====================================
+
+```{r workflow, echo=TRUE}
+
+#load the libraries - tell us which packages you're using and why
+# tidyverse- useful package for data management
+# flexdashboard- necessary for making a flexdashboard
+# tidyr- helps tidy data
+# data.table- helps tidy data
+# leaflet- mapping mapckage
+# highcharter- mapping package
+
+
+#load your data - which datasets do you need?
+# I am getting my data from 2019 Novel Coronavirus COVID-19 (2019-nCoV) Data Repository by Johns Hopkins Center for Systems Science and Engineering 
+# I am using one data set of confirmed COVID-19 cases
+
+#Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
+# The data comes in a time series format-- I need to take the data and create a summation of all cases per county. 
+
+#Analysis/processing step 1 - what are you hoping to do here, why? 
+# Once I have the summary's I am going to plot them on a map using highcharter
+
+#Analysis/processing step 2 - what are you hoping to do here, why? 
+# Then I will plotting them on map using leaflet
+
+#Check the outcomes? How will you know if your steps worked?
+# I will know if I have two functioning maps of Idaho with accurate totals!
+```
+
+# Package Evaluation
+
+This dashboard was created to help explore two different ways of displaying COVID-19 data. The critical step for this analysis is tidying the data into a usable format that the mapping packages can understand. The next crucial step was finding an engaging way to display the data. I chose two different packages to do this an in effort to compare process and outcomes of both packages. In order to assess the efficiency of each mapping process, I used microbenchmark to measure the time it takes to create each map. Overally, the highcharter map has a faster processing time then leaflet map. 
+
+```{r, mb}
+hc.time.mb <- microbenchmark(id_hcmap, times=15)
+                               
+leaf.time.mb <- microbenchmark(id_confirm_map, times=15)
+
+hc.time.mb
+leaf.time.mb
+```
+
+# Assignment Reflection
+
+These excercise helped me learn how to created an interactive flex dashboard that the public can easily navigate. Further, it showed me how there are several different ways of acheiving the same goal and that is in particular why I chose to explore two mapping packages. While this dashboard is for COVID-19 data, I want to create a dashboard for my own research displaying information about lidar usage in FEMA Region X (Idaho, Oregon, Washington, and Alaska). It will be intended for emergency managers and government officials to assess the current state of lidar use in all four states. I find this to be a workable format and recommend it for others to use!
+
+The data used to build the analysis is taken from the data repository for the 2019 Novel Coronavirus Visual Dashboard, operated by the Johns Hopkins University Center for Systems Science and Engineering (JHU CCSE). Their GitHub repo is linked [here](https://github.com/CSSEGISandData/COVID-19).
+
+This dashboard was created by Tara Pozzi. 
