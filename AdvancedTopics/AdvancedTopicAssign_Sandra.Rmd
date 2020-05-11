@@ -82,16 +82,12 @@ class(pixels)
 pixel_elev <- raster::extract(elev, # raster layer
               pixels_spdf,   # SPDF with pixels
               df=TRUE)         # return a dataframe
-pixel_elev
 ## Then I grabbed the name of the ID_pixel from the pixels_spdf
 pixel_elev$pix_id<- pixels_spdf$ID_pixel
-pixel_elev$pix_id
 ## Fix the column names
 names(pixel_elev) <- c('ID','elev','pix_id')
-pixel_elev
 ## The pixels and pixel_elev data were merged, using merge function from package base.
 pixelelev <- merge(pixels, pixel_elev, by.x = 'ID_pixel', by.y = 'pix_id')
-pixelelev
 
 ######## Step2: Assign the UTM projection to pixelelev and to raster file to measure distance using different package.
 
@@ -111,12 +107,10 @@ x=LongLatToUTM(pixelelev$Long,pixelelev$Lat,ID=pixelelev$ID_pixel,17)
 ## Merge the new UTM coordinates to the locations dataframe.
 x$ID_pixel=x$ID
 pixelelev= merge(pixelelev,x,by="ID_pixel")
-head(pixelelev)
 ## Change names of variables in the dataframe
 names(pixelelev)
 df=pixelelev
 names(df)=c("ID_pixel","Long","Lat","ID_veg","loc","ndvi","ID.x","z","ID.y","x","y")
-names(df)
 ## Arrange according ID_veg
 df <- df[order(df$ID_veg),]
 ## Define the projection to reproject the raster file from lat long into UTM
@@ -127,11 +121,9 @@ elev_utm <- projectRaster(elev, crs = sr)
 ## Transform df dataframe into sf object and assign geometry.
 coordnt=st_as_sf(df, coords = c("x", "y"), crs = ("+init=epsg:32717"),stringsAsFactors = FALSE)
 class(coordnt)
-coordnt
 
 ######## Step3: Processing raster file
 ## Transforming raster utm file into shapefile
-elev_utm
 elev_shape = rasterToPolygons(elev_utm,na.rm=TRUE)
 class(elev_shape)
 ## Saving shapefile elev_shape in folder
@@ -139,7 +131,6 @@ writeOGR(elev_shape,"elev_shape", dsn="C:/Users/Sandra/Desktop/R files/Stats/RMa
 ## Call shapefile elev_utm_shape and transform into sf file
 elev_shape <- st_read("C:/Users/Sandra/Desktop/R files/Stats/RMarkdownAssignment_Sandra/datatemp/elev_shape.shp")%>%
        st_transform(crs = 32717)
-class(elev_shape)
 
 ```
 
@@ -169,7 +160,6 @@ speed <- hd
 speed[adj] <- 6 * exp(-3.5 * abs(slope[adj] + 0.05))
 ## Geocorrect again for distance to create a time matrix.
 conductance <- geoCorrection(speed)
-class(conductance)
 ## Calculate distance using the least cost distance
 dist2 <- costDistance(conductance,
                       fromCoords = as(as_Spatial(coordnt[1:56,]), "SpatialPoints"),
@@ -181,25 +171,19 @@ dist2 <- costDistance(conductance,
 coord_df <- st_drop_geometry(coordnt)
 ### Subset columns from datafrane coordnt
 ID_pixels<-coord_df[, 1]
-ID_pixels
 ### Assign ID names to row and columns of dist2 matrix
 rownames(dist2) <- ID_pixels[1:56]
-dist2
 colnames(dist2) <- ID_pixels[57:96]
-dist2
 ## Rename column names of dist2 matrix
 dist2_id <- melt(as.matrix(dist2), varnames = c("fern", "forest"))
 ## Convert matrix into dataframe
 dist2_id[dist2_id$fern > dist2_id$forest,]
-class(dist2_id)
 ## Find the minimun distance between bracken fern and forest pixels
 summ_fern_value<- dist2_id %>% 
   group_by(fern) %>% 
   summarise(min = min(value, na.rm = TRUE))
-summ_fern_value
 ## Rename column name of summ_fern_value dataframe
 fernvalue<- summ_fern_value %>% rename(value = min)
-fernvalue
 ## Select forest pixel that match fern pixels and values
 neardistance <- right_join(dist2_id,fernvalue, by=c("value","fern"))
 view(neardistance)
@@ -219,7 +203,6 @@ fernid<- fernf %>% rename(ID_pixel = fern_f)
 near <- right_join(df,fernid, by=c("ID_pixel"))
 ## Convert dataframe to tibble dataframe
 dfnear<- as_tibble(near)
-class(dfnear)
 ## Removing duplicated rows
 dfpixel <- distinct(dfnear, ID_pixel, .keep_all = TRUE)
 ## Extracting x,y coordinates from df dataframe
@@ -250,7 +233,6 @@ points(dforest$x,dforest$y,col="blue",cex=.5)
 
 ## Use elev_shape shapefile to create a hexagonal grid using. Cellsize=8 was chosen to match small grids with the distance between pixel points
 hex_elev_shape <- st_make_grid(elev_shape, cellsize = 8, square = FALSE)
-hex_elev_shape
 
 ######## Step2: Creation of an igraph network and a distance matrix
 
@@ -312,7 +294,6 @@ dfpixel_dist3 <- distinct(dfnear_dist3, ID_pixel, .keep_all = TRUE)
 dfern_dist3<-df[1:56,10:11]
 dforest_dist3<-df[57:96,10:11]
 ## Extracting x,y coordinates from dfpixel_dist3 to plot the nearest forest pixels to bracken fern patches
-dfpixel_dist3
 dffo_dist3<-dfpixel_dist3[1:12,10:11]
 ## Plot nearest bracken fern and forest pixels
 myCol <- terrain.colors(6)
