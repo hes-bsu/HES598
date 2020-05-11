@@ -266,7 +266,7 @@ abs_train <- trainset[which(trainset$hyd_bin == 0),]
 abs_test <- testset[which(testset$hyd_bin == 0),]
 
 
-m2 <- glm(hyd_bin~Job534911_2013_2015_usace_huron_dem, data=trainset, family= binomial(link="logit"))
+m2 <- glm(hyd_bin~originalMcongStMarysRiver, data=trainset, family= binomial(link="logit"))
 evaluate(pres_test,abs_test,m2)
 
 #I should also consider kfold() cross validation, where I train the model on 4/5 of my (spatially blocked) data and test it with 1/5, and cycle thru that multiple times. Further step down the road! 
@@ -292,7 +292,7 @@ sb2[,1]/ sb2[,2]
 ```{r}
 #For this project, I will attempt one more two of modeling appraoch and compare the outcomes to the glm. The rest of the modeling functions in dismo often deal with presence only data, so I will instead use the machine learning randomForest() regression one the presence/absence data that I have.  
 library(randomForest)
-model <- hyd_bin~McongStMarysRiver
+model <- hyd_bin~originalMcongStMarysRiver
 rf1 <- randomForest(model,data=trainset)
 erf <- evaluate(pres_test,abs_test,rf1)
 #Without spatial blocking, AUC is slightly improved to 0.62. 
