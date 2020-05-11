@@ -82,7 +82,7 @@ library(rgdal) #to load and augment spatial shape files
 library(rgeos) #to use gBuffer function
 ```
 
-#For loading data
+#Load the data onto your machine
 ```{r include=FALSE}
 
 options(
