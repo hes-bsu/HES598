@@ -28,8 +28,10 @@ Due to the overlap in habitat, this region is a biological hotspot, therefore im
 I have 2 data sets that I will be incorporating to make a generalized linear model using R to achieve this. The 2 datasets include the remote sensed analysis of this landscape, and camera trap images to gain information on the wildlife activity that is occurring in this region. 
 
 Rodríguez, I., Albert, P., La Rose, C., Sharpe, C.J. 2011. A Study of the Use of Fire by Amerindian Communities in South Rupununi, Guyana, with recommendations for sustainable land management. Study prepared for the South Central and South Rupununi District Toshaos Councils. South Central Peoples Development Association (SCPDA), Forest Peoples Programme, UK.
+
 Bovolo, C.I., Pereira, R., Parkin, G., Kilsby, C., Wagner, T. 2012. Fine-scale regional climate patterns in the Guianas, tropical South America, based on observations and reanalysis data. International Journal of Climatology, 32(11): 1665-1689. DOI: 10.1002/joc.2387.
 
+For this particular assignment, I want to see if there is a difference between two raster files of a SIMILAR region in my study area. The 2 rasters are not precisely the same. Besides the areas, the main difference is that 1 raster is a composite with no augmentation, and the other is a raster generated from an NDVI greenest composite function in Google Earth Engine (for reference): https://geohackweek.github.io/GoogleEarthEngine/03-load-imagery/
 
 ## Study Area
 
@@ -43,52 +45,89 @@ plot(guyboundary)
 ```
 
 ```{r}
-#subset of study site
+#no changes to the raster is landcover
 landcover <- raster("C:/Users/Nessa/Desktop/BSU/SpatialDatainR_HES598/GUYdata/GUY_adm/subset2.tif") 
+landcover
+landcover <- setMinMax(landcover)#to see min & max pixel values
+landcover
+
+```
+#Visualize landcover raster
+```{r}
 plot(landcover)
 ```
+
+```{r}
+image(landcover)#different way of visualizing (plot of raster)
+```
+
+
+```{r}
+# we can specify the colors too
+col <- terrain.colors(5)
+image(landcover, zlim=c(57,2654), main="classes by pixels (landcover)", col=col)
+```
+
 
 
 ## Map an attribute of your data
 
 After you've made your study area map, trying plotting some attributes of your data. Remember, there's a lot of functionality that we haven't explored yet so be sure to checkout the package documentation and reference webpages if you're having trouble figuring out how to render the data you'd like to display.
 
+I used this site as a guide:https://www.neonscience.org/raster-data-r
+
 ```{r attributeplot}
-#Pixel variation of study region
+#Greenest Composite Mosaic function is DAD1
 DAD1 <- raster("C:/Users/Nessa/Desktop/BSU/RESEARCH/GUYresearch/Camera trap/DAD1/DadAnalysis/GreenCompositeYear2015_DAD.tif")
 DAD1
+
+```
+
+#Visualize DAD1
+```{r}
 plot(DAD1)
 ```
+
+
+
+
+```{r}
+
+image(DAD1)#different way of visualizing (plot of raster)
+```
+
+```{r}
+# we can specify the colors too
+col <- terrain.colors(5)
+image(DAD1, zlim=c(0,3634), main="classes by pixels (DAD1)", col=col)
+```
+
+
 
 ## Plot your data a differnt way
 
 Throughout this course I will be encouraging you to plot your data in ways that don't require you to generate a map. This might help you see patterns that a map might make hard to detect. It might also help you recognize that your _is_ specifically tied to the spatial arrangement of your data (making maps and spatial analysis a critical component of your project). I use `ggplot2` as the primary means for generating these plots. There's a cheatsheet available for `ggplot2` as well (got to Help > Cheatsheets inside RStudio). I also recommend [Data Visualization: A Practical Introduction by Kieran Healy](https://socviz.co). His website has the code for building the plots in his book.
 
 ```{r}
-med.inc <- median(id.census.sf$income)
-#fips_codes comes with tidycensus; using it here to get county names
-fips_codes$GEOID <- paste0(fips_codes$state_code, fips_codes$county_code)
+##Histogram of Pixel variation of study region by greenest composite NDVI
 
-id.census.plot <- id.census.sf %>% 
-  left_join(fips_codes)
+# the distribution of values in the raster
+hist(DAD1, main="Distribution of pixel values", 
+     col= "purple", 
+     maxpixels=22000000)
 
-np <- as.integer(id.census.plot$nonprof)
-np <- np[np != max(np)]
-bks <- log(quantile(np, probs = seq(0,1,0.25), names=FALSE), 10)
-bks <- c(bks, log(max(as.integer(id.census.plot$nonprof))))
-
-ggplot() +
-  geom_point(data=id.census.plot, 
-             aes(x=income, 
-                 y = reorder(county, income), color = log(as.integer(nonprof),10))) +
-  scale_color_gradient(breaks= bks ,guide="colourbar", name="Num of Nonprofits (log)")+
-  geom_vline(xintercept = med.inc)
 ```
+
+```{r}
+####Histogram of Pixel variation of study region by no NDVI calculation
+hist(landcover, main="Distribution of pixel values-", 
+     col= "purple", 
+     maxpixels=22000000)
+```
+
 
 ## What did you learn?
 
-Tell me a little bit about how plotting your data spatially versus as a more traditional plot affects your thinking. Did you notice anything interesting about the spatial arrangment of the data? Are there trends in the data that the map makes hard to see? What about interactions. This doesn't have to be exhaustive, I just want you to reflect a little bit on how data visualtizaiton can help clarify your research questions.
+This was interesting to see the differences between my raster that didn't have a classification (landcover raster) vs the mask layer treated by greenest pixel NDVI function (DAD1 raster). Attribute tables: I noticed that there was a difference between min values by raster. Histogram plot:There was more variation in pixel distribution in the landcover raster compared to the more "normal distribution" in the DAD1 raster. I don't think I would have noticed this difference if I didn't plot via a histogram! Glad I did this!
 
-**Remember, you can use ? to at the prompt to learn more about a command (e.g., ?plot will tell you about the usage of the plot command). Send me questions if you need help!! Good luck.**
-
-**Once you've gotten everything in the Rmakrdown document, press the `knit` button and you'll see your work rendered as a webpage**
+Comparing the variation of DAD1 and the histogram was interesting as wel
