@@ -1,15 +1,15 @@
 ---
 title: "Advanced Topic: Landscape Metrics and Raster Data"
-author: "Merry Davidson"
+author: "Merry M Davidson"
 date: "4/6/2020"
 output: html_document
 ---
 
 ## Introduction:
-My thesis research aims to quantify the degree of change on the landscape and the effects of habitat on the wildlife community. The study site of interest is the Rupununi savanna-forest boundary located on the Southwest portion of Guyana (South America). In order to quantify change, I used Landsat derived satellite images to generate  rasters using Spectral Unmixing Analysis classification (from this point on-SUA). This classification identifies the fractional componment of each pixel based on user generated classes or end members. For my SUA, I used the following classes: forest, bareground, grass, and water.
-My chosen Advanced Topic for this course is: Landscape Metrics and Raster Data. 
+My thesis research aims to quantify the degree of change on the landscape and the effects of habitat on the wildlife community. The study site of interest is the Rupununi savanna-forest boundary located on the Southwest portion of Guyana (South America). To quantify change, I used Landsat derived satellite images to generate rasters using Spectral Unmixing Analysis classification (from this point on-SUA). This classification identifies the fractional component for each pixel based on user-generated classes or end members. For my SUA, I used the following classes: forest, bare ground, grass, and water.
+My chosen Advanced Topic for this course is Landscape Metrics and Raster Data. 
 My goal for this assignment is to learn and practice using raster data in R with the following raster packages: raster, rgdal, and rgeos. Specifically, I will obtain SUA pixel values of 13 specific points in a subset of my study area.  
-Bigger picture: This inforation will be used in a generalized linear model that will look at wildlife-landscape interactions.
+The bigger picture: This information will be used in a generalized linear model that will look at wildlife-landscape interactions.
 
 For more information on Google Earth Engine Spectral Unmixing Classification: https://developers.google.com/earth-engine/image_transforms
 For more background on applying Spectral Unmixing Classification:
@@ -45,25 +45,25 @@ My plan or outline
 ##The final goal is to end up with 2 rasters. This way I can merge the spatial points raster and SUA values raster together. I start off with a raster and a spatial data file of points. 
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
-#In order to get two raster files, I need to transform my GPS points into a raster so I can merge (stack) both rasters together.
+#To get two raster files, I need to transform my GPS points into a raster so I can merge (stack) both rasters together.
 #That is the first step. 
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
-#The second step is to analyze the data. Are there differences in SUA values between the points? 9 out of the 13 points are classified as bush island habitats. Is there more resolution or variability using SUA values instead of the catergorical habitat description?
+#The second step is to analyze the data. Are there differences in SUA values between the points? 9 out of the 13 points are classified as bush island habitats. Is there more resolution or variability using SUA values instead of the categorical habitat description?
 
 #Check the outcomes- how will you know if your steps worked?
-#If I have a SUA value for 13 points I will know I did it correctly.
+#If I have an SUA value for 13 points, I will know I did it correctly.
 
 ```
 
 ## Introduce the packages
-The critical step in my objective is the transformation from a shape file into a raster file. 
+The critical step in my objective is the transformation from a shapefile into a raster file. 
 The three packages that I will use to achieve this objective are: "raster"  "rgdal" and "rgeos"
 Raster: https://cran.r-project.org/web/packages/raster/raster.pdf
-This package is very useful to do lots of manipulations to rasters and calculate information within the rasters (such as NDVI or other classification indices). There are several functions from this package that I will use in order to complete my objective. In order, the functions and uses are as follows: mask() was used to visually see the SUA layer on the specified GPS points. rasterize() function transformed the GPS shapefile into a raster. stack() function put the 2 layers in alignment to exctract the SUA values from the specifi points. Lastly, aggregate() function made a table with the SUA values by site!
+This package is beneficial to do lots of manipulations to rasters and calculate information within the rasters (such as NDVI or other classification indices). There are several functions from this package that I will use to complete my objective. In order, the functions and uses are as follows: mask() was used to visually see the SUA layer on the specified GPS points. rasterize() function transformed the GPS shapefile into a raster. stack() function put the 2 layers in alignment to extract the SUA values from the specific points. Lastly, aggregate() function made a table with the SUA values by site!
 
 Rgdal: https://cran.r-project.org/web/packages/rgdal/rgdal.pdf
-The rgdal package is useful for working with vectors, also known as shapefiles. Although there are some fucntions that work for rasters as well, I will only use this package to read in the GPS shapefile using the  readOGR() function.
+The rgdal package is useful for working with vectors, also known as shapefiles. Although there are some functions work for rasters as well, I will only use this package to read in the GPS shapefile using the readOGR() function.
 
 Rgeos: https://cran.rstudio.com/web/packages/rgeos/rgeos.pdf
 I used the rgeos package for the gBuffer() function. This is the step where I turned my 13 points of interest into 100 m buffer points to later get SUA values for that area.
