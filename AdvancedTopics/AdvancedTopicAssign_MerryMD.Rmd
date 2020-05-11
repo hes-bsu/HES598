@@ -5,73 +5,85 @@ date: "4/6/2020"
 output: html_document
 ---
 
+## Introduction:
+My thesis research aims to quantify the degree of change on the landscape and the effects of habitat on the wildlife community. The study site of interest is the Rupununi savanna-forest boundary located on the Southwest portion of Guyana (South America). In order to quantify change, I used Landsat derived satellite images to generate  rasters using Spectral Unmixing Analysis classification (from this point on-SUA). This classification identifies the fractional componment of each pixel based on user generated classes or end members. For my SUA, I used the following classes: forest, bareground, grass, and water.
+My chosen Advanced Topic for this course is: Landscape Metrics and Raster Data. 
+My goal for this assignment is to learn and practice using raster data in R with the following raster packages: raster, rgdal, and rgeos. Specifically, I will obtain SUA pixel values of 13 specific points in a subset of my study area.  
+Bigger picture: This inforation will be used in a generalized linear model that will look at wildlife-landscape interactions.
+
+For more information on Google Earth Engine Spectral Unmixing Classification: https://developers.google.com/earth-engine/image_transforms
+For more background on applying Spectral Unmixing Classification:
+https://www.sciencedirect.com/science/article/abs/pii/S0034425718305200
+
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(googledrive) #for loading in the data
-library(curl) #called for Google Drive data access
-library(here) #called for Google Drive data access (be srue to make a temp folder for downloads
-library(raster) #to load and augment rasters
-library(rgdal) #to load and augment spatial shape files
-library(rgeos) #to use gbuffer function
-######THINK AOBUT THIS: PUT ALL THE LIBRARIES HERE OR IN THE PACKAGES INTRO? DO I NEED THINGS HERE?
+
 ```
-
-
-SAVE YOUR FILE IN THE AdvancedTopics FOLDER IN THE GIT REPO
-
-## Introduction:
-My thesis research aims to quantify the degree of landscape change on the landscape. The study site of interest is the Rupununi savanna-forest boundary located on the Southwest portion of Guyana (South America). In order to quantify change, I have generated rasters using Spectral Unmixing Analysis (SUA) classification for the period of 2000-2018.
-My chosen Advanced Topic for this course is: Landscape Metrics and Raster Data. 
-My goal for this assignment is to learn how to use raster data in R by using raster packages and fucntions [Specify wich ones here}}}. Specifically, I will obtain SUA pixel totals of 13 specific points in a subset of my study area.  
-Bigger picture: This inforation will be used in a statistical generalized linear model that will look at wildlife-landscape interactions.
-
 
 
 ## PSUEDOCODE:
-
+My plan or outline
 
 ```{r}
-#load the libraries - tell us which packages you're using and why
-##Both raster packages to help format my 2 rasters  
-## library(rgdal)
-## library(raster)
+#load the libraries - 
+#library(googledrive) #for loading in the data
+#library(curl) #called for Google Drive data access
+#library(here) #called for Google Drive data access (be sure to make a temp folder for downloads)
+#library(raster) #to load and augment rasters
+#library(rgdal) #to load and augment spatial shape files
+#library(rgeos) #to use gbuffer function
 
-
-#load your data - which datasets do you need?
-##Dadanawa raster file Landsat 7, year 2015 greenest pixel composite image "DADYR15"
-#DADYR15 <- raster()
-##The SUA classification of year 2015 "SUADAD15"
+#load your data - what data do you need?
+##The SUA classification of year 2015 "SUADAD15" (in a UTM coordinate raster file)
 #SUADAD15 <- raster()
-##GPS points to get SUA totals for "DADPTS"
-#DADPTS <- read.csv()
+##GPS points to get SUA totals for "DADPTS" (in a UTM shapefile format)
+#DADPTS <- readOGR()
 
-
-#Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
-##Make sure the two rasters stack up
+#Organize the data - what form should the data be in? 
+##The final goal is to end up with 2 rasters. This way I can merge the spatial points raster and SUA values raster together. I start off with a raster and a spatial data file of points. 
 
 #Analysis/processing step 1 - what are you hoping to do here, why? 
-#Quantify the metrics by landcover type: water, forest, bareground and quantify the amount of patches per class
+#In order to get two raster files, I need to transform my GPS points into a raster so I can merge (stack) both rasters together.
+#That is the first step. 
 
 #Analysis/processing step 2 - what are you hoping to do here, why? 
-#Are there differences in SUA values between the points? 9 out of the 13 points have been classified as bush island habitats. Is there more resolution or variability using SUA values instead of the catergorical habitat description?
+#The second step is to analyze the data. Are there differences in SUA values between the points? 9 out of the 13 points are classified as bush island habitats. Is there more resolution or variability using SUA values instead of the catergorical habitat description?
 
-#Check the outcomes? How will you know if your steps worked?
+#Check the outcomes- how will you know if your steps worked?
 #If I have a SUA value for 13 points I will know I did it correctly.
 
-#
 ```
 
 ## Introduce the packages
-Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
-#library(googledrive) where data is stored
-#for loading in the data
-## library(rgdal)
-## library(raster)to load rasters
+The critical step in my objective is the transformation from a shape file into a raster file. 
+The three packages that I will use to achieve this objective are: "raster"  "rgdal" and "rgeos"
+Raster: https://cran.r-project.org/web/packages/raster/raster.pdf
+This package is very useful to do lots of manipulations to rasters and calculate information within the rasters (such as NDVI or other classification indices). There are several functions from this package that I will use in order to complete my objective. In order, the functions and uses are as follows: mask() was used to visually see the SUA layer on the specified GPS points. rasterize() function transformed the GPS shapefile into a raster. stack() function put the 2 layers in alignment to exctract the SUA values from the specifi points. Lastly, aggregate() function made a table with the SUA values by site!
+
+Rgdal: https://cran.r-project.org/web/packages/rgdal/rgdal.pdf
+The rgdal package is useful for working with vectors, also known as shapefiles. Although there are some fucntions that work for rasters as well, I will only use this package to read in the GPS shapefile using the  readOGR() function.
+
+Rgeos: https://cran.rstudio.com/web/packages/rgeos/rgeos.pdf
+I used the rgeos package for the gBuffer() function. This is the step where I turned my 13 points of interest into 100 m buffer points to later get SUA values for that area.
+
+
+
 
 #Actual code:
-Load data
-
+Load the libraries
 ```{r}
+library(googledrive) #for loading in the data
+library(curl) #called for Google Drive data access
+library(here) #called for Google Drive data access (be sure to make a temp folder for downloads)
+library(raster) #to load and augment rasters
+library(rgdal) #to load and augment spatial shape files
+library(rgeos) #to use gBuffer function
+```
+
+
+```{r include=FALSE}
 #for loading in the data
 
 
@@ -95,13 +107,6 @@ files <- drive_ls(folder)
 
 lapply(files$id, function(x) drive_download(as_id(x), path = paste0(here::here("datatemp/original/"), files[files$id==x,]$name), overwrite = TRUE))
 
-
-
-##delete below later
-#load in  Year 2015 raster
-#SUADAD15 <- raster("C:/Users/Nessa/Courses/HES598/datatemp/originalYear2015.tif")
-#visualize the rasters
-#plot(DADYR15)
 
 ```
 
@@ -189,7 +194,13 @@ sd.agg_sua_camera_trap
 ```
 
 
-## Reflect
-Write a few sentences on what you learned from this exercise. How has your skill improved? What do you wish you understood better? What do you imagine your next steps to be?
+##Conclusion
+To refer back to the pseudocode, I would know if was successful in my objective if I had an SUA value for 13 points. Indeed, that is what I have!!
+The objectives I asked were: Is there more resolution or variability using SUA values instead of the catergorical habitat description?
+Conclusion: There IS more variability when looking at the SUA values compared to a categorical habitat variable.
 
-Once you're done push the "knit" button to create the html page from your Rmarkdown document. If you've got questions, let me know!!
+The next step then is to include the SUA values in a model that looks at effects of the points on species. I will also obtain SUA values for more points within my study area so increase sample size in the model.
+
+## Reflect
+This was very helpful in making progress with my thesis! I got more practice coding and working with rasters in R.
+
