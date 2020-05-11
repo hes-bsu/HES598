@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(root.dir = "C:/Users/LouisJochems/Documents/HES598/datatemp")
 ```
 
 
@@ -28,6 +29,8 @@ Before you get started programming all of the potential things you could do duri
 #load the libraries - tell us which packages you're using and why
 knitr::opts_chunk$set(echo = TRUE)
 library(googledrive)
+library(curl)
+library(here)
 # To connect to folder with field data. 
 library(tidyverse)
 library(reshape2)
@@ -71,121 +74,113 @@ library(parallel)
 #Lastly, although the INLA framework allows for high computation of variables with complex structure through stochastic partial differential equations, I still likely need to assess how long these models will take to run given this relatively long time-series of field data. 
 ```
 
+Processing steps below: 
+Ignore this chunk, I largely did this through a working directory from another script
+Will leave here for reference on data wrangling/organization 
+
 ```{r}
-#load your data - which datasets do you need?
-setwd("Z:/SDMData/FullVegDataset2011-18")
-veg_raw <- read.csv("FullVegDataset2011-18.csv")
-m.raw <- melt(veg_raw, id=c("site_id","county","date","year","site_name","transect_num","meadow_width_m","emergent_width_m","submergent_width_m",
-                            "point_num","gps_lon","gps_lat","water_depth_cm","bottom_vis","substrate_type","org_depth_cm","unvegetated_pcnt",
-                            "total_cover_pcnt","standing_dead_pcnt","detritus_pcnt", "taxa_name"),
-              measure.vars = c("percent_cover"))
+# #load your data - which datasets do you need?
+# #setwd("Z:/SDMData/FullVegDataset2011-18")
+# veg_raw <- read.csv("FullVegDataset2011-18.csv")
+# m.raw <- melt(veg_raw, id=c("site_id","county","date","year","site_name","transect_num","meadow_width_m","emergent_width_m","submergent_width_m",
+#                             "point_num","gps_lon","gps_lat","water_depth_cm","bottom_vis","substrate_type","org_depth_cm","unvegetated_pcnt",
+#                             "total_cover_pcnt","standing_dead_pcnt","detritus_pcnt", "taxa_name"),
+#               measure.vars = c("percent_cover"))
+# 
+# m.raw <- m.raw[m.raw$taxa_name %in% c("Hydrocharis morsus-ranae","Typha angustifolia","Typha glauca","Typha glauca (hybrid)","Typha latifolia","Typha sp.",
+#                                    "Phragmites australis","Phragmites australis (invasive","Phragmites australis (native)"),]
+# #This is the full field dataset of vegetation surveys of Michigan wetlands from 2011-2018. This includes many spp observations, but I've reduced it to EFB, Typha, and Phragmites. 
+# 
+# #Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
+# veg_data <- m.raw %>% spread(taxa_name, value)
+# #replace NA's with o 
+# veg_data[is.na(veg_data)] <- 0
+# 
+# #Confusion with distinguishing typha glauca and the hybrid in the field, so I will combine them
+# veg_data$typha_combined <- veg_data$`Typha glauca` + veg_data$`Typha glauca (hybrid)` + veg_data$`Typha sp.`
+# veg_data <- data.frame(veg_data)
+# 
+# #create binomial presence/absence data (needed for SDMs down the road)
+# veg_data$hyd_bin <- ifelse(veg_data$Hydrocharis.morsus.ranae>0,1,0)
+# veg_data$typh_bin <- ifelse(veg_data$typha_combined>0,1,0)
+# 
+# dim(veg_data)
+# #[1] 2255   30
+# #2,225 rows with 30 columns of data. Each row is a quadrat from a given transect in a given year between 2011-18. 
+# 
+# #First, I need to create a shape file for my full quadrat layer 
+# #for now, subset to quads that have coords 
+# veg_data <- veg_data[which(veg_data$gps_lon < 0 & veg_data$gps_lat>0),]
+# # Many quadrats without GPS coordinates unfortunately 
+# # Now we only 1873 plots total
+# 
+# 
+# #Take the full_veg dataset and subset to counties with records that overlap our topobathymetry layer
+# #Will work with Munuscong Bay layer in the Upper Peninsula (UP)
+# UP_data <- as.data.frame(veg_data)
+# 
+# #Check for duplicates of GPS coordinates 
+# dups <- UP_data[duplicated(UP_data[,c(11,12)]),c(11,12)]
+# #none!
+# 
+# #also see if there are errors with gps coords 
+# range(UP_data$gps_lon)
+# range(UP_data$gps_lat)
+# 
+# #Since our lidar layer is even a smaller subset of the area, we need to further subset points to the ROI, around Munuscong Bay on the St. Mary's River (technically Lake Huron)
+# #Will do so by site names, determined from GIS
+# UP_data$site_name <- as.factor(UP_data$site_name)
+# Mcong <- UP_data[UP_data$site_name %in% c("Benchmark: Munuscong Island Wetland", "Benchmark: Munuscong Lake Wetland #6","Gogomain River Wetland #1","Munuscong Lake Wetland #2,#3 Munuscong River Delta","Raber Bay Wetland" ,"Roach Point Wetland"),] 
+# #remove redundant GPS columns 
+# Mcong <- within(Mcong, rm(gps_lon.1, gps_lat.1))
+# 
+# #write.csv(Mcong,"UP_data.csv")
+# 
+# #let's make dataframe into spatial object with binomial occurence 
+# # now need to create sp dataframe 
+# #Mcong <- SpatialPointsDataFrame(Mcong[,11:12],Mcong)
+# #This new SP dataframe has no coordinate reference system, and normally I would assign UTM in other applications, but I will wait until I load in this specific raster dem. 
+# #crs(Mcong) <- "+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
+# # plot(Mcong)
 
-m.raw <- m.raw[m.raw$taxa_name %in% c("Hydrocharis morsus-ranae","Typha angustifolia","Typha glauca","Typha glauca (hybrid)","Typha latifolia","Typha sp.",
-                                   "Phragmites australis","Phragmites australis (invasive","Phragmites australis (native)"),]
-#This is the full field dataset of vegetation surveys of Michigan wetlands from 2011-2018. This includes many spp observations, but I've reduced it to EFB, Typha, and Phragmites. 
-
-#Organize the data - what form should the data be in? A list? how many elements, a data frame? how many rows and columns?
-veg_data <- m.raw %>% spread(taxa_name, value)
-#replace NA's with o 
-veg_data[is.na(veg_data)] <- 0
-
-#Confusion with distinguishing typha glauca and the hybrid in the field, so I will combine them
-veg_data$typha_combined <- veg_data$`Typha glauca` + veg_data$`Typha glauca (hybrid)` + veg_data$`Typha sp.`
-veg_data <- data.frame(veg_data)
-
-#create binomial presence/absence data (needed for SDMs down the road)
-veg_data$hyd_bin <- ifelse(veg_data$Hydrocharis.morsus.ranae>0,1,0)
-veg_data$typh_bin <- ifelse(veg_data$typha_combined>0,1,0)
-
-dim(veg_data)
-#[1] 2255   30
-#2,225 rows with 30 columns of data. Each row is a quadrat from a given transect in a given year between 2011-18. 
-
-#out of the scope of this exercise... will include these steps over the summer! 
-# ##now I need to load in shapefiles so that I could calculate additional, potentially important predictors, e.g. fetch 
-# MI_boundary <- st_read("Z:/SDMData/RSpatialFiles/MichiganBoundaries.shp")#state boundary layer 
-# GL_coastlines <- st_read("Z:/SDMData/RSpatialFiles/GreatLakesCoastlines.shp") #coastline layer useful for calculated fetch
-# wetland_polys <- st_read("Z:/SDMData/RSpatialFiles/great_lakes_coastal_wetlands.shp") #delineated wetlands in GL 
-# CWMP_surveys <- st_read("Z:/SDMData/RSpatialFiles/CWMPSurveys_EFB2011-18.shp") #centroid layer of all surveyed wetlands in time period
-# invaded_sites <- st_read("Z:/SDMData/RSpatialFiles/MI_InvadedSites2011_18.shp") #centroid layer of EFB-invaded sites only 
-
-#Analysis/processing step 1 - what are you hoping to do here, why? 
-#First, I need to create a shape file for my full quadrat layer 
-#for now, subset to quads that have coords 
-veg_data <- veg_data[which(veg_data$gps_lon < 0 & veg_data$gps_lat>0),]
-# Many quadrats without GPS coordinates unfortunately 
-# Now we only 1873 plots total
-
-# now need to create spatial object with full dataset for future analyses 
-veg_data <- SpatialPointsDataFrame(veg_data[,11:12],
-                                    veg_data)
-crs(veg_data) <- "+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
-plot(veg_data)
 ```
 
 ```{r} 
 #will load in subsetted data from class's google drive 
-folder.url <- "https://drive.google.com/open?id=1cjqJMM2JyQWDtVorNEyO6HLprB_s7XOF" #replace this link with the link to your specific folder which you can get by clicking the "get shareable link option"
+# folder.url <- "https://drive.google.com/open?id=1cjqJMM2JyQWDtVorNEyO6HLprB_s7XOF" #replace this link with the link to your specific folder which you can get by clicking the "get shareable link option"
+# 
+# folder <- drive_get(as_id(folder.url))
+# # 
+# # gdrive_files <- drive_ls(folder)
+# 
+# lapply(gdrive_files$id, function(x)drive_download(as_id(x), 
+#                                         path = paste0(here::here("/datatemp/original/"), 
+#                                             gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE)) 
+# # #replace the path with a folder on your computer outside of the repo directory
+# 
+# file.list <- list.files((pattern = "*.csv")) #replace the pattern with the appropriate extensions for the files you want to load (e.g., .shp, .csv)
+# field_data <- lapply(file.list, read.csv) #Then read in the file using the appropriate read command (e.g., raster, read_sf, read.csv)
+# #for DEM in folder as well 
+# file.list <- list.files((pattern = "*.tif")) 
+# topobath <- lapply(file.list,raster)
 
-folder <- drive_get(as_id(folder.url))
-
-files <- drive_ls(folder)
-
-lapply(files$id, function(x) drive_download(as_id(x), path = "~/Rspatial/", overwrite = TRUE)) #replace the path with a folder on your computer outside of the repo directory
-
-file.list <- list.files((pattern = "*.csv")) #replace the pattern with the appropriate extensions for the files you want to load (e.g., .shp, .csv)
-
-field_data <- lapply(file.list, read.csv) #Then read in the file using the appropriate read command (e.g., raster, read_sf, read.csv)
-
-#for DEMs in folder as well 
-file.list <- list.files((pattern = "*.tif")) 
-raster <- lapply(filelist,raster)
-```
-
-```{r}
-#Analysis/processing step 2 - what are you hoping to do here, why? 
-#Take the full_veg dataset and subset to counties with records that overlap our topobathymetry layer
-#Will work with Munuscong Bay layer in the Upper Peninsula (UP)
-UP_data <- as.data.frame(UP_data)
-
-#Check for duplicates of GPS coordinates 
-dups <- UP_data[duplicated(UP_data[,c(11,12)]),c(11,12)]
-#none!
-
-#also see if there are no errors with gps coords 
-range(UP_data$gps_lon)
-range(UP_data$gps_lat)
-
-#since our lidar layer is even a smaller subset of the area, we need to further subset points to the ROI, around Munuscong Bay on the St. Mary's River (technically Lake Huron)
-#will do so by site names, determined from GIS
-UP_data$site_name <- as.factor(UP_data$site_name)
-Mcong <- UP_data[UP_data$site_name %in% c("Benchmark: Munuscong Island Wetland", "Benchmark: Munuscong Lake Wetland #6","Gogomain River Wetland #1","Munuscong Lake Wetland #2,#3 Munuscong River Delta","Raber Bay Wetland" ,"Roach Point Wetland"),] 
-#remove redundant GPS columns 
-Mcong <- within(Mcong, rm(gps_lon.1, gps_lat.1))
-
-#let's make dataframe into spatial object with binomial occurence 
-# now need to create sp dataframe 
-Mcong <- SpatialPointsDataFrame(Mcong[,11:12],
-                                    Mcong)
-#This new SP dataframe has no coordinate reference system, and normally I would assign UTM in other applications, but I will wait to consider this until I load in this specific raster dem. 
-#crs(Mcong) <- "+proj=utm +zone=16 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
-# plot(Mcong)
+setwd("C:/Users/LouisJochems/Documents/HES598/datatemp/")
+field_data <- read.csv("C:/Users/LouisJochems/Documents/HES598/datatemp/originalUP_data.csv")
+topobath <- raster("C:/Users/LouisJochems/Documents/HES598/datatemp/originalMcongStMarysRiver.tif")
 
 ```
 
+
+More data to load!
+This topobathymetry layer is a digital elevation models (DEM) from NOAA's Digital Coast repository, where they have collected aerial lidar of all US coastlines, including the Great Lakes. The lidar uses green/NIR lasers to penetrate into the water surface, and thus are able to retrieve returns from the bottom in the form of a DEM (depending on turbidity of course). The extent of these surveys are fairly restricted to the coasts, and thus I am making an assumption that most of the areas are indeed GL water surfaces/wetlands, or potentially suitable habitat for EFB.
+
 ```{r}
-#More data to load! 
-#This topobathymetry layer is a digital elevation models (DEM) from NOAA's Digital Coast repository, where they have collected aerial lidar of all US coastlines, including the Great Lakes. The lidar uses green/NIR lasers to penetrate into the water surface, and thus are able to retrieve returns from the bottom in the form of a DEM (depending on turbidity of course). The extent of these surveys are fairly restricted to the coasts, and thus I am making an assumption that most of the areas are indeed GL water surfaces/wetlands, or potentially suitable habitat for EFB. 
-
-setwd("Z:/SDMData/GreatLakesLayers/Rasters")
-
-#rough name, but that's how NOAA (or US Army Corps of Engineers?) delivers your requested area.
+#rough name, but that's how NOAA (or US Army Corps of Engineers) delivers requested area.
 # I renamed the the .tif file in the google drive to McongStMarysRiver, where the lidar covers Munsucong Bay along the St. Mary's river 
-topobath <- raster("Job534911_2013_2015_usace_huron_dem.tif")
+#topobath <- raster("Job534911_2013_2015_usace_huron_dem.tif")
 
 # Although I just have one raster layer, I assigned the layer as a rasterstack for the modeling analyses below. 
 topobath <- stack(topobath)
-
 
 # Unfortunately, the raster is in a lambert conical projection in NAD 1983 (with units in feet?!), but we often don't want to reproject a raster as it can skew the cells. Therefore, I make the decision here to project the points layer into the NAD1983 projection of the DEM. 
 #CRS of topobathymetry layer 
@@ -193,55 +188,51 @@ crs(topobath) <- "+init=epsg:2251 +proj=lcc +lat_1=47.08333333333334 +lat_2=45.4
 
 
 #After using the crs() function on the UP_data points dataframe, there was a misalignment between the points and raster when I plotted them. Instead, I tried sptransform() below and achieved the correct alignment in the plot. 
-cord.dec <- SpatialPointsDataFrame(UP_data[,11:12], UP_data, proj4string =CRS("+proj=longlat"))
+cord.dec <- SpatialPointsDataFrame(field_data[,12:13], field_data, proj4string =CRS("+proj=longlat"))
 cord.NAD <- spTransform(cord.dec,CRS("+init=epsg:2251"))
-
 
 plot(topobath)
 points(cord.NAD,cex=0.5)
 #points intersect with layer! 
-
 ```
 
 ```{r}
 #extract values from topobath layer to serve as a predictor variable for EFB presence 
-predictor <- extract(topobath,cord.NAD)
+predictor <- raster::extract(topobath,cord.NAD)
 
 topo_depth <- as.vector(predictor)
 
 #Add vector of predictor values to our spatial data frame 
-#Remember to keep name consistent with raster layer so that we can map predictions later on! 
-cord.NAD$Job534911_2013_2015_usace_huron_dem <- topo_depth
+#Remember to keep name consistent with that of original raster layer so that we can map predictions later on! 
+cord.NAD$originalMcongStMarysRiver <- topo_depth
 
 #glm will remove obs with NAs values, but for clealiness' sake, let's remove all transect survey plots in the rest of the county (those that did not intersect with the topobathymetry layer)
-cord.NAD_mod <- sp.na.omit(cord.NAD, col.name = "Job534911_2013_2015_usace_huron_dem")
+cord.NAD_mod <- sp.na.omit(cord.NAD, col.name = "originalMcongStMarysRiver")
 
 #Plot to check values extracted from raster
-plot(hyd_bin~Job534911_2013_2015_usace_huron_dem,data=cord.NAD, xlab="Elevation (ft)", ylab="EFB Occurrence")
-
+plot(hyd_bin~originalMcongStMarysRiver,data=cord.NAD, xlab="Elevation (ft)", ylab="EFB Occurrence")
 
 #now we are ready to run a glm between topo_depth 
 #binomial model for EFB occurence against topo_depth 
-m1 <- glm(hyd_bin~Job534911_2013_2015_usace_huron_dem, data=data.frame(cord.NAD), family= binomial(link="logit"))
+m1 <- glm(hyd_bin~originalMcongStMarysRiver, data=data.frame(cord.NAD), family= binomial(link="logit"))
 ```
 
 
 ```{r}
 #Check the outcomes? How will you know if your steps worked?
-#
 summary(m1)
 
-
 #plot model predictions on entire extent of topobathymetry layer 
-p <- raster::predict(topobath, m1, progress='text')
+p <- raster::predict(topobath, m1, progress="text")
 #Takes awhile, so let's say I wanted to predict EFB occurence across multiple rasters throughout the state. I'll use microbenchmark to get a rough idea of just how long that could take 
-predict.mb <- microbenchmark(p,times=1)
+
+# predict.mb <- microbenchmark(p,times=1)
 #this takes about 2 minutes for a dataset that spans about 25km, so extrapolating this out for the entire state coastlines of ~5300 km, could take 10,600 minutes, or 176 hours! Definitely will need a super comp... 
 
 #map of proability of EFB occurence based on topobathymetry dem 
 plot(p)
 
-#still need to plogis cell values to get probabilities on real numbers scale that is actually interpretable
+#I need to plogis cell values to get probabilities on real numbers scale that is actually interpretable
 p2 <- calc(p,plogis)
 plot(p2, main= "Probability of EFB Occurence across Topobathymetry DEM, Munsucong Bay, St. Mary's River, MI")
 
@@ -301,7 +292,7 @@ sb2[,1]/ sb2[,2]
 ```{r}
 #For this project, I will attempt one more two of modeling appraoch and compare the outcomes to the glm. The rest of the modeling functions in dismo often deal with presence only data, so I will instead use the machine learning randomForest() regression one the presence/absence data that I have.  
 library(randomForest)
-model <- hyd_bin~Job534911_2013_2015_usace_huron_dem
+model <- hyd_bin~McongStMarysRiver
 rf1 <- randomForest(model,data=trainset)
 erf <- evaluate(pres_test,abs_test,rf1)
 #Without spatial blocking, AUC is slightly improved to 0.62. 
@@ -313,7 +304,7 @@ plot(prf, main= "Probability of EFB Occurence across Topobathymetry DEM, Munsuco
 
 
 ```{r}
-#EFB's habitat suitabillity from rf predictions look quite different from the glm! Lastly, we can plot individual outputs and compare side by side, and also average the model ouputs and plot EFB suitabillity. 
+#EFB's habitat suitability from rf predictions look quite different from the glm! Lastly, we can plot individual outputs and compare side by side, and also average the model ouputs and plot EFB habitat suitability. 
 models <- stack(p2, prf)
 names(models) <- c("GLM", "RF")
 plot(models)
@@ -322,7 +313,6 @@ plot(models)
 #average predictions 
 m <- mean(models)
 plot(m, main= "Average Score")
-
 ```
 ## Introduce the packages
 Given your psuedo code, where is the critical step? What packages and functions are you considering to help you complete this step? Why did you choose them? 
